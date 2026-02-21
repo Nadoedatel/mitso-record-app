@@ -1,0 +1,37 @@
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  compatibilityDate: '2024-04-03',
+  devtools: { enabled: true },
+
+  // Source directory
+  srcDir: 'src/',
+
+  // Modules
+  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
+
+  // TypeScript configuration
+  typescript: {
+    strict: true,
+    typeCheck: true,
+  },
+
+  // Runtime config
+  runtimeConfig: {
+    public: {
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8080/api',
+    },
+  },
+
+  // Path aliases
+  alias: {
+    '@': './src',
+  },
+
+  // Auto imports
+  imports: {
+    dirs: ['composables/**', 'utils/**'],
+  },
+
+  // CSS
+  css: ['@/app/styles/main.css'],
+})

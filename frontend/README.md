@@ -1,42 +1,104 @@
-# vue-project
+# MITSO Record App - Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Nuxt 3 приложение для учёта студенческих зачёток.
 
-## Recommended IDE Setup
+## Стек
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **Nuxt 3** - Full-stack Vue фреймворк
+- **TypeScript** - Строгая типизация
+- **Pinia** - State management
+- **FSD Architecture** - Feature-Sliced Design
 
-## Recommended Browser Setup
+## Установка
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+## Запуск
 
-```sh
+```bash
+# Development сервер
 npm run dev
+
+# Production сборка
+npm run build
+npm run preview
+
+# Type checking
+npm run typecheck
 ```
 
-### Type-Check, Compile and Minify for Production
+Приложение запустится на `http://localhost:3000`
 
-```sh
-npm run build
+## Архитектура (FSD)
+
+```
+src/
+├── app/              # Конфигурация приложения
+├── pages/            # Страницы (Nuxt файловый роутинг)
+│   ├── index.vue     # Главная с выбором роли
+│   ├── student.vue   # Страница студента
+│   └── teacher.vue   # Страница преподавателя
+├── widgets/          # Композитные UI блоки
+├── features/         # Фичи с бизнес-логикой
+│   ├── auth/         # Авторизация
+│   ├── students/     # API студентов
+│   ├── teachers/     # API преподавателей
+│   ├── grades/       # API оценок
+│   └── subjects/     # API предметов
+├── entities/         # Бизнес-сущности
+│   ├── user/
+│   ├── student/
+│   ├── teacher/
+│   ├── grade/
+│   └── subject/
+└── shared/           # Переиспользуемый код
+    ├── api/          # HTTP клиент
+    └── lib/          # Утилиты
+```
+
+## Переменные окружения
+
+Создайте файл `.env`:
+
+```env
+NUXT_PUBLIC_API_URL=http://localhost:8080/api
+```
+
+## API Integration
+
+Фронтенд подключается к backend API на `localhost:8080`.
+
+Убедитесь что backend запущен перед использованием фронтенда.
+
+## Основные функции
+
+1. **Авторизация** - Вход через email/пароль с JWT токенами
+2. **Студенты** - Поиск и просмотр информации о студентах
+3. **Преподаватели** - Просмотр информации о преподавателях
+4. **Роли** - Сохранение выбранной роли в localStorage
+
+## Troubleshooting
+
+### Backend недоступен
+
+Убедитесь что backend запущен на порту 8080:
+
+```bash
+cd ../backend
+npm run start:dev
+```
+
+### TypeScript ошибки
+
+```bash
+npm run typecheck
+```
+
+### Проблемы с зависимостями
+
+```bash
+rm -rf node_modules .nuxt
+npm install
 ```

@@ -1,13 +1,21 @@
-import type {IGrade} from "@/entities/grade/model/types.ts";
+import type { User } from '../../user/model/types'
 
-export interface IStudent {
-    id: number;
-    name: string;
-    last_name: string;
-    middle_name: string;
-    faculty: string;
-    speciality: string;
-    enrollment_date: string;
-    group_name: string;
-    grades: IGrade[];
+export interface Student {
+  id: number
+  userId: number
+  firstName: string
+  lastName: string
+  middleName?: string
+  studentId: string // Номер зачетной книжки
+  group: string
+  course: number
+  faculty: string
+  specialization: string
+  enrollmentYear: number
+  phone?: string
+  address?: string
+  birthDate?: string
+  createdAt: string
+  updatedAt: string
+  user?: User
 }

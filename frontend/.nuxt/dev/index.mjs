@@ -35,7 +35,7 @@ import { dirname as dirname$1, resolve as resolve$1 } from 'file:///Users/nadoe/
 import { createServerHead as createServerHead$1, CapoPlugin } from 'file:///Users/nadoe/WebstormProjects/mitso-record-app/frontend/node_modules/unhead/dist/index.mjs';
 import { defineHeadPlugin } from 'file:///Users/nadoe/WebstormProjects/mitso-record-app/frontend/node_modules/@unhead/shared/dist/index.mjs';
 
-const serverAssets = [{"baseName":"server","dir":"/Users/nadoe/WebstormProjects/mitso-record-app/frontend/server/assets"}];
+const serverAssets = [{"baseName":"server","dir":"/Users/nadoe/WebstormProjects/mitso-record-app/frontend/src/server/assets"}];
 
 const assets$1 = createStorage();
 
@@ -48,7 +48,7 @@ const storage = createStorage({});
 storage.mount('/assets', assets$1);
 
 storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"/Users/nadoe/WebstormProjects/mitso-record-app/frontend"}));
-storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"/Users/nadoe/WebstormProjects/mitso-record-app/frontend/server"}));
+storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"/Users/nadoe/WebstormProjects/mitso-record-app/frontend/src/server"}));
 storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"/Users/nadoe/WebstormProjects/mitso-record-app/frontend/.nuxt"}));
 storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"/Users/nadoe/WebstormProjects/mitso-record-app/frontend/.nuxt/cache"}));
 storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"/Users/nadoe/WebstormProjects/mitso-record-app/frontend/.data/kv"}));
@@ -646,7 +646,9 @@ const _inlineRuntimeConfig = {
       }
     }
   },
-  "public": {}
+  "public": {
+    "apiUrl": "http://localhost:8080/api"
+  }
 };
 const envOptions = {
   prefix: "NITRO_",

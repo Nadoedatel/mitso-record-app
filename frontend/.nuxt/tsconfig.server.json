@@ -18,10 +18,10 @@
         "./types/nitro-imports"
       ],
       "~/*": [
-        "../*"
+        "../src/*"
       ],
       "@/*": [
-        "../*"
+        "../src/*"
       ],
       "~~/*": [
         "../*"
@@ -69,10 +69,10 @@
         "../node_modules/nuxt"
       ],
       "~": [
-        "./.."
+        "../src"
       ],
       "@": [
-        "./.."
+        "./src"
       ],
       "~~": [
         "./.."
@@ -84,13 +84,10 @@
         "../shared"
       ],
       "assets": [
-        "../assets"
+        "../src/assets"
       ],
       "public": [
-        "../public"
-      ],
-      "public/*": [
-        "../public/*"
+        "../src/public"
       ],
       "#build": [
         "./"
@@ -100,6 +97,9 @@
       ],
       "#internal/nuxt/paths": [
         "../node_modules/nuxt/dist/core/runtime/nitro/paths"
+      ],
+      "pinia": [
+        "../node_modules/pinia/dist/pinia"
       ],
       "#vue-router": [
         "./vue-router"
@@ -113,11 +113,13 @@
   },
   "include": [
     "./types/nitro-nuxt.d.ts",
+    "../node_modules/@pinia/nuxt/runtime/server",
+    "../node_modules/@nuxtjs/tailwindcss/runtime/server",
     "../node_modules/@nuxt/devtools/runtime/server",
     "../node_modules/@nuxt/telemetry/runtime/server",
     "./types/nitro.d.ts",
     "../**/*",
-    "../server/**/*"
+    "../src/server/**/*"
   ],
   "exclude": [
     "../node_modules",
