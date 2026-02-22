@@ -1,104 +1,77 @@
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateSubjectDto, UpdateSubjectDto } from './dto';
+import { CreateSubjectDto, UpdateSubjectDto, QuerySubjectDto } from './dto';
+import { PaginatedResponse } from '../common/dto';
 export declare class SubjectsService {
     private prisma;
     constructor(prisma: PrismaService);
     create(dto: CreateSubjectDto): Promise<{
-        teacher: {
+        subjectGroups: ({
+            group: {
+                name: string;
+                course: number;
+                faculty: string;
+                createdAt: Date;
+                updatedAt: Date;
+                id: number;
+            };
+        } & {
             createdAt: Date;
-            updatedAt: Date;
             id: number;
-            firstName: string;
-            lastName: string;
-            middleName: string | null;
-            phone: string | null;
-            department: string;
-            position: string;
-            academicDegree: string | null;
-            officeNumber: string | null;
-            userId: number;
-        };
-    } & {
-        createdAt: Date;
-        updatedAt: Date;
-        id: number;
-        name: string;
-        code: string;
-        credits: number;
-        semester: number;
-        description: string | null;
-        teacherId: number;
-    }>;
-    findAll(teacherId?: number, semester?: number): Promise<({
-        teacher: {
-            createdAt: Date;
-            updatedAt: Date;
-            id: number;
-            firstName: string;
-            lastName: string;
-            middleName: string | null;
-            phone: string | null;
-            department: string;
-            position: string;
-            academicDegree: string | null;
-            officeNumber: string | null;
-            userId: number;
-        };
-        grades: {
-            createdAt: Date;
-            updatedAt: Date;
-            id: number;
-            studentId: number;
-            notes: string | null;
-            examDate: Date | null;
+            groupId: number;
             subjectId: number;
-            gradeValue: number;
-            gradeType: import(".prisma/client").$Enums.GradeType;
-        }[];
-    } & {
-        createdAt: Date;
-        updatedAt: Date;
-        id: number;
-        name: string;
-        code: string;
-        credits: number;
-        semester: number;
-        description: string | null;
-        teacherId: number;
-    })[]>;
-    findOne(id: number): Promise<{
-        teacher: {
-            createdAt: Date;
-            updatedAt: Date;
-            id: number;
-            firstName: string;
-            lastName: string;
-            middleName: string | null;
-            phone: string | null;
-            department: string;
-            position: string;
-            academicDegree: string | null;
-            officeNumber: string | null;
-            userId: number;
-        };
-        grades: ({
-            student: {
+        })[];
+        teacherSubjects: ({
+            teacher: {
                 createdAt: Date;
                 updatedAt: Date;
                 id: number;
                 firstName: string;
                 lastName: string;
                 middleName: string | null;
-                studentId: string;
-                group: string;
+                phone: string | null;
+                department: string;
+                position: string;
+                academicDegree: string | null;
+                officeNumber: string | null;
+                userId: number;
+            };
+        } & {
+            createdAt: Date;
+            id: number;
+            teacherId: number;
+            subjectId: number;
+        })[];
+    } & {
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
+        code: string;
+        credits: number;
+        semester: number;
+        description: string | null;
+    }>;
+    findAll(query: QuerySubjectDto): Promise<PaginatedResponse<any>>;
+    findOne(id: number): Promise<{
+        subjectGroups: ({
+            group: {
+                name: string;
                 course: number;
                 faculty: string;
-                specialization: string;
-                enrollmentYear: number;
-                phone: string | null;
-                address: string | null;
-                birthDate: Date | null;
-                userId: number;
+                id: number;
+            };
+        } & {
+            createdAt: Date;
+            id: number;
+            groupId: number;
+            subjectId: number;
+        })[];
+        grades: ({
+            student: {
+                id: number;
+                firstName: string;
+                lastName: string;
+                studentId: string;
             };
         } & {
             createdAt: Date;
@@ -111,44 +84,134 @@ export declare class SubjectsService {
             gradeValue: number;
             gradeType: import(".prisma/client").$Enums.GradeType;
         })[];
+        teacherSubjects: ({
+            teacher: {
+                id: number;
+                firstName: string;
+                lastName: string;
+                department: string;
+                position: string;
+            };
+        } & {
+            createdAt: Date;
+            id: number;
+            teacherId: number;
+            subjectId: number;
+        })[];
     } & {
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         id: number;
-        name: string;
         code: string;
         credits: number;
         semester: number;
         description: string | null;
-        teacherId: number;
     }>;
     update(id: number, dto: UpdateSubjectDto): Promise<{
-        teacher: {
+        subjectGroups: ({
+            group: {
+                name: string;
+                course: number;
+                faculty: string;
+                createdAt: Date;
+                updatedAt: Date;
+                id: number;
+            };
+        } & {
             createdAt: Date;
-            updatedAt: Date;
             id: number;
-            firstName: string;
-            lastName: string;
-            middleName: string | null;
-            phone: string | null;
-            department: string;
-            position: string;
-            academicDegree: string | null;
-            officeNumber: string | null;
-            userId: number;
-        };
+            groupId: number;
+            subjectId: number;
+        })[];
+        teacherSubjects: ({
+            teacher: {
+                createdAt: Date;
+                updatedAt: Date;
+                id: number;
+                firstName: string;
+                lastName: string;
+                middleName: string | null;
+                phone: string | null;
+                department: string;
+                position: string;
+                academicDegree: string | null;
+                officeNumber: string | null;
+                userId: number;
+            };
+        } & {
+            createdAt: Date;
+            id: number;
+            teacherId: number;
+            subjectId: number;
+        })[];
     } & {
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         id: number;
-        name: string;
         code: string;
         credits: number;
         semester: number;
         description: string | null;
-        teacherId: number;
     }>;
     remove(id: number): Promise<{
         message: string;
+    }>;
+    assignGroups(subjectId: number, groupIds: number[]): Promise<{
+        subjectGroups: ({
+            group: {
+                name: string;
+                course: number;
+                faculty: string;
+                id: number;
+            };
+        } & {
+            createdAt: Date;
+            id: number;
+            groupId: number;
+            subjectId: number;
+        })[];
+        grades: ({
+            student: {
+                id: number;
+                firstName: string;
+                lastName: string;
+                studentId: string;
+            };
+        } & {
+            createdAt: Date;
+            updatedAt: Date;
+            id: number;
+            studentId: number;
+            notes: string | null;
+            examDate: Date | null;
+            subjectId: number;
+            gradeValue: number;
+            gradeType: import(".prisma/client").$Enums.GradeType;
+        })[];
+        teacherSubjects: ({
+            teacher: {
+                id: number;
+                firstName: string;
+                lastName: string;
+                department: string;
+                position: string;
+            };
+        } & {
+            createdAt: Date;
+            id: number;
+            teacherId: number;
+            subjectId: number;
+        })[];
+    } & {
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
+        code: string;
+        credits: number;
+        semester: number;
+        description: string | null;
     }>;
 }

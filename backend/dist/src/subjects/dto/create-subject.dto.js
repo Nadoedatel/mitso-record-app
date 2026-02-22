@@ -11,36 +11,38 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateSubjectDto = void 0;
 const class_validator_1 = require("class-validator");
+const swagger_1 = require("@nestjs/swagger");
 class CreateSubjectDto {
 }
 exports.CreateSubjectDto = CreateSubjectDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'Математический анализ', description: 'Subject name' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateSubjectDto.prototype, "name", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'MATH101', description: 'Subject code' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateSubjectDto.prototype, "code", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 4, description: 'Number of credits' }),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(1),
     (0, class_validator_1.Max)(10),
     __metadata("design:type", Number)
 ], CreateSubjectDto.prototype, "credits", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 1, description: 'Semester number' }),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(1),
     (0, class_validator_1.Max)(12),
     __metadata("design:type", Number)
 ], CreateSubjectDto.prototype, "semester", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Subject description' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateSubjectDto.prototype, "description", void 0);
-__decorate([
-    (0, class_validator_1.IsInt)(),
-    __metadata("design:type", Number)
-], CreateSubjectDto.prototype, "teacherId", void 0);
 //# sourceMappingURL=create-subject.dto.js.map

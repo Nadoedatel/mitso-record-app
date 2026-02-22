@@ -1,6 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
-import { LoginDto, RegisterDto, RefreshTokenDto } from './dto';
+import { LoginDto, RegisterDto } from './dto';
 export declare class AuthService {
     private prisma;
     private jwtService;
@@ -23,7 +23,7 @@ export declare class AuthService {
             role: import(".prisma/client").$Enums.Role;
         };
     }>;
-    refresh(dto: RefreshTokenDto): Promise<{
+    refresh(refreshToken: string): Promise<{
         accessToken: string;
         refreshToken: string;
     }>;
@@ -32,6 +32,8 @@ export declare class AuthService {
         email: string;
         role: import(".prisma/client").$Enums.Role;
         student: {
+            course: number;
+            faculty: string;
             createdAt: Date;
             updatedAt: Date;
             id: number;
@@ -39,14 +41,12 @@ export declare class AuthService {
             lastName: string;
             middleName: string | null;
             studentId: string;
-            group: string;
-            course: number;
-            faculty: string;
             specialization: string;
             enrollmentYear: number;
             phone: string | null;
             address: string | null;
             birthDate: Date | null;
+            groupId: number | null;
             userId: number;
         } | null;
         teacher: {

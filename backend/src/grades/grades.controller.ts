@@ -10,8 +10,9 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GradesService } from './grades.service';
-import { CreateGradeDto, UpdateGradeDto } from './dto';
+import { CreateGradeDto, UpdateGradeDto, QueryGradeDto, BatchCreateGradeDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
 import { Roles } from '../common/decorators';
 import { Role } from '@prisma/client';
@@ -20,6 +21,8 @@ import { Role } from '@prisma/client';
  * GradesController - handles grade-related endpoints
  * Base path: /api/grades
  */
+@ApiTags('grades')
+@ApiBearerAuth()
 @Controller('grades')
 @UseGuards(JwtAuthGuard)
 export class GradesController {
@@ -32,22 +35,36 @@ export class GradesController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @ApiOperation({ summary: 'Create new grade (ADMIN/TEACHER only)' })
+  @ApiResponse({ status: 201, description: 'Grade created successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   create(@Body() dto: CreateGradeDto) {
     return this.gradesService.create(dto);
   }
 
   /**
-   * Get all grades with optional filters
-   * GET /api/grades?studentId=1&subjectId=2
+   * Batch create or update grades
+   * POST /api/grades/batch
+   */
+  @Post('batch')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.TEACHER)
+  @ApiOperation({ summary: 'Batch create or update grades (ADMIN/TEACHER only)' })
+  @ApiResponse({ status: 201, description: 'Grades processed successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  batchCreate(@Body() dto: BatchCreateGradeDto) {
+    return this.gradesService.batchCreate(dto.grades);
+  }
+
+  /**
+   * Get all grades with optional filters and pagination
+   * GET /api/grades?studentId=1&subjectId=2&page=1&limit=20
    */
   @Get()
-  findAll(
-    @Query('studentId', new ParseIntPipe({ optional: true }))
-    studentId?: number,
-    @Query('subjectId', new ParseIntPipe({ optional: true }))
-    subjectId?: number,
-  ) {
-    return this.gradesService.findAll(studentId, subjectId);
+  @ApiOperation({ summary: 'Get all grades with filters and pagination' })
+  @ApiResponse({ status: 200, description: 'Grades retrieved successfully' })
+  findAll(@Query() query: QueryGradeDto) {
+    return this.gradesService.findAll(query);
   }
 
   /**
@@ -56,6 +73,8 @@ export class GradesController {
    * This is the key endpoint mentioned in API conventions
    */
   @Get('student/:id')
+  @ApiOperation({ summary: 'Get all grades for a specific student' })
+  @ApiResponse({ status: 200, description: 'Student grades retrieved successfully' })
   findByStudent(@Param('id', ParseIntPipe) studentId: number) {
     return this.gradesService.findByStudent(studentId);
   }
@@ -65,6 +84,9 @@ export class GradesController {
    * GET /api/grades/:id
    */
   @Get(':id')
+  @ApiOperation({ summary: 'Get grade by ID' })
+  @ApiResponse({ status: 200, description: 'Grade found' })
+  @ApiResponse({ status: 404, description: 'Grade not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.gradesService.findOne(id);
   }

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateSubjectDto, UpdateSubjectDto } from './dto';
+import { CreateSubjectDto, UpdateSubjectDto, QuerySubjectDto } from './dto';
+import { PaginatedResponse } from '../common/dto';
 
 /**
  * SubjectsService - business logic for subject management
@@ -16,35 +17,85 @@ export class SubjectsService {
     return this.prisma.subject.create({
       data: dto,
       include: {
-        teacher: true,
+        teacherSubjects: {
+          include: {
+            teacher: true,
+          },
+        },
+        subjectGroups: {
+          include: {
+            group: true,
+          },
+        },
       },
     });
   }
 
   /**
-   * Find all subjects with optional filters
+   * Find all subjects with optional filters and pagination
    */
-  async findAll(teacherId?: number, semester?: number) {
+  async findAll(query: QuerySubjectDto): Promise<PaginatedResponse<any>> {
+    const { teacherId, semester, page = 1, limit = 20 } = query;
+
     const where: any = {};
 
     if (teacherId) {
-      where.teacherId = teacherId;
+      where.teacherSubjects = {
+        some: {
+          teacherId,
+        },
+      };
     }
 
     if (semester) {
       where.semester = semester;
     }
 
-    return this.prisma.subject.findMany({
-      where,
-      include: {
-        teacher: true,
-        grades: true,
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    });
+    const [data, total] = await Promise.all([
+      this.prisma.subject.findMany({
+        where,
+        include: {
+          teacherSubjects: {
+            include: {
+              teacher: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  department: true,
+                },
+              },
+            },
+          },
+          subjectGroups: {
+            include: {
+              group: {
+                select: {
+                  id: true,
+                  name: true,
+                  course: true,
+                },
+              },
+            },
+          },
+          grades: true,
+        },
+        orderBy: {
+          name: 'asc',
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.subject.count({ where }),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   /**
@@ -54,10 +105,41 @@ export class SubjectsService {
     const subject = await this.prisma.subject.findUnique({
       where: { id },
       include: {
-        teacher: true,
+        teacherSubjects: {
+          include: {
+            teacher: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                department: true,
+                position: true,
+              },
+            },
+          },
+        },
+        subjectGroups: {
+          include: {
+            group: {
+              select: {
+                id: true,
+                name: true,
+                course: true,
+                faculty: true,
+              },
+            },
+          },
+        },
         grades: {
           include: {
-            student: true,
+            student: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                studentId: true,
+              },
+            },
           },
         },
       },
@@ -81,7 +163,16 @@ export class SubjectsService {
       where: { id },
       data: dto,
       include: {
-        teacher: true,
+        teacherSubjects: {
+          include: {
+            teacher: true,
+          },
+        },
+        subjectGroups: {
+          include: {
+            group: true,
+          },
+        },
       },
     });
   }
@@ -98,5 +189,44 @@ export class SubjectsService {
     });
 
     return { message: 'Subject deleted successfully' };
+  }
+
+  /**
+   * Assign groups to a subject
+   */
+  async assignGroups(subjectId: number, groupIds: number[]) {
+    // Check if subject exists
+    await this.findOne(subjectId);
+
+    // Check if all groups exist
+    const groups = await this.prisma.group.findMany({
+      where: { id: { in: groupIds } },
+    });
+
+    if (groups.length !== groupIds.length) {
+      throw new NotFoundException('One or more groups not found');
+    }
+
+    // Create subject-group relations (ignore duplicates)
+    const createPromises = groupIds.map((groupId) =>
+      this.prisma.subjectGroup.upsert({
+        where: {
+          subjectId_groupId: {
+            subjectId,
+            groupId,
+          },
+        },
+        create: {
+          subjectId,
+          groupId,
+        },
+        update: {},
+      }),
+    );
+
+    await Promise.all(createPromises);
+
+    // Return updated subject with groups
+    return this.findOne(subjectId);
   }
 }

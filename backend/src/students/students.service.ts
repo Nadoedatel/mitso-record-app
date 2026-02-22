@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateStudentDto, UpdateStudentDto } from './dto';
+import { CreateStudentDto, UpdateStudentDto, QueryStudentDto } from './dto';
+import { PaginatedResponse } from '../common/dto';
 
 /**
  * StudentsService - business logic for student management
@@ -31,35 +32,64 @@ export class StudentsService {
   }
 
   /**
-   * Find all students with optional search
-   * @param search - search by firstName, lastName, or studentId
+   * Find all students with optional search and pagination
+   * @param query - pagination and search parameters
    */
-  async findAll(search?: string) {
-    const where = search
-      ? {
-          OR: [
-            { firstName: { contains: search, mode: 'insensitive' as const } },
-            { lastName: { contains: search, mode: 'insensitive' as const } },
-            { studentId: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+  async findAll(query: QueryStudentDto): Promise<PaginatedResponse<any>> {
+    const { search, groupId, page = 1, limit = 20 } = query;
 
-    return this.prisma.student.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
+    const where: any = {};
+
+    // Add search filter
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search, mode: 'insensitive' as const } },
+        { lastName: { contains: search, mode: 'insensitive' as const } },
+        { studentId: { contains: search, mode: 'insensitive' as const } },
+      ];
+    }
+
+    // Add group filter
+    if (groupId) {
+      where.groupId = groupId;
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.student.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+            },
+          },
+          group: {
+            select: {
+              id: true,
+              name: true,
+              course: true,
+              faculty: true,
+            },
           },
         },
-      },
-      orderBy: {
-        lastName: 'asc',
-      },
-    });
+        orderBy: {
+          lastName: 'asc',
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.student.count({ where }),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   /**
@@ -76,11 +106,23 @@ export class StudentsService {
             role: true,
           },
         },
+        group: {
+          select: {
+            id: true,
+            name: true,
+            course: true,
+            faculty: true,
+          },
+        },
         grades: {
           include: {
             subject: {
               include: {
-                teacher: true,
+                teacherSubjects: {
+                  include: {
+                    teacher: true,
+                  },
+                },
               },
             },
           },
@@ -148,14 +190,30 @@ export class StudentsService {
   }
 
   /**
-   * Delete student
+   * Delete student with transaction (also deletes related grades)
    */
   async remove(id: number) {
     // Check if student exists
-    await this.findOne(id);
+    const student = await this.findOne(id);
 
-    await this.prisma.student.delete({
-      where: { id },
+    // Use transaction to ensure all related data is deleted atomically
+    await this.prisma.$transaction(async (tx) => {
+      // Delete all grades for this student
+      await tx.grade.deleteMany({
+        where: { studentId: id },
+      });
+
+      // Delete student
+      await tx.student.delete({
+        where: { id },
+      });
+
+      // If student has userId, optionally delete user account
+      if (student.userId) {
+        await tx.user.delete({
+          where: { id: student.userId },
+        });
+      }
     });
 
     return { message: 'Student deleted successfully' };

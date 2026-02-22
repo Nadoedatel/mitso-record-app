@@ -10,8 +10,9 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { StudentsService } from './students.service';
-import { CreateStudentDto, UpdateStudentDto } from './dto';
+import { CreateStudentDto, UpdateStudentDto, QueryStudentDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
 import { Roles } from '../common/decorators';
 import { Role } from '@prisma/client';
@@ -20,6 +21,8 @@ import { Role } from '@prisma/client';
  * StudentsController - handles student-related endpoints
  * Base path: /api/students
  */
+@ApiTags('students')
+@ApiBearerAuth()
 @Controller('students')
 @UseGuards(JwtAuthGuard)
 export class StudentsController {
@@ -37,12 +40,14 @@ export class StudentsController {
   }
 
   /**
-   * Get all students with optional search
-   * GET /api/students?search=name
+   * Get all students with optional search and pagination
+   * GET /api/students?search=name&page=1&limit=20
    */
   @Get()
-  findAll(@Query('search') search?: string) {
-    return this.studentsService.findAll(search);
+  @ApiOperation({ summary: 'Get all students with search and pagination' })
+  @ApiResponse({ status: 200, description: 'Students retrieved successfully' })
+  findAll(@Query() query: QueryStudentDto) {
+    return this.studentsService.findAll(query);
   }
 
   /**
@@ -50,6 +55,9 @@ export class StudentsController {
    * GET /api/students/:id
    */
   @Get(':id')
+  @ApiOperation({ summary: 'Get student by ID' })
+  @ApiResponse({ status: 200, description: 'Student found' })
+  @ApiResponse({ status: 404, description: 'Student not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.studentsService.findOne(id);
   }

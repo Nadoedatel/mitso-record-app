@@ -26,13 +26,18 @@ let GradesService = class GradesService {
                 student: true,
                 subject: {
                     include: {
-                        teacher: true,
+                        teacherSubjects: {
+                            include: {
+                                teacher: true,
+                            },
+                        },
                     },
                 },
             },
         });
     }
-    async findAll(studentId, subjectId) {
+    async findAll(query) {
+        const { studentId, subjectId, page = 1, limit = 20 } = query;
         const where = {};
         if (studentId) {
             where.studentId = studentId;
@@ -40,20 +45,36 @@ let GradesService = class GradesService {
         if (subjectId) {
             where.subjectId = subjectId;
         }
-        return this.prisma.grade.findMany({
-            where,
-            include: {
-                student: true,
-                subject: {
-                    include: {
-                        teacher: true,
+        const [data, total] = await Promise.all([
+            this.prisma.grade.findMany({
+                where,
+                include: {
+                    student: true,
+                    subject: {
+                        include: {
+                            teacherSubjects: {
+                                include: {
+                                    teacher: true,
+                                },
+                            },
+                        },
                     },
                 },
-            },
-            orderBy: {
-                examDate: 'desc',
-            },
-        });
+                orderBy: {
+                    examDate: 'desc',
+                },
+                skip: (page - 1) * limit,
+                take: limit,
+            }),
+            this.prisma.grade.count({ where }),
+        ]);
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
     }
     async findByStudent(studentId) {
         return this.prisma.grade.findMany({
@@ -61,7 +82,11 @@ let GradesService = class GradesService {
             include: {
                 subject: {
                     include: {
-                        teacher: true,
+                        teacherSubjects: {
+                            include: {
+                                teacher: true,
+                            },
+                        },
                     },
                 },
             },
@@ -78,7 +103,11 @@ let GradesService = class GradesService {
                 student: true,
                 subject: {
                     include: {
-                        teacher: true,
+                        teacherSubjects: {
+                            include: {
+                                teacher: true,
+                            },
+                        },
                     },
                 },
             },
@@ -100,7 +129,11 @@ let GradesService = class GradesService {
                 student: true,
                 subject: {
                     include: {
-                        teacher: true,
+                        teacherSubjects: {
+                            include: {
+                                teacher: true,
+                            },
+                        },
                     },
                 },
             },
@@ -112,6 +145,56 @@ let GradesService = class GradesService {
             where: { id },
         });
         return { message: 'Grade deleted successfully' };
+    }
+    async batchCreate(grades) {
+        const results = await Promise.allSettled(grades.map((gradeDto) => this.prisma.grade.upsert({
+            where: {
+                studentId_subjectId_gradeType: {
+                    studentId: gradeDto.studentId,
+                    subjectId: gradeDto.subjectId,
+                    gradeType: gradeDto.gradeType,
+                },
+            },
+            create: {
+                ...gradeDto,
+                examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
+            },
+            update: {
+                gradeValue: gradeDto.gradeValue,
+                examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
+                notes: gradeDto.notes,
+            },
+            include: {
+                student: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        studentId: true,
+                    },
+                },
+                subject: {
+                    select: {
+                        id: true,
+                        name: true,
+                        code: true,
+                    },
+                },
+            },
+        })));
+        const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+        const failed = results.filter((r) => r.status === 'rejected');
+        return {
+            total: grades.length,
+            succeeded,
+            failed: failed.length,
+            errors: failed.map((f) => ({
+                reason: f.status === 'rejected' ? f.reason.message : 'Unknown error',
+            })),
+            data: results
+                .filter((r) => r.status === 'fulfilled')
+                .map((r) => (r.status === 'fulfilled' ? r.value : null)),
+        };
     }
 };
 exports.GradesService = GradesService;

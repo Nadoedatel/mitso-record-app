@@ -27,27 +27,34 @@ let AuthService = class AuthService {
             throw new common_1.ConflictException('User with this email already exists');
         }
         const hashedPassword = await bcrypt.hash(dto.password, 10);
-        const user = await this.prisma.user.create({
-            data: {
-                email: dto.email,
-                password: hashedPassword,
-                role: dto.role || 'STUDENT',
-            },
+        const user = await this.prisma.$transaction(async (tx) => {
+            const newUser = await tx.user.create({
+                data: {
+                    email: dto.email,
+                    password: hashedPassword,
+                    role: dto.role || 'STUDENT',
+                },
+            });
+            const tokens = await this.generateTokens({
+                sub: newUser.id,
+                email: newUser.email,
+                role: newUser.role,
+            });
+            const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
+            await tx.user.update({
+                where: { id: newUser.id },
+                data: { refreshToken: hashedRefreshToken },
+            });
+            return {
+                user: {
+                    id: newUser.id,
+                    email: newUser.email,
+                    role: newUser.role,
+                },
+                ...tokens,
+            };
         });
-        const tokens = await this.generateTokens({
-            sub: user.id,
-            email: user.email,
-            role: user.role,
-        });
-        await this.updateRefreshToken(user.id, tokens.refreshToken);
-        return {
-            user: {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-            },
-            ...tokens,
-        };
+        return user;
     }
     async login(dto) {
         const user = await this.prisma.user.findUnique({
@@ -75,9 +82,12 @@ let AuthService = class AuthService {
             ...tokens,
         };
     }
-    async refresh(dto) {
+    async refresh(refreshToken) {
+        if (!refreshToken) {
+            throw new common_1.UnauthorizedException('Refresh token not provided');
+        }
         try {
-            const payload = this.jwtService.verify(dto.refreshToken, {
+            const payload = this.jwtService.verify(refreshToken, {
                 secret: process.env.JWT_REFRESH_SECRET,
             });
             const user = await this.prisma.user.findUnique({
@@ -86,7 +96,7 @@ let AuthService = class AuthService {
             if (!user || !user.refreshToken) {
                 throw new common_1.UnauthorizedException('Invalid refresh token');
             }
-            const isRefreshTokenValid = await bcrypt.compare(dto.refreshToken, user.refreshToken);
+            const isRefreshTokenValid = await bcrypt.compare(refreshToken, user.refreshToken);
             if (!isRefreshTokenValid) {
                 throw new common_1.UnauthorizedException('Invalid refresh token');
             }

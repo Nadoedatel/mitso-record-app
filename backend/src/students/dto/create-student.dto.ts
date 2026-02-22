@@ -24,8 +24,9 @@ export class CreateStudentDto {
   @IsString()
   studentId: string; // Номер зачетной книжки
 
-  @IsString()
-  group: string;
+  @IsInt()
+  @IsOptional()
+  groupId?: number;
 
   @IsInt()
   @Min(1)

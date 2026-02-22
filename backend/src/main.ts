@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters';
 
@@ -9,9 +10,13 @@ import { HttpExceptionFilter } from './common/filters';
  */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const logger = new Logger('Bootstrap');
 
   // Set global prefix for all routes
   app.setGlobalPrefix('api');
+
+  // Enable cookie parser for httpOnly cookies
+  app.use(cookieParser());
 
   // Enable CORS
   app.enableCors({
@@ -54,8 +59,8 @@ async function bootstrap() {
   const port = process.env.PORT || 8080;
   await app.listen(port);
 
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+  logger.log(`🚀 Application is running on: http://localhost:${port}`);
+  logger.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();

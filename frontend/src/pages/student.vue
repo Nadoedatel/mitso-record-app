@@ -108,6 +108,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '~/features/auth/model/useAuth'
+import { useHttpClient } from '~/shared/api/httpClient'
 import { gradesApi } from '~/features/grades/api/gradesApi'
 import type { Grade } from '~/entities/grade'
 
@@ -165,8 +166,12 @@ async function logout() {
 }
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) {
-    router.push('/')
+  // Check if token exists (from localStorage via httpClient)
+  const httpClient = useHttpClient()
+  const token = httpClient.getAccessToken()
+
+  if (!token) {
+    router.push('/login')
     return
   }
 
@@ -175,6 +180,11 @@ onMounted(async () => {
   try {
     // Fetch full profile with student data
     await authStore.fetchProfile()
+
+    // Set token in auth store if user was fetched successfully
+    if (authStore.user && token) {
+      authStore.setAuth(authStore.user, token)
+    }
 
     // Fetch grades
     await fetchGrades()

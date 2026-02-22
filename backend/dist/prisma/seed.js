@@ -6,12 +6,30 @@ const prisma = new client_1.PrismaClient();
 async function main() {
     console.log('🌱 Starting database seeding...');
     await prisma.grade.deleteMany();
+    await prisma.teacherSubject.deleteMany();
+    await prisma.subjectGroup.deleteMany();
     await prisma.subject.deleteMany();
     await prisma.student.deleteMany();
     await prisma.teacher.deleteMany();
+    await prisma.group.deleteMany();
     await prisma.user.deleteMany();
     console.log('✅ Cleaned existing data');
     const passwordHash = await bcrypt.hash('password123', 10);
+    const group1 = await prisma.group.create({
+        data: {
+            name: 'ИС-21',
+            course: 2,
+            faculty: 'Информационных технологий',
+        },
+    });
+    const group2 = await prisma.group.create({
+        data: {
+            name: 'ПИ-22',
+            course: 1,
+            faculty: 'Информационных технологий',
+        },
+    });
+    console.log('✅ Created 2 groups');
     const student1User = await prisma.user.create({
         data: {
             email: 'student@mitso.by',
@@ -23,7 +41,7 @@ async function main() {
                     lastName: 'Иванов',
                     middleName: 'Иванович',
                     studentId: 'ST2024001',
-                    group: 'ИС-21',
+                    groupId: group1.id,
                     course: 2,
                     faculty: 'Информационных технологий',
                     specialization: 'Информационные системы',
@@ -46,7 +64,7 @@ async function main() {
                     lastName: 'Петрова',
                     middleName: 'Сергеевна',
                     studentId: 'ST2024002',
-                    group: 'ИС-21',
+                    groupId: group1.id,
                     course: 2,
                     faculty: 'Информационных технологий',
                     specialization: 'Информационные системы',
@@ -69,7 +87,7 @@ async function main() {
                     lastName: 'Сидоров',
                     middleName: 'Петрович',
                     studentId: 'ST2024003',
-                    group: 'ПИ-22',
+                    groupId: group2.id,
                     course: 1,
                     faculty: 'Информационных технологий',
                     specialization: 'Программная инженерия',
@@ -122,7 +140,14 @@ async function main() {
         },
         include: { teacher: true },
     });
-    console.log('✅ Created 2 teachers');
+    await prisma.user.create({
+        data: {
+            email: 'admin@mitso.by',
+            password: passwordHash,
+            role: 'ADMIN',
+        },
+    });
+    console.log('✅ Created 2 teachers and 1 admin');
     const subject1 = await prisma.subject.create({
         data: {
             name: 'Веб-разработка',
@@ -130,7 +155,6 @@ async function main() {
             credits: 4,
             semester: 3,
             description: 'Основы веб-разработки: HTML, CSS, JavaScript',
-            teacherId: teacher1User.teacher.id,
         },
     });
     const subject2 = await prisma.subject.create({
@@ -140,7 +164,6 @@ async function main() {
             credits: 5,
             semester: 3,
             description: 'Проектирование и разработка баз данных',
-            teacherId: teacher1User.teacher.id,
         },
     });
     const subject3 = await prisma.subject.create({
@@ -150,7 +173,6 @@ async function main() {
             credits: 6,
             semester: 1,
             description: 'Введение в математический анализ',
-            teacherId: teacher2User.teacher.id,
         },
     });
     const subject4 = await prisma.subject.create({
@@ -160,10 +182,28 @@ async function main() {
             credits: 4,
             semester: 2,
             description: 'Основы линейной алгебры и аналитической геометрии',
-            teacherId: teacher2User.teacher.id,
         },
     });
     console.log('✅ Created 4 subjects');
+    await prisma.teacherSubject.createMany({
+        data: [
+            { teacherId: teacher1User.teacher.id, subjectId: subject1.id },
+            { teacherId: teacher1User.teacher.id, subjectId: subject2.id },
+            { teacherId: teacher2User.teacher.id, subjectId: subject3.id },
+            { teacherId: teacher2User.teacher.id, subjectId: subject4.id },
+        ],
+    });
+    console.log('✅ Created teacher-subject relations');
+    await prisma.subjectGroup.createMany({
+        data: [
+            { subjectId: subject1.id, groupId: group1.id },
+            { subjectId: subject2.id, groupId: group1.id },
+            { subjectId: subject3.id, groupId: group1.id },
+            { subjectId: subject3.id, groupId: group2.id },
+            { subjectId: subject4.id, groupId: group1.id },
+        ],
+    });
+    console.log('✅ Created subject-group relations');
     await prisma.grade.createMany({
         data: [
             {
@@ -223,7 +263,9 @@ async function main() {
     console.log('\n🎉 Seeding completed successfully!');
     console.log('\n📝 Test Credentials:');
     console.log('-----------------------------------');
-    console.log('Students:');
+    console.log('Admin:');
+    console.log('  Email: admin@mitso.by');
+    console.log('\nStudents:');
     console.log('  Email: student@mitso.by');
     console.log('  Email: petrova@mitso.by');
     console.log('  Email: sidorov@mitso.by');
