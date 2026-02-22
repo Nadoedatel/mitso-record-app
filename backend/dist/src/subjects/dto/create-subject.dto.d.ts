@@ -4,5 +4,4 @@ export declare class CreateSubjectDto {
     credits: number;
     semester: number;
     description?: string;
-    teacherId: number;
 }

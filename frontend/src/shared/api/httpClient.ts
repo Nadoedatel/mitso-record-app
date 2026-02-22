@@ -1,17 +1,59 @@
 class HttpClient {
   private baseURL: string
   private accessToken: string | null = null
+  private userData: any = null
+  private readonly TOKEN_KEY = 'mitso_access_token'
+  private readonly USER_DATA_KEY = 'mitso_user_data'
 
   constructor(baseURL: string) {
     this.baseURL = baseURL
+    // Load token from localStorage on initialization
+    if (process.client) {
+      this.accessToken = localStorage.getItem(this.TOKEN_KEY)
+      const storedUserData = localStorage.getItem(this.USER_DATA_KEY)
+      if (storedUserData) {
+        try {
+          this.userData = JSON.parse(storedUserData)
+        } catch (e) {
+          console.error('Failed to parse user data:', e)
+        }
+      }
+    }
   }
 
   setAccessToken(token: string | null) {
     this.accessToken = token
+    if (process.client) {
+      if (token) {
+        localStorage.setItem(this.TOKEN_KEY, token)
+      } else {
+        localStorage.removeItem(this.TOKEN_KEY)
+      }
+    }
   }
 
   getAccessToken() {
     return this.accessToken
+  }
+
+  setUserData(data: any) {
+    this.userData = data
+    if (process.client) {
+      if (data) {
+        localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(data))
+      } else {
+        localStorage.removeItem(this.USER_DATA_KEY)
+      }
+    }
+  }
+
+  getUserData() {
+    return this.userData
+  }
+
+  clearAuth() {
+    this.setAccessToken(null)
+    this.setUserData(null)
   }
 
   private async request<T>(
@@ -66,12 +108,15 @@ class HttpClient {
 
     const data = await response.json()
 
-    // API returns { data: ..., message: ... }
-    // Return just the data part
-    if (data && 'data' in data) {
+    // API returns { data: ..., message: ... } for wrapped responses
+    // But PaginatedResponse already has 'data' field, so we need to check
+    // if it's a wrapper (has 'message' field) or the actual data
+    if (data && 'data' in data && 'message' in data) {
+      // This is a wrapped response: { data: ..., message: ... }
       return data.data as T
     }
 
+    // Return as-is if it's already the expected type (e.g., PaginatedResponse)
     return data as T
   }
 
@@ -85,15 +130,16 @@ class HttpClient {
 
       if (response.ok) {
         const data = await response.json()
-        this.accessToken = data.accessToken
+        // Use setAccessToken to also update localStorage
+        this.setAccessToken(data.accessToken || data.data?.accessToken)
         return true
       }
 
-      this.accessToken = null
+      this.setAccessToken(null)
       return false
     } catch (error) {
       console.error('Token refresh failed:', error)
-      this.accessToken = null
+      this.setAccessToken(null)
       return false
     }
   }

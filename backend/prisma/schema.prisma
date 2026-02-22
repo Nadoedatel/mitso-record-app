@@ -11,16 +11,16 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  email         String    @unique
-  password      String
-  role          Role      @default(STUDENT)
-  refreshToken  String?   @map("refresh_token")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String
+  role         Role     @default(STUDENT)
+  refreshToken String?  @map("refresh_token")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  student       Student?
-  teacher       Teacher?
+  student Student?
+  teacher Teacher?
 
   @@map("users")
 }
@@ -32,88 +32,129 @@ enum Role {
 }
 
 model Student {
-  id                Int       @id @default(autoincrement())
-  userId            Int       @unique @map("user_id")
-  firstName         String    @map("first_name")
-  lastName          String    @map("last_name")
-  middleName        String?   @map("middle_name")
-  studentId         String    @unique @map("student_id") // Номер зачетной книжки
-  group             String
-  course            Int
-  faculty           String
-  specialization    String
-  enrollmentYear    Int       @map("enrollment_year")
-  phone             String?
-  address           String?
-  birthDate         DateTime? @map("birth_date")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  id             Int       @id @default(autoincrement())
+  userId         Int       @unique @map("user_id")
+  firstName      String    @map("first_name")
+  lastName       String    @map("last_name")
+  middleName     String?   @map("middle_name")
+  studentId      String    @unique @map("student_id") // Номер зачетной книжки
+  groupId        Int?      @map("group_id")
+  course         Int
+  faculty        String
+  specialization String
+  enrollmentYear Int       @map("enrollment_year")
+  phone          String?
+  address        String?
+  birthDate      DateTime? @map("birth_date")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  grades            Grade[]
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group  Group?  @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  grades Grade[]
 
   @@map("students")
 }
 
 model Teacher {
-  id              Int       @id @default(autoincrement())
-  userId          Int       @unique @map("user_id")
-  firstName       String    @map("first_name")
-  lastName        String    @map("last_name")
-  middleName      String?   @map("middle_name")
-  department      String
-  position        String
-  academicDegree  String?   @map("academic_degree")
-  phone           String?
-  officeNumber    String?   @map("office_number")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique @map("user_id")
+  firstName      String   @map("first_name")
+  lastName       String   @map("last_name")
+  middleName     String?  @map("middle_name")
+  department     String
+  position       String
+  academicDegree String?  @map("academic_degree")
+  phone          String?
+  officeNumber   String?  @map("office_number")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subjects        Subject[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teacherSubjects TeacherSubject[]
 
   @@map("teachers")
 }
 
 model Subject {
-  id              Int       @id @default(autoincrement())
-  name            String
-  code            String    @unique
-  credits         Int
-  semester        Int
-  description     String?
-  teacherId       Int       @map("teacher_id")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String   @unique
+  credits     Int
+  semester    Int
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  teacher         Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherSubjects TeacherSubject[]
+  subjectGroups   SubjectGroup[]
   grades          Grade[]
 
   @@map("subjects")
 }
 
 model Grade {
-  id              Int       @id @default(autoincrement())
-  studentId       Int       @map("student_id")
-  subjectId       Int       @map("subject_id")
-  gradeValue      Int       @map("grade_value") // 1-10 или 0-100
-  gradeType       GradeType @map("grade_type")
-  examDate        DateTime? @map("exam_date")
-  notes           String?
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id         Int       @id @default(autoincrement())
+  studentId  Int       @map("student_id")
+  subjectId  Int       @map("subject_id")
+  gradeValue Int       @map("grade_value") // 1-10 или 0-100
+  gradeType  GradeType @map("grade_type")
+  examDate   DateTime? @map("exam_date")
+  notes      String?
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
 
-  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  subject         Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, subjectId, gradeType])
   @@map("grades")
 }
 
 enum GradeType {
-  EXAM          // Экзамен
-  CREDIT        // Зачёт
-  COURSEWORK    // Курсовая работа
-  TEST          // Контрольная работа
-  LAB           // Лабораторная работа
+  EXAM // Экзамен
+  CREDIT // Зачёт
+  COURSEWORK // Курсовая работа
+  TEST // Контрольная работа
+  LAB // Лабораторная работа
+}
+
+model Group {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  course    Int
+  faculty   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  students      Student[]
+  subjectGroups SubjectGroup[]
+
+  @@map("groups")
+}
+
+model TeacherSubject {
+  id        Int      @id @default(autoincrement())
+  teacherId Int      @map("teacher_id")
+  subjectId Int      @map("subject_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, subjectId])
+  @@map("teacher_subjects")
+}
+
+model SubjectGroup {
+  id        Int      @id @default(autoincrement())
+  subjectId Int      @map("subject_id")
+  groupId   Int      @map("group_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  group   Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, groupId])
+  @@map("subject_groups")
 }

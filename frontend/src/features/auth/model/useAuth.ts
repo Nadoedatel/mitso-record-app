@@ -18,9 +18,10 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = response.user
       accessToken.value = response.accessToken
 
-      // Set token in HTTP client
+      // Set token and user data in HTTP client
       const httpClient = useHttpClient()
       httpClient.setAccessToken(response.accessToken)
+      httpClient.setUserData(response.user)
 
       return response
     } catch (error) {
@@ -38,9 +39,10 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = response.user
       accessToken.value = response.accessToken
 
-      // Set token in HTTP client
+      // Set token and user data in HTTP client
       const httpClient = useHttpClient()
       httpClient.setAccessToken(response.accessToken)
+      httpClient.setUserData(response.user)
 
       return response
     } catch (error) {
@@ -61,9 +63,9 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null
       accessToken.value = null
 
-      // Clear token from HTTP client
+      // Clear all auth data from HTTP client
       const httpClient = useHttpClient()
-      httpClient.setAccessToken(null)
+      httpClient.clearAuth()
 
       // Clear local storage
       const { storage } = await import('~/shared/lib/storage')
@@ -94,6 +96,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     const httpClient = useHttpClient()
     httpClient.setAccessToken(token)
+    httpClient.setUserData(userData)
   }
 
   return {

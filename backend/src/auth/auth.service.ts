@@ -6,7 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-import { LoginDto, RegisterDto, RefreshTokenDto } from './dto';
+import { LoginDto, RegisterDto } from './dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 /**
@@ -21,7 +21,7 @@ export class AuthService {
   ) {}
 
   /**
-   * Register a new user
+   * Register a new user with Prisma transaction
    */
   async register(dto: RegisterDto) {
     // Check if user already exists
@@ -36,33 +36,42 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    // Create user
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        password: hashedPassword,
-        role: dto.role || 'STUDENT',
-      },
+    // Use transaction to ensure atomicity
+    const user = await this.prisma.$transaction(async (tx) => {
+      // Create user
+      const newUser = await tx.user.create({
+        data: {
+          email: dto.email,
+          password: hashedPassword,
+          role: dto.role || 'STUDENT',
+        },
+      });
+
+      // Generate tokens
+      const tokens = await this.generateTokens({
+        sub: newUser.id,
+        email: newUser.email,
+        role: newUser.role,
+      });
+
+      // Save refresh token (within transaction)
+      const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
+      await tx.user.update({
+        where: { id: newUser.id },
+        data: { refreshToken: hashedRefreshToken },
+      });
+
+      return {
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          role: newUser.role,
+        },
+        ...tokens,
+      };
     });
 
-    // Generate tokens
-    const tokens = await this.generateTokens({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    });
-
-    // Save refresh token
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      ...tokens,
-    };
+    return user;
   }
 
   /**
@@ -106,12 +115,16 @@ export class AuthService {
   }
 
   /**
-   * Refresh access token using refresh token
+   * Refresh access token using refresh token from httpOnly cookie
    */
-  async refresh(dto: RefreshTokenDto) {
+  async refresh(refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not provided');
+    }
+
     try {
       // Verify refresh token
-      const payload = this.jwtService.verify(dto.refreshToken, {
+      const payload = this.jwtService.verify(refreshToken, {
         secret: process.env.JWT_REFRESH_SECRET,
       });
 
@@ -126,7 +139,7 @@ export class AuthService {
 
       // Verify stored refresh token
       const isRefreshTokenValid = await bcrypt.compare(
-        dto.refreshToken,
+        refreshToken,
         user.refreshToken,
       );
 

@@ -86,23 +86,214 @@
             </div>
           </div>
         </div>
+
+        <!-- Grade Assignment Section -->
+        <div class="grade-assignment-section">
+          <h2>Выставление оценок</h2>
+
+          <!-- Subject Selection -->
+          <div class="selection-row">
+            <div class="selection-group">
+              <label for="subject-select">Выберите предмет:</label>
+              <select
+                id="subject-select"
+                v-model="selectedSubjectId"
+                @change="onSubjectChange"
+                class="select-input"
+              >
+                <option :value="null">-- Выберите предмет --</option>
+                <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
+                  {{ subject.name }} ({{ subject.code }})
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Group Selection -->
+          <div v-if="selectedSubjectId && groups.length > 0" class="selection-row">
+            <div class="selection-group">
+              <label for="group-select">Выберите группу:</label>
+              <select
+                id="group-select"
+                v-model="selectedGroup"
+                @change="onGroupChange"
+                class="select-input"
+              >
+                <option :value="null">-- Выберите группу --</option>
+                <option v-for="group in groups" :key="group.group" :value="group.group">
+                  {{ group.group }} ({{ group.studentCount }} студентов)
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Loading indicator for groups -->
+          <div v-if="selectedSubjectId && groupsLoading" class="loading-small">
+            Загрузка групп...
+          </div>
+
+          <!-- Students Table -->
+          <div v-if="selectedGroup && students.length > 0" class="students-table-container">
+            <h3>Студенты группы {{ selectedGroup }}</h3>
+
+            <div v-if="studentsLoading" class="loading-small">
+              Загрузка студентов...
+            </div>
+
+            <div v-else class="grades-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ФИО</th>
+                    <th>Номер зачётки</th>
+                    <th>Текущие оценки</th>
+                    <th>Тип оценки</th>
+                    <th>Оценка (1-10)</th>
+                    <th>Дата</th>
+                    <th>Примечания</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="student in students" :key="student.id">
+                    <td>
+                      {{ student.lastName }} {{ student.firstName }}
+                      {{ student.middleName }}
+                    </td>
+                    <td>{{ student.studentId }}</td>
+                    <td>
+                      <div v-if="student.grades && student.grades.length > 0" class="current-grades">
+                        <span
+                          v-for="grade in student.grades"
+                          :key="grade.id"
+                          :class="['grade-badge', getGradeClass(grade.gradeValue)]"
+                        >
+                          {{ getGradeTypeLabel(grade.gradeType) }}: {{ grade.gradeValue }}
+                        </span>
+                      </div>
+                      <span v-else class="no-grades">Нет оценок</span>
+                    </td>
+                    <td>
+                      <select
+                        v-model="gradesForm[student.id].gradeType"
+                        class="table-select"
+                      >
+                        <option value="">-- Выберите --</option>
+                        <option value="EXAM">Экзамен</option>
+                        <option value="CREDIT">Зачёт</option>
+                        <option value="COURSEWORK">Курсовая</option>
+                        <option value="TEST">Контрольная</option>
+                        <option value="LAB">Лабораторная</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        v-model.number="gradesForm[student.id].gradeValue"
+                        type="number"
+                        min="1"
+                        max="10"
+                        class="table-input"
+                        placeholder="1-10"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        v-model="gradesForm[student.id].examDate"
+                        type="date"
+                        class="table-input"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        v-model="gradesForm[student.id].notes"
+                        type="text"
+                        class="table-input"
+                        placeholder="Примечания"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Save Button -->
+            <div class="actions">
+              <button
+                @click="saveBatchGrades"
+                :disabled="isSaving || !hasValidGrades"
+                class="save-button"
+              >
+                {{ isSaving ? 'Сохранение...' : 'Сохранить оценки' }}
+              </button>
+              <button
+                @click="clearGradesForm"
+                :disabled="isSaving"
+                class="clear-button"
+              >
+                Очистить форму
+              </button>
+            </div>
+
+            <!-- Success/Error Messages -->
+            <div v-if="saveSuccess" class="success-message">
+              Оценки успешно сохранены!
+            </div>
+            <div v-if="saveError" class="error-message">
+              {{ saveError }}
+            </div>
+          </div>
+
+          <!-- Empty state when no students -->
+          <div v-else-if="selectedGroup && !studentsLoading && students.length === 0" class="empty">
+            В выбранной группе нет студентов
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '~/features/auth/model/useAuth'
+import { useHttpClient } from '~/shared/api/httpClient'
 import { subjectsApi } from '~/features/subjects/api/subjectsApi'
+import { gradesApi, type GroupInfo, type StudentWithGrades, type GradeBatchDto } from '~/features/grades/api/gradesApi'
 import type { Subject } from '~/entities/subject'
+import { GradeType } from '~/entities/grade'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
+// Existing state
 const subjects = ref<Subject[]>([])
 const loading = ref(false)
 const error = ref('')
+
+// Grade assignment state
+const selectedSubjectId = ref<number | null>(null)
+const selectedGroup = ref<string | null>(null)
+const groups = ref<GroupInfo[]>([])
+const students = ref<StudentWithGrades[]>([])
+const groupsLoading = ref(false)
+const studentsLoading = ref(false)
+const isSaving = ref(false)
+const saveSuccess = ref(false)
+const saveError = ref('')
+
+// Form for grades - structure: { [studentId]: { gradeType, gradeValue, examDate, notes } }
+const gradesForm = ref<Record<number, {
+  gradeType: GradeType | ''
+  gradeValue: number | null
+  examDate: string
+  notes: string
+}>>({})
+
+// Computed property to check if there are valid grades to save
+const hasValidGrades = computed(() => {
+  return Object.entries(gradesForm.value).some(([_, grade]) => {
+    return grade.gradeType && grade.gradeValue && grade.gradeValue >= 1 && grade.gradeValue <= 10
+  })
+})
 
 async function fetchSubjects() {
   if (!authStore.user?.teacher?.id) {
@@ -114,9 +305,10 @@ async function fetchSubjects() {
   error.value = ''
 
   try {
-    subjects.value = await subjectsApi.fetchSubjects({
+    const response = await subjectsApi.fetchSubjects({
       teacherId: authStore.user.teacher.id,
     })
+    subjects.value = response.data
   } catch (err: any) {
     error.value = err.message || 'Ошибка загрузки предметов'
   } finally {
@@ -124,9 +316,144 @@ async function fetchSubjects() {
   }
 }
 
+async function onSubjectChange() {
+  selectedGroup.value = null
+  students.value = []
+  groups.value = []
+  gradesForm.value = {}
+  saveSuccess.value = false
+  saveError.value = ''
+
+  if (!selectedSubjectId.value) return
+
+  groupsLoading.value = true
+  try {
+    groups.value = await gradesApi.fetchGroupsBySubject(selectedSubjectId.value)
+  } catch (err: any) {
+    saveError.value = err.message || 'Ошибка загрузки групп'
+  } finally {
+    groupsLoading.value = false
+  }
+}
+
+async function onGroupChange() {
+  students.value = []
+  gradesForm.value = {}
+  saveSuccess.value = false
+  saveError.value = ''
+
+  if (!selectedGroup.value || !selectedSubjectId.value) return
+
+  studentsLoading.value = true
+  try {
+    students.value = await gradesApi.fetchStudentsByGroupAndSubject(
+      selectedGroup.value,
+      selectedSubjectId.value
+    )
+
+    // Initialize grades form for each student
+    students.value.forEach(student => {
+      gradesForm.value[student.id] = {
+        gradeType: '',
+        gradeValue: null,
+        examDate: '',
+        notes: ''
+      }
+    })
+  } catch (err: any) {
+    saveError.value = err.message || 'Ошибка загрузки студентов'
+  } finally {
+    studentsLoading.value = false
+  }
+}
+
+function getGradeTypeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    EXAM: 'Экзамен',
+    CREDIT: 'Зачёт',
+    COURSEWORK: 'Курсовая',
+    TEST: 'Контрольная',
+    LAB: 'Лабораторная',
+  }
+  return labels[type] || type
+}
+
+function getGradeClass(value: number): string {
+  if (value >= 9) return 'excellent'
+  if (value >= 7) return 'good'
+  if (value >= 5) return 'satisfactory'
+  return 'poor'
+}
+
+async function saveBatchGrades() {
+  if (!selectedSubjectId.value) return
+
+  saveSuccess.value = false
+  saveError.value = ''
+  isSaving.value = true
+
+  try {
+    // Filter and prepare grades to save (only those with gradeType and gradeValue)
+    const gradesToSave: GradeBatchDto[] = []
+
+    Object.entries(gradesForm.value).forEach(([studentId, grade]) => {
+      if (grade.gradeType && grade.gradeValue && grade.gradeValue >= 1 && grade.gradeValue <= 10) {
+        gradesToSave.push({
+          studentId: parseInt(studentId),
+          subjectId: selectedSubjectId.value!,
+          gradeType: grade.gradeType as GradeType,
+          gradeValue: grade.gradeValue,
+          examDate: grade.examDate || undefined,
+          notes: grade.notes || undefined,
+        })
+      }
+    })
+
+    if (gradesToSave.length === 0) {
+      saveError.value = 'Нет оценок для сохранения'
+      return
+    }
+
+    // Save grades
+    await gradesApi.createBatchGrades(gradesToSave)
+
+    saveSuccess.value = true
+
+    // Refresh students data to show updated grades
+    if (selectedGroup.value && selectedSubjectId.value) {
+      students.value = await gradesApi.fetchStudentsByGroupAndSubject(
+        selectedGroup.value,
+        selectedSubjectId.value
+      )
+
+      // Clear form after successful save
+      clearGradesForm()
+    }
+
+    // Hide success message after 3 seconds
+    setTimeout(() => {
+      saveSuccess.value = false
+    }, 3000)
+  } catch (err: any) {
+    saveError.value = err.message || 'Ошибка при сохранении оценок'
+  } finally {
+    isSaving.value = false
+  }
+}
+
+function clearGradesForm() {
+  students.value.forEach(student => {
+    gradesForm.value[student.id] = {
+      gradeType: '',
+      gradeValue: null,
+      examDate: '',
+      notes: ''
+    }
+  })
+}
+
 function viewSubjectDetails(subject: Subject) {
-  // TODO: Implement grade management page
-  alert(`Управление оценками для предмета "${subject.name}" будет реализовано в следующей версии`)
+  router.push(`/subjects/${subject.id}/grades`)
 }
 
 async function logout() {
@@ -135,8 +462,12 @@ async function logout() {
 }
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) {
-    router.push('/')
+  // Check if token exists (from localStorage via httpClient)
+  const httpClient = useHttpClient()
+  const token = httpClient.getAccessToken()
+
+  if (!token) {
+    router.push('/login')
     return
   }
 
@@ -145,6 +476,11 @@ onMounted(async () => {
   try {
     // Fetch full profile with teacher data
     await authStore.fetchProfile()
+
+    // Set token in auth store if user was fetched successfully
+    if (authStore.user && token) {
+      authStore.setAuth(authStore.user, token)
+    }
 
     // Fetch subjects
     await fetchSubjects()
@@ -349,5 +685,177 @@ onMounted(async () => {
 
 .view-button:hover {
   background: #5568d3;
+}
+
+/* Grade Assignment Section */
+.grade-assignment-section {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.selection-row {
+  margin-bottom: 20px;
+}
+
+.selection-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selection-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.select-input {
+  padding: 10px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.select-input:hover {
+  border-color: #667eea;
+}
+
+.select-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.loading-small {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.students-table-container {
+  margin-top: 20px;
+}
+
+.students-table-container h3 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.table-select,
+.table-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.table-select:focus,
+.table-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.table-input[type="number"] {
+  max-width: 80px;
+}
+
+.table-input[type="date"] {
+  max-width: 140px;
+}
+
+.current-grades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.grade-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.no-grades {
+  color: #999;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  align-items: center;
+}
+
+.save-button {
+  padding: 12px 24px;
+  background: #52c41a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #389e0d;
+}
+
+.save-button:disabled {
+  background: #d9d9d9;
+  cursor: not-allowed;
+}
+
+.clear-button {
+  padding: 12px 24px;
+  background: #ff7875;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.clear-button:hover:not(:disabled) {
+  background: #ff4d4f;
+}
+
+.clear-button:disabled {
+  background: #d9d9d9;
+  cursor: not-allowed;
+}
+
+.success-message {
+  padding: 12px 20px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 6px;
+  color: #52c41a;
+  font-weight: 600;
+  margin-top: 15px;
+}
+
+.error-message {
+  padding: 12px 20px;
+  background: #fff1f0;
+  border: 1px solid #ffccc7;
+  border-radius: 6px;
+  color: #ff4d4f;
+  font-weight: 600;
+  margin-top: 15px;
 }
 </style>

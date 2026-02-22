@@ -4,7 +4,7 @@ export declare class CreateStudentDto {
     lastName: string;
     middleName?: string;
     studentId: string;
-    group: string;
+    groupId?: number;
     course: number;
     faculty: string;
     specialization: string;

@@ -30,7 +30,8 @@ let TeachersService = class TeachersService {
             },
         });
     }
-    async findAll(search) {
+    async findAll(query) {
+        const { search, page = 1, limit = 20 } = query;
         const where = search
             ? {
                 OR: [
@@ -40,22 +41,45 @@ let TeachersService = class TeachersService {
                 ],
             }
             : {};
-        return this.prisma.teacher.findMany({
-            where,
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        email: true,
-                        role: true,
+        const [data, total] = await Promise.all([
+            this.prisma.teacher.findMany({
+                where,
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            email: true,
+                            role: true,
+                        },
+                    },
+                    teacherSubjects: {
+                        include: {
+                            subject: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    code: true,
+                                    semester: true,
+                                },
+                            },
+                        },
                     },
                 },
-                subjects: true,
-            },
-            orderBy: {
-                lastName: 'asc',
-            },
-        });
+                orderBy: {
+                    lastName: 'asc',
+                },
+                skip: (page - 1) * limit,
+                take: limit,
+            }),
+            this.prisma.teacher.count({ where }),
+        ]);
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
     }
     async findOne(id) {
         const teacher = await this.prisma.teacher.findUnique({
@@ -68,11 +92,27 @@ let TeachersService = class TeachersService {
                         role: true,
                     },
                 },
-                subjects: {
+                teacherSubjects: {
                     include: {
-                        grades: {
+                        subject: {
                             include: {
-                                student: true,
+                                grades: {
+                                    include: {
+                                        student: {
+                                            select: {
+                                                id: true,
+                                                firstName: true,
+                                                lastName: true,
+                                                studentId: true,
+                                            },
+                                        },
+                                    },
+                                },
+                                subjectGroups: {
+                                    include: {
+                                        group: true,
+                                    },
+                                },
                             },
                         },
                     },
@@ -95,7 +135,11 @@ let TeachersService = class TeachersService {
                         role: true,
                     },
                 },
-                subjects: true,
+                teacherSubjects: {
+                    include: {
+                        subject: true,
+                    },
+                },
             },
         });
         if (!teacher) {
@@ -120,11 +164,83 @@ let TeachersService = class TeachersService {
         });
     }
     async remove(id) {
-        await this.findOne(id);
-        await this.prisma.teacher.delete({
-            where: { id },
+        const teacher = await this.findOne(id);
+        await this.prisma.$transaction(async (tx) => {
+            await tx.teacherSubject.deleteMany({
+                where: { teacherId: id },
+            });
+            await tx.teacher.delete({
+                where: { id },
+            });
+            if (teacher.userId) {
+                await tx.user.delete({
+                    where: { id: teacher.userId },
+                });
+            }
         });
         return { message: 'Teacher deleted successfully' };
+    }
+    async getSubjects(teacherId) {
+        await this.findOne(teacherId);
+        const teacherSubjects = await this.prisma.teacherSubject.findMany({
+            where: { teacherId },
+            include: {
+                subject: {
+                    include: {
+                        grades: {
+                            select: {
+                                id: true,
+                                gradeValue: true,
+                                gradeType: true,
+                            },
+                        },
+                        subjectGroups: {
+                            include: {
+                                group: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        return teacherSubjects.map((ts) => ts.subject);
+    }
+    async assignSubjects(teacherId, subjectIds) {
+        await this.findOne(teacherId);
+        const subjects = await this.prisma.subject.findMany({
+            where: { id: { in: subjectIds } },
+        });
+        if (subjects.length !== subjectIds.length) {
+            throw new common_1.NotFoundException('One or more subjects not found');
+        }
+        const createPromises = subjectIds.map((subjectId) => this.prisma.teacherSubject.upsert({
+            where: {
+                teacherId_subjectId: {
+                    teacherId,
+                    subjectId,
+                },
+            },
+            create: {
+                teacherId,
+                subjectId,
+            },
+            update: {},
+        }));
+        await Promise.all(createPromises);
+        return this.getSubjects(teacherId);
+    }
+    async removeSubject(teacherId, subjectId) {
+        await this.findOne(teacherId);
+        const deleted = await this.prisma.teacherSubject.deleteMany({
+            where: {
+                teacherId,
+                subjectId,
+            },
+        });
+        if (deleted.count === 0) {
+            throw new common_1.NotFoundException(`Teacher ${teacherId} is not assigned to subject ${subjectId}`);
+        }
+        return { message: 'Subject removed from teacher successfully' };
     }
 };
 exports.TeachersService = TeachersService;

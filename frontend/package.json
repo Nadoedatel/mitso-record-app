@@ -1,7 +1,7 @@
 {
   "name": "mitso-record-app-frontend",
   "version": "1.0.0",
-  "description": "MITSO Record App Frontend - Nuxt 3",
+  "description": "MITSO Record",
   "private": true,
   "type": "module",
   "engines": {

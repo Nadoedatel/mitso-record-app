@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StudentsController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const students_service_1 = require("./students.service");
 const dto_1 = require("./dto");
 const guards_1 = require("../common/guards");
@@ -26,8 +27,8 @@ let StudentsController = class StudentsController {
     create(dto) {
         return this.studentsService.create(dto);
     }
-    findAll(search) {
-        return this.studentsService.findAll(search);
+    findAll(query) {
+        return this.studentsService.findAll(query);
     }
     findOne(id) {
         return this.studentsService.findOne(id);
@@ -51,13 +52,18 @@ __decorate([
 ], StudentsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('search')),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all students with search and pagination' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Students retrieved successfully' }),
+    __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [dto_1.QueryStudentDto]),
     __metadata("design:returntype", void 0)
 ], StudentsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get student by ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Student found' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Student not found' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -83,6 +89,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], StudentsController.prototype, "remove", null);
 exports.StudentsController = StudentsController = __decorate([
+    (0, swagger_1.ApiTags)('students'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('students'),
     (0, common_1.UseGuards)(guards_1.JwtAuthGuard),
     __metadata("design:paramtypes", [students_service_1.StudentsService])

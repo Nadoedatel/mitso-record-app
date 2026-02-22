@@ -1,36 +1,36 @@
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto, RefreshTokenDto } from './dto';
+import { LoginDto, RegisterDto } from './dto';
 import { AuthUser } from './interfaces/auth-user.interface';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
-    register(dto: RegisterDto): Promise<{
-        accessToken: string;
-        refreshToken: string;
+    register(dto: RegisterDto, res: Response): Promise<{
         user: {
             id: number;
             email: string;
             role: import(".prisma/client").$Enums.Role;
         };
-    }>;
-    login(dto: LoginDto): Promise<{
         accessToken: string;
-        refreshToken: string;
+    }>;
+    login(dto: LoginDto, res: Response): Promise<{
         user: {
             id: number;
             email: string;
             role: import(".prisma/client").$Enums.Role;
         };
-    }>;
-    refresh(dto: RefreshTokenDto): Promise<{
         accessToken: string;
-        refreshToken: string;
+    }>;
+    refresh(req: Request, res: Response): Promise<{
+        accessToken: string;
     }>;
     getMe(user: AuthUser): Promise<{
         id: number;
         email: string;
         role: import(".prisma/client").$Enums.Role;
         student: {
+            course: number;
+            faculty: string;
             createdAt: Date;
             updatedAt: Date;
             id: number;
@@ -38,14 +38,12 @@ export declare class AuthController {
             lastName: string;
             middleName: string | null;
             studentId: string;
-            group: string;
-            course: number;
-            faculty: string;
             specialization: string;
             enrollmentYear: number;
             phone: string | null;
             address: string | null;
             birthDate: Date | null;
+            groupId: number | null;
             userId: number;
         } | null;
         teacher: {
@@ -63,7 +61,7 @@ export declare class AuthController {
             userId: number;
         } | null;
     }>;
-    logout(user: AuthUser): Promise<{
+    logout(user: AuthUser, res: Response): Promise<{
         message: string;
     }>;
 }

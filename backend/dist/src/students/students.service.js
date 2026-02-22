@@ -33,31 +33,54 @@ let StudentsService = class StudentsService {
             },
         });
     }
-    async findAll(search) {
-        const where = search
-            ? {
-                OR: [
-                    { firstName: { contains: search, mode: 'insensitive' } },
-                    { lastName: { contains: search, mode: 'insensitive' } },
-                    { studentId: { contains: search, mode: 'insensitive' } },
-                ],
-            }
-            : {};
-        return this.prisma.student.findMany({
-            where,
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        email: true,
-                        role: true,
+    async findAll(query) {
+        const { search, groupId, page = 1, limit = 20 } = query;
+        const where = {};
+        if (search) {
+            where.OR = [
+                { firstName: { contains: search, mode: 'insensitive' } },
+                { lastName: { contains: search, mode: 'insensitive' } },
+                { studentId: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+        if (groupId) {
+            where.groupId = groupId;
+        }
+        const [data, total] = await Promise.all([
+            this.prisma.student.findMany({
+                where,
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            email: true,
+                            role: true,
+                        },
+                    },
+                    group: {
+                        select: {
+                            id: true,
+                            name: true,
+                            course: true,
+                            faculty: true,
+                        },
                     },
                 },
-            },
-            orderBy: {
-                lastName: 'asc',
-            },
-        });
+                orderBy: {
+                    lastName: 'asc',
+                },
+                skip: (page - 1) * limit,
+                take: limit,
+            }),
+            this.prisma.student.count({ where }),
+        ]);
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
     }
     async findOne(id) {
         const student = await this.prisma.student.findUnique({
@@ -70,11 +93,23 @@ let StudentsService = class StudentsService {
                         role: true,
                     },
                 },
+                group: {
+                    select: {
+                        id: true,
+                        name: true,
+                        course: true,
+                        faculty: true,
+                    },
+                },
                 grades: {
                     include: {
                         subject: {
                             include: {
-                                teacher: true,
+                                teacherSubjects: {
+                                    include: {
+                                        teacher: true,
+                                    },
+                                },
                             },
                         },
                     },
@@ -127,9 +162,19 @@ let StudentsService = class StudentsService {
         });
     }
     async remove(id) {
-        await this.findOne(id);
-        await this.prisma.student.delete({
-            where: { id },
+        const student = await this.findOne(id);
+        await this.prisma.$transaction(async (tx) => {
+            await tx.grade.deleteMany({
+                where: { studentId: id },
+            });
+            await tx.student.delete({
+                where: { id },
+            });
+            if (student.userId) {
+                await tx.user.delete({
+                    where: { id: student.userId },
+                });
+            }
         });
         return { message: 'Student deleted successfully' };
     }

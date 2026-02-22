@@ -15,12 +15,12 @@ export interface RegisterDto {
 export interface AuthResponse {
   user: User
   accessToken: string
-  refreshToken: string
+  // refreshToken is now in httpOnly cookie, not in response body
 }
 
 export interface RefreshResponse {
   accessToken: string
-  refreshToken: string
+  // refreshToken is now in httpOnly cookie, not in response body
 }
 
 export const authApi = {
@@ -34,9 +34,10 @@ export const authApi = {
     return httpClient.post<AuthResponse>('/auth/register', data)
   },
 
-  async refresh(refreshToken: string): Promise<RefreshResponse> {
+  async refresh(): Promise<RefreshResponse> {
     const httpClient = useHttpClient()
-    return httpClient.post<RefreshResponse>('/auth/refresh', { refreshToken })
+    // refreshToken is automatically sent via httpOnly cookie
+    return httpClient.post<RefreshResponse>('/auth/refresh')
   },
 
   async getMe(): Promise<User> {

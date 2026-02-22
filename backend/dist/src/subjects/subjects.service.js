@@ -20,37 +20,116 @@ let SubjectsService = class SubjectsService {
         return this.prisma.subject.create({
             data: dto,
             include: {
-                teacher: true,
+                teacherSubjects: {
+                    include: {
+                        teacher: true,
+                    },
+                },
+                subjectGroups: {
+                    include: {
+                        group: true,
+                    },
+                },
             },
         });
     }
-    async findAll(teacherId, semester) {
+    async findAll(query) {
+        const { teacherId, semester, page = 1, limit = 20 } = query;
         const where = {};
         if (teacherId) {
-            where.teacherId = teacherId;
+            where.teacherSubjects = {
+                some: {
+                    teacherId,
+                },
+            };
         }
         if (semester) {
             where.semester = semester;
         }
-        return this.prisma.subject.findMany({
-            where,
-            include: {
-                teacher: true,
-                grades: true,
-            },
-            orderBy: {
-                name: 'asc',
-            },
-        });
+        const [data, total] = await Promise.all([
+            this.prisma.subject.findMany({
+                where,
+                include: {
+                    teacherSubjects: {
+                        include: {
+                            teacher: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    department: true,
+                                },
+                            },
+                        },
+                    },
+                    subjectGroups: {
+                        include: {
+                            group: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    course: true,
+                                },
+                            },
+                        },
+                    },
+                    grades: true,
+                },
+                orderBy: {
+                    name: 'asc',
+                },
+                skip: (page - 1) * limit,
+                take: limit,
+            }),
+            this.prisma.subject.count({ where }),
+        ]);
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
     }
     async findOne(id) {
         const subject = await this.prisma.subject.findUnique({
             where: { id },
             include: {
-                teacher: true,
+                teacherSubjects: {
+                    include: {
+                        teacher: {
+                            select: {
+                                id: true,
+                                firstName: true,
+                                lastName: true,
+                                department: true,
+                                position: true,
+                            },
+                        },
+                    },
+                },
+                subjectGroups: {
+                    include: {
+                        group: {
+                            select: {
+                                id: true,
+                                name: true,
+                                course: true,
+                                faculty: true,
+                            },
+                        },
+                    },
+                },
                 grades: {
                     include: {
-                        student: true,
+                        student: {
+                            select: {
+                                id: true,
+                                firstName: true,
+                                lastName: true,
+                                studentId: true,
+                            },
+                        },
                     },
                 },
             },
@@ -66,7 +145,16 @@ let SubjectsService = class SubjectsService {
             where: { id },
             data: dto,
             include: {
-                teacher: true,
+                teacherSubjects: {
+                    include: {
+                        teacher: true,
+                    },
+                },
+                subjectGroups: {
+                    include: {
+                        group: true,
+                    },
+                },
             },
         });
     }
@@ -76,6 +164,30 @@ let SubjectsService = class SubjectsService {
             where: { id },
         });
         return { message: 'Subject deleted successfully' };
+    }
+    async assignGroups(subjectId, groupIds) {
+        await this.findOne(subjectId);
+        const groups = await this.prisma.group.findMany({
+            where: { id: { in: groupIds } },
+        });
+        if (groups.length !== groupIds.length) {
+            throw new common_1.NotFoundException('One or more groups not found');
+        }
+        const createPromises = groupIds.map((groupId) => this.prisma.subjectGroup.upsert({
+            where: {
+                subjectId_groupId: {
+                    subjectId,
+                    groupId,
+                },
+            },
+            create: {
+                subjectId,
+                groupId,
+            },
+            update: {},
+        }));
+        await Promise.all(createPromises);
+        return this.findOne(subjectId);
     }
 };
 exports.SubjectsService = SubjectsService;

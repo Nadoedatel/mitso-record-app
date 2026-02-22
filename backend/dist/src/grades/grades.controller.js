@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GradesController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const grades_service_1 = require("./grades.service");
 const dto_1 = require("./dto");
 const guards_1 = require("../common/guards");
@@ -26,8 +27,11 @@ let GradesController = class GradesController {
     create(dto) {
         return this.gradesService.create(dto);
     }
-    findAll(studentId, subjectId) {
-        return this.gradesService.findAll(studentId, subjectId);
+    batchCreate(dto) {
+        return this.gradesService.batchCreate(dto.grades);
+    }
+    findAll(query) {
+        return this.gradesService.findAll(query);
     }
     findByStudent(studentId) {
         return this.gradesService.findByStudent(studentId);
@@ -47,21 +51,39 @@ __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)(guards_1.RolesGuard),
     (0, decorators_1.Roles)(client_1.Role.ADMIN, client_1.Role.TEACHER),
+    (0, swagger_1.ApiOperation)({ summary: 'Create new grade (ADMIN/TEACHER only)' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Grade created successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.CreateGradeDto]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "create", null);
 __decorate([
-    (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('studentId', new common_1.ParseIntPipe({ optional: true }))),
-    __param(1, (0, common_1.Query)('subjectId', new common_1.ParseIntPipe({ optional: true }))),
+    (0, common_1.Post)('batch'),
+    (0, common_1.UseGuards)(guards_1.RolesGuard),
+    (0, decorators_1.Roles)(client_1.Role.ADMIN, client_1.Role.TEACHER),
+    (0, swagger_1.ApiOperation)({ summary: 'Batch create or update grades (ADMIN/TEACHER only)' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Grades processed successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden' }),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number]),
+    __metadata("design:paramtypes", [dto_1.BatchCreateGradeDto]),
+    __metadata("design:returntype", void 0)
+], GradesController.prototype, "batchCreate", null);
+__decorate([
+    (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all grades with filters and pagination' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Grades retrieved successfully' }),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [dto_1.QueryGradeDto]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('student/:id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all grades for a specific student' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Student grades retrieved successfully' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -69,6 +91,9 @@ __decorate([
 ], GradesController.prototype, "findByStudent", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get grade by ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Grade found' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Grade not found' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -94,6 +119,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "remove", null);
 exports.GradesController = GradesController = __decorate([
+    (0, swagger_1.ApiTags)('grades'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('grades'),
     (0, common_1.UseGuards)(guards_1.JwtAuthGuard),
     __metadata("design:paramtypes", [grades_service_1.GradesService])

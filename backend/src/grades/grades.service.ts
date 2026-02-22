@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateGradeDto, UpdateGradeDto } from './dto';
+import { CreateGradeDto, UpdateGradeDto, QueryGradeDto } from './dto';
+import { PaginatedResponse } from '../common/dto';
 
 /**
  * GradesService - business logic for grade management
@@ -22,7 +23,11 @@ export class GradesService {
         student: true,
         subject: {
           include: {
-            teacher: true,
+            teacherSubjects: {
+              include: {
+                teacher: true,
+              },
+            },
           },
         },
       },
@@ -30,9 +35,11 @@ export class GradesService {
   }
 
   /**
-   * Find all grades with optional filters
+   * Find all grades with optional filters and pagination
    */
-  async findAll(studentId?: number, subjectId?: number) {
+  async findAll(query: QueryGradeDto): Promise<PaginatedResponse<any>> {
+    const { studentId, subjectId, page = 1, limit = 20 } = query;
+
     const where: any = {};
 
     if (studentId) {
@@ -43,20 +50,37 @@ export class GradesService {
       where.subjectId = subjectId;
     }
 
-    return this.prisma.grade.findMany({
-      where,
-      include: {
-        student: true,
-        subject: {
-          include: {
-            teacher: true,
+    const [data, total] = await Promise.all([
+      this.prisma.grade.findMany({
+        where,
+        include: {
+          student: true,
+          subject: {
+            include: {
+              teacherSubjects: {
+                include: {
+                  teacher: true,
+                },
+              },
+            },
           },
         },
-      },
-      orderBy: {
-        examDate: 'desc',
-      },
-    });
+        orderBy: {
+          examDate: 'desc',
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.grade.count({ where }),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   /**
@@ -69,7 +93,11 @@ export class GradesService {
       include: {
         subject: {
           include: {
-            teacher: true,
+            teacherSubjects: {
+              include: {
+                teacher: true,
+              },
+            },
           },
         },
       },
@@ -90,7 +118,11 @@ export class GradesService {
         student: true,
         subject: {
           include: {
-            teacher: true,
+            teacherSubjects: {
+              include: {
+                teacher: true,
+              },
+            },
           },
         },
       },
@@ -120,7 +152,11 @@ export class GradesService {
         student: true,
         subject: {
           include: {
-            teacher: true,
+            teacherSubjects: {
+              include: {
+                teacher: true,
+              },
+            },
           },
         },
       },
@@ -139,5 +175,66 @@ export class GradesService {
     });
 
     return { message: 'Grade deleted successfully' };
+  }
+
+  /**
+   * Batch create or update grades
+   * Uses upsert to handle both creation and updates
+   */
+  async batchCreate(grades: CreateGradeDto[]) {
+    const results = await Promise.allSettled(
+      grades.map((gradeDto) =>
+        this.prisma.grade.upsert({
+          where: {
+            studentId_subjectId_gradeType: {
+              studentId: gradeDto.studentId,
+              subjectId: gradeDto.subjectId,
+              gradeType: gradeDto.gradeType,
+            },
+          },
+          create: {
+            ...gradeDto,
+            examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
+          },
+          update: {
+            gradeValue: gradeDto.gradeValue,
+            examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
+            notes: gradeDto.notes,
+          },
+          include: {
+            student: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                studentId: true,
+              },
+            },
+            subject: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+              },
+            },
+          },
+        }),
+      ),
+    );
+
+    const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+    const failed = results.filter((r) => r.status === 'rejected');
+
+    return {
+      total: grades.length,
+      succeeded,
+      failed: failed.length,
+      errors: failed.map((f) => ({
+        reason: f.status === 'rejected' ? f.reason.message : 'Unknown error',
+      })),
+      data: results
+        .filter((r) => r.status === 'fulfilled')
+        .map((r) => (r.status === 'fulfilled' ? r.value : null)),
+    };
   }
 }
