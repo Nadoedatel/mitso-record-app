@@ -113,6 +113,24 @@ export declare class StudentsController {
         userId: number;
     }>;
     update(id: number, dto: UpdateStudentDto): Promise<{
+        specialization: {
+            name: string;
+            id: number;
+            faculty: {
+                name: string;
+                id: number;
+            };
+            code: string | null;
+        } | null;
+        group: {
+            name: string;
+            id: number;
+            faculty: {
+                name: string;
+                id: number;
+            } | null;
+            course: number;
+        } | null;
         user: {
             id: number;
             email: string;

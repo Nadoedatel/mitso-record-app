@@ -120,8 +120,8 @@
                 class="select-input"
               >
                 <option :value="null">-- Выберите группу --</option>
-                <option v-for="group in groups" :key="group.group" :value="group.group">
-                  {{ group.group }} ({{ group.studentCount }} студентов)
+                <option v-for="group in groups" :key="group.id" :value="group.id">
+                  {{ group.name }} ({{ group.studentCount || 0 }} студентов)
                 </option>
               </select>
             </div>
@@ -134,7 +134,7 @@
 
           <!-- Students Table -->
           <div v-if="selectedGroup && students.length > 0" class="students-table-container">
-            <h3>Студенты группы {{ selectedGroup }}</h3>
+            <h3>Студенты группы {{ groups.find(g => g.id === selectedGroup)?.name || selectedGroup }}</h3>
 
             <div v-if="studentsLoading" class="loading-small">
               Загрузка студентов...
@@ -257,8 +257,10 @@ import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '~/features/auth/model/useAuth'
 import { useHttpClient } from '~/shared/api/httpClient'
 import { subjectsApi } from '~/features/subjects/api/subjectsApi'
-import { gradesApi, type GroupInfo, type StudentWithGrades, type GradeBatchDto } from '~/features/grades/api/gradesApi'
+import { gradesApi, type GradeBatchDto } from '~/features/grades/api/gradesApi'
 import type { Subject } from '~/entities/subject'
+import type { Group } from '~/entities/group'
+import type { Student } from '~/entities/student'
 import { GradeType } from '~/entities/grade'
 
 const authStore = useAuthStore()
@@ -271,9 +273,9 @@ const error = ref('')
 
 // Grade assignment state
 const selectedSubjectId = ref<number | null>(null)
-const selectedGroup = ref<string | null>(null)
-const groups = ref<GroupInfo[]>([])
-const students = ref<StudentWithGrades[]>([])
+const selectedGroup = ref<number | null>(null)
+const groups = ref<Group[]>([])
+const students = ref<Student[]>([])
 const groupsLoading = ref(false)
 const studentsLoading = ref(false)
 const isSaving = ref(false)
@@ -352,7 +354,7 @@ async function onGroupChange() {
     )
 
     // Initialize grades form for each student
-    students.value.forEach(student => {
+    students.value.forEach((student: Student) => {
       gradesForm.value[student.id] = {
         gradeType: '',
         gradeValue: null,
@@ -442,7 +444,7 @@ async function saveBatchGrades() {
 }
 
 function clearGradesForm() {
-  students.value.forEach(student => {
+  students.value.forEach((student: Student) => {
     gradesForm.value[student.id] = {
       gradeType: '',
       gradeValue: null,

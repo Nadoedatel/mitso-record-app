@@ -229,6 +229,32 @@ export class StudentsService {
             role: true,
           },
         },
+        group: {
+          select: {
+            id: true,
+            name: true,
+            course: true,
+            faculty: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        specialization: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            faculty: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
   }

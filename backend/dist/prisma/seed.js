@@ -217,10 +217,13 @@ async function main() {
     await prisma.subjectGroup.createMany({
         data: [
             { subjectId: subject1.id, groupId: group1.id },
+            { subjectId: subject1.id, groupId: group2.id },
             { subjectId: subject2.id, groupId: group1.id },
+            { subjectId: subject2.id, groupId: group2.id },
             { subjectId: subject3.id, groupId: group1.id },
             { subjectId: subject3.id, groupId: group2.id },
             { subjectId: subject4.id, groupId: group1.id },
+            { subjectId: subject4.id, groupId: group2.id },
         ],
     });
     console.log('✅ Created subject-group relations');

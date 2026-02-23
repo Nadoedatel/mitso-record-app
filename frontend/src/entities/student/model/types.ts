@@ -1,6 +1,7 @@
 import type { User } from '../../user/model/types'
 import type { Group } from '../../group/model/types'
 import type { Specialization } from '../../specialization/model/types'
+import type { Grade } from '../../grade/model/types'
 
 export interface Student {
   id: number
@@ -21,4 +22,5 @@ export interface Student {
   createdAt: string
   updatedAt: string
   user?: User
+  grades?: Grade[]
 }

@@ -251,13 +251,21 @@ async function main() {
   console.log('✅ Created teacher-subject relations')
 
   // Create Subject-Group relations
+  // Link subjects to multiple groups so all groups appear in grades management
   await prisma.subjectGroup.createMany({
     data: [
+      // Веб-разработка taught to both groups
       { subjectId: subject1.id, groupId: group1.id },
+      { subjectId: subject1.id, groupId: group2.id },
+      // Базы данных taught to both groups
       { subjectId: subject2.id, groupId: group1.id },
+      { subjectId: subject2.id, groupId: group2.id },
+      // Математический анализ taught to both groups
       { subjectId: subject3.id, groupId: group1.id },
       { subjectId: subject3.id, groupId: group2.id },
+      // Линейная алгебра taught to both groups
       { subjectId: subject4.id, groupId: group1.id },
+      { subjectId: subject4.id, groupId: group2.id },
     ],
   })
 
