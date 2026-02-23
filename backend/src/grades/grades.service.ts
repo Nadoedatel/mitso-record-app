@@ -178,39 +178,38 @@ export class GradesService {
   }
 
   /**
-   * Get groups assigned to a specific subject via SubjectGroup table
+   * Get all groups in the system (not filtered by subject)
    * Returns groups with student count
+   * This allows teachers to see all groups when managing grades
    */
   async findGroupsBySubject(subjectId: number) {
-    // Get all groups assigned to this subject
-    const subjectGroups = await this.prisma.subjectGroup.findMany({
-      where: { subjectId },
+    // Get ALL groups in the system (not filtered by subjectId)
+    const groups = await this.prisma.group.findMany({
       include: {
-        group: {
-          include: {
-            faculty: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            students: {
-              select: {
-                id: true,
-              },
-            },
+        faculty: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        students: {
+          select: {
+            id: true,
           },
         },
       },
+      orderBy: {
+        name: 'asc',
+      },
     });
 
-    return subjectGroups.map((sg) => ({
-      id: sg.group.id,
-      name: sg.group.name,
-      course: sg.group.course,
-      facultyId: sg.group.facultyId,
-      faculty: sg.group.faculty,
-      studentCount: sg.group.students.length,
+    return groups.map((group) => ({
+      id: group.id,
+      name: group.name,
+      course: group.course,
+      facultyId: group.facultyId,
+      faculty: group.faculty,
+      studentCount: group.students.length,
     }));
   }
 

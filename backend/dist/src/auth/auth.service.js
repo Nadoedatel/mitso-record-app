@@ -116,7 +116,16 @@ let AuthService = class AuthService {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
             include: {
-                student: true,
+                student: {
+                    include: {
+                        group: true,
+                        specialization: {
+                            include: {
+                                faculty: true,
+                            },
+                        },
+                    },
+                },
                 teacher: true,
             },
         });
