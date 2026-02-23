@@ -199,6 +199,88 @@
             </table>
           </div>
         </div>
+
+        <!-- Faculties Tab -->
+        <div v-if="activeTab === 'faculties'" class="section">
+          <div class="section-header">
+            <input
+              v-model="facultiesSearch"
+              type="text"
+              placeholder="Поиск по названию..."
+              class="search-input"
+              @input="searchFaculties"
+            />
+            <button @click="openFacultyModal()" class="add-button">+ Добавить факультет</button>
+          </div>
+
+          <div v-if="loadingFaculties" class="loading">Загрузка...</div>
+          <div v-else-if="faculties.length === 0" class="empty">Факультеты не найдены</div>
+          <div v-else class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Название</th>
+                  <th>Специализации</th>
+                  <th>Группы</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="faculty in faculties" :key="faculty.id">
+                  <td>{{ faculty.name }}</td>
+                  <td>{{ faculty._count?.specializations || 0 }}</td>
+                  <td>{{ faculty._count?.groups || 0 }}</td>
+                  <td class="actions">
+                    <button @click="openFacultyModal(faculty)" class="edit-btn">Редактировать</button>
+                    <button @click="deleteFacultyItem(faculty.id)" class="delete-btn">Удалить</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Specializations Tab -->
+        <div v-if="activeTab === 'specializations'" class="section">
+          <div class="section-header">
+            <input
+              v-model="specializationsSearch"
+              type="text"
+              placeholder="Поиск по названию..."
+              class="search-input"
+              @input="searchSpecializations"
+            />
+            <button @click="openSpecializationModal()" class="add-button">+ Добавить специализацию</button>
+          </div>
+
+          <div v-if="loadingSpecializations" class="loading">Загрузка...</div>
+          <div v-else-if="specializations.length === 0" class="empty">Специализации не найдены</div>
+          <div v-else class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Название</th>
+                  <th>Код</th>
+                  <th>Факультет</th>
+                  <th>Студентов</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="spec in specializations" :key="spec.id">
+                  <td>{{ spec.name }}</td>
+                  <td>{{ spec.code || '-' }}</td>
+                  <td>{{ spec.faculty?.name || '-' }}</td>
+                  <td>{{ spec._count?.students || 0 }}</td>
+                  <td class="actions">
+                    <button @click="openSpecializationModal(spec)" class="edit-btn">Редактировать</button>
+                    <button @click="deleteSpecializationItem(spec.id)" class="delete-btn">Удалить</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -251,7 +333,12 @@
           <div class="form-row">
             <div class="form-field">
               <label>Специализация</label>
-              <input v-model.number="studentForm.specializationId" type="number" placeholder="ID специализации (опционально)" />
+              <select v-model.number="studentForm.specializationId">
+                <option :value="undefined">Не выбрана</option>
+                <option v-for="spec in specializations" :key="spec.id" :value="spec.id">
+                  {{ spec.name }}
+                </option>
+              </select>
             </div>
           </div>
           <div class="form-row">
@@ -351,6 +438,20 @@
             <input v-model="teacherForm.officeNumber" type="text" />
           </div>
 
+          <div class="form-field">
+            <label>Дисциплины</label>
+            <div class="multiselect-container">
+              <label v-for="subject in subjects" :key="subject.id" class="checkbox-label">
+                <input
+                  type="checkbox"
+                  :value="subject.id"
+                  v-model="teacherForm.selectedSubjectIds"
+                />
+                {{ subject.name }} ({{ subject.code }})
+              </label>
+            </div>
+          </div>
+
           <div class="modal-actions">
             <button type="button" @click="closeTeacherModal" class="cancel-btn">Отмена</button>
             <button type="submit" class="submit-btn">
@@ -387,13 +488,17 @@
             </div>
           </div>
           <div class="form-field">
-            <label>Преподаватель</label>
-            <select v-model="subjectForm.teacherId">
-              <option :value="undefined">Не назначен</option>
-              <option v-for="teacher in allTeachers" :key="teacher.id" :value="teacher.id">
-                {{ teacher.lastName }} {{ teacher.firstName }}
-              </option>
-            </select>
+            <label>Преподаватели</label>
+            <div class="multiselect-container">
+              <label v-for="teacher in allTeachers" :key="teacher.id" class="checkbox-label">
+                <input
+                  type="checkbox"
+                  :value="teacher.id"
+                  v-model="subjectForm.selectedTeacherIds"
+                />
+                {{ teacher.lastName }} {{ teacher.firstName }} {{ teacher.middleName }}
+              </label>
+            </div>
           </div>
           <div class="form-field">
             <label>Описание</label>
@@ -424,12 +529,76 @@
               <label>Курс *</label>
               <input v-model.number="groupForm.course" required type="number" min="1" max="6" />
             </div>
+            <div class="form-field">
+              <label>Факультет</label>
+              <select v-model.number="groupForm.facultyId">
+                <option :value="undefined">Не выбран</option>
+                <option v-for="faculty in faculties" :key="faculty.id" :value="faculty.id">
+                  {{ faculty.name }}
+                </option>
+              </select>
+            </div>
           </div>
 
           <div class="modal-actions">
             <button type="button" @click="closeGroupModal" class="cancel-btn">Отмена</button>
             <button type="submit" class="submit-btn">
               {{ editingGroup ? 'Сохранить' : 'Создать' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Faculty Modal -->
+    <div v-if="showFacultyModal" class="modal-overlay" @click.self="closeFacultyModal">
+      <div class="modal">
+        <h2>{{ editingFaculty ? 'Редактировать факультет' : 'Добавить факультет' }}</h2>
+        <form @submit.prevent="saveFaculty" class="form">
+          <div class="form-field">
+            <label>Название *</label>
+            <input v-model="facultyForm.name" required type="text" placeholder="Например: Факультет информационных технологий" />
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" @click="closeFacultyModal" class="cancel-btn">Отмена</button>
+            <button type="submit" class="submit-btn">
+              {{ editingFaculty ? 'Сохранить' : 'Создать' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Specialization Modal -->
+    <div v-if="showSpecializationModal" class="modal-overlay" @click.self="closeSpecializationModal">
+      <div class="modal">
+        <h2>{{ editingSpecialization ? 'Редактировать специализацию' : 'Добавить специализацию' }}</h2>
+        <form @submit.prevent="saveSpecialization" class="form">
+          <div class="form-field">
+            <label>Название *</label>
+            <input v-model="specializationForm.name" required type="text" placeholder="Например: Информационные системы и технологии" />
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Код</label>
+              <input v-model="specializationForm.code" type="text" placeholder="Например: 1-40 05 01" />
+            </div>
+            <div class="form-field">
+              <label>Факультет *</label>
+              <select v-model.number="specializationForm.facultyId" required>
+                <option :value="undefined">Выберите факультет</option>
+                <option v-for="faculty in faculties" :key="faculty.id" :value="faculty.id">
+                  {{ faculty.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" @click="closeSpecializationModal" class="cancel-btn">Отмена</button>
+            <button type="submit" class="submit-btn">
+              {{ editingSpecialization ? 'Сохранить' : 'Создать' }}
             </button>
           </div>
         </form>
@@ -446,6 +615,8 @@ import { studentsApi } from '~/features/students/api/studentsApi'
 import { teachersApi } from '~/features/teachers/api/teachersApi'
 import { subjectsApi } from '~/features/subjects/api/subjectsApi'
 import { fetchGroups, createGroup, updateGroup, deleteGroup as deleteGroupApi } from '~/features/groups/api/groupsApi'
+import { fetchFaculties, createFaculty, updateFaculty, deleteFaculty } from '~/features/faculties/api/facultiesApi'
+import { fetchSpecializations, createSpecialization, updateSpecialization, deleteSpecialization } from '~/features/specializations/api/specializationsApi'
 import type { Student } from '~/entities/student'
 import type { Teacher } from '~/entities/teacher'
 import type { Subject } from '~/entities/subject'
@@ -462,6 +633,8 @@ const tabs = [
   { id: 'teachers', label: 'Преподаватели' },
   { id: 'subjects', label: 'Дисциплины' },
   { id: 'groups', label: 'Группы' },
+  { id: 'faculties', label: 'Факультеты' },
+  { id: 'specializations', label: 'Специализации' },
 ]
 
 const activeTab = ref('students')
@@ -507,6 +680,7 @@ const teacherForm = ref<any>({
   academicDegree: '',
   phone: '',
   officeNumber: '',
+  selectedSubjectIds: [],
 })
 
 // Subjects
@@ -522,6 +696,7 @@ const subjectForm = ref<any>({
   semester: 1,
   description: '',
   teacherId: undefined,
+  selectedTeacherIds: [],
 })
 
 // Groups
@@ -533,6 +708,28 @@ const editingGroup = ref<Group | null>(null)
 const groupForm = ref<any>({
   name: '',
   course: 1,
+  facultyId: undefined,
+})
+
+// Faculties
+const faculties = ref<any[]>([])
+const loadingFaculties = ref(false)
+const facultiesSearch = ref('')
+const showFacultyModal = ref(false)
+const editingFaculty = ref<any>(null)
+const facultyForm = ref<any>({
+  name: '',
+})
+
+// Specializations
+const specializations = ref<any[]>([])
+const loadingSpecializations = ref(false)
+const specializationsSearch = ref('')
+const showSpecializationModal = ref(false)
+const editingSpecialization = ref<any>(null)
+const specializationForm = ref<any>({
+  name: '',
+  code: '',
   facultyId: undefined,
 })
 
@@ -684,7 +881,7 @@ async function searchTeachers() {
   }
 }
 
-function openTeacherModal(teacher?: Teacher) {
+async function openTeacherModal(teacher?: Teacher) {
   if (teacher) {
     editingTeacher.value = teacher
     teacherForm.value = {
@@ -698,6 +895,15 @@ function openTeacherModal(teacher?: Teacher) {
       academicDegree: teacher.academicDegree,
       phone: teacher.phone,
       officeNumber: teacher.officeNumber,
+      selectedSubjectIds: [],
+    }
+
+    // Load teacher's subjects
+    try {
+      const teacherSubjects = await teachersApi.getTeacherSubjects(teacher.id)
+      teacherForm.value.selectedSubjectIds = teacherSubjects.map((s: any) => s.id)
+    } catch (error) {
+      console.error('Failed to load teacher subjects:', error)
     }
   } else {
     editingTeacher.value = null
@@ -712,6 +918,7 @@ function openTeacherModal(teacher?: Teacher) {
       academicDegree: '',
       phone: '',
       officeNumber: '',
+      selectedSubjectIds: [],
     }
   }
   showTeacherModal.value = true
@@ -724,6 +931,8 @@ function closeTeacherModal() {
 
 async function saveTeacher() {
   try {
+    let teacherId: number
+
     if (editingTeacher.value) {
       const updateData: any = {
         firstName: teacherForm.value.firstName,
@@ -736,6 +945,7 @@ async function saveTeacher() {
         officeNumber: teacherForm.value.officeNumber,
       }
       await teachersApi.updateTeacher(editingTeacher.value.id, updateData)
+      teacherId = editingTeacher.value.id
       alert('Преподаватель обновлён')
     } else {
       // First, register the user
@@ -761,9 +971,16 @@ async function saveTeacher() {
         phone: teacherForm.value.phone,
         officeNumber: teacherForm.value.officeNumber,
       }
-      await teachersApi.createTeacher(createData as any)
+      const createdTeacher = await teachersApi.createTeacher(createData as any)
+      teacherId = createdTeacher.id
       alert('Преподаватель создан')
     }
+
+    // Assign subjects to teacher
+    if (teacherForm.value.selectedSubjectIds.length > 0) {
+      await teachersApi.assignSubjects(teacherId, teacherForm.value.selectedSubjectIds)
+    }
+
     closeTeacherModal()
     await searchTeachers()
   } catch (error: any) {
@@ -799,7 +1016,7 @@ async function searchSubjects() {
   }
 }
 
-function openSubjectModal(subject?: Subject) {
+async function openSubjectModal(subject?: Subject) {
   if (subject) {
     editingSubject.value = subject
     subjectForm.value = {
@@ -809,6 +1026,15 @@ function openSubjectModal(subject?: Subject) {
       semester: subject.semester,
       description: subject.description,
       teacherId: subject.teacherId,
+      selectedTeacherIds: [],
+    }
+
+    // Load subject's teachers
+    try {
+      const subjectTeachers = await subjectsApi.getSubjectTeachers(subject.id)
+      subjectForm.value.selectedTeacherIds = subjectTeachers.map((t: any) => t.id)
+    } catch (error) {
+      console.error('Failed to load subject teachers:', error)
     }
   } else {
     editingSubject.value = null
@@ -819,6 +1045,7 @@ function openSubjectModal(subject?: Subject) {
       semester: 1,
       description: '',
       teacherId: undefined,
+      selectedTeacherIds: [],
     }
   }
   showSubjectModal.value = true
@@ -831,13 +1058,23 @@ function closeSubjectModal() {
 
 async function saveSubject() {
   try {
+    let subjectId: number
+
     if (editingSubject.value) {
       await subjectsApi.updateSubject(editingSubject.value.id, subjectForm.value)
+      subjectId = editingSubject.value.id
       alert('Дисциплина обновлена')
     } else {
-      await subjectsApi.createSubject(subjectForm.value)
+      const createdSubject = await subjectsApi.createSubject(subjectForm.value)
+      subjectId = createdSubject.id
       alert('Дисциплина создана')
     }
+
+    // Assign teachers to subject
+    if (subjectForm.value.selectedTeacherIds.length > 0) {
+      await subjectsApi.assignTeachers(subjectId, subjectForm.value.selectedTeacherIds)
+    }
+
     closeSubjectModal()
     await searchSubjects()
   } catch (error: any) {
@@ -922,6 +1159,127 @@ async function deleteGroup(id: number) {
   }
 }
 
+// Faculties methods
+async function searchFaculties() {
+  loadingFaculties.value = true
+  try {
+    faculties.value = await fetchFaculties({ search: facultiesSearch.value })
+  } catch (error: any) {
+    alert('Ошибка загрузки факультетов: ' + (error.message || 'Неизвестная ошибка'))
+  } finally {
+    loadingFaculties.value = false
+  }
+}
+
+function openFacultyModal(faculty?: any) {
+  if (faculty) {
+    editingFaculty.value = faculty
+    facultyForm.value = { name: faculty.name }
+  } else {
+    editingFaculty.value = null
+    facultyForm.value = { name: '' }
+  }
+  showFacultyModal.value = true
+}
+
+function closeFacultyModal() {
+  showFacultyModal.value = false
+  editingFaculty.value = null
+}
+
+async function saveFaculty() {
+  try {
+    if (editingFaculty.value) {
+      await updateFaculty(editingFaculty.value.id, facultyForm.value)
+      alert('Факультет обновлён')
+    } else {
+      await createFaculty(facultyForm.value)
+      alert('Факультет создан')
+    }
+    closeFacultyModal()
+    await searchFaculties()
+    await searchGroups()
+  } catch (error: any) {
+    alert('Ошибка: ' + (error.message || 'Неизвестная ошибка'))
+  }
+}
+
+async function deleteFacultyItem(id: number) {
+  if (!confirm('Вы уверены, что хотите удалить факультет?')) return
+
+  try {
+    await deleteFaculty(id)
+    alert('Факультет удалён')
+    await searchFaculties()
+  } catch (error: any) {
+    alert('Ошибка удаления: ' + (error.message || 'Неизвестная ошибка'))
+  }
+}
+
+// Specializations methods
+async function searchSpecializations() {
+  loadingSpecializations.value = true
+  try {
+    specializations.value = await fetchSpecializations({ search: specializationsSearch.value })
+  } catch (error: any) {
+    alert('Ошибка загрузки специализаций: ' + (error.message || 'Неизвестная ошибка'))
+  } finally {
+    loadingSpecializations.value = false
+  }
+}
+
+function openSpecializationModal(specialization?: any) {
+  if (specialization) {
+    editingSpecialization.value = specialization
+    specializationForm.value = {
+      name: specialization.name,
+      code: specialization.code,
+      facultyId: specialization.facultyId,
+    }
+  } else {
+    editingSpecialization.value = null
+    specializationForm.value = {
+      name: '',
+      code: '',
+      facultyId: undefined,
+    }
+  }
+  showSpecializationModal.value = true
+}
+
+function closeSpecializationModal() {
+  showSpecializationModal.value = false
+  editingSpecialization.value = null
+}
+
+async function saveSpecialization() {
+  try {
+    if (editingSpecialization.value) {
+      await updateSpecialization(editingSpecialization.value.id, specializationForm.value)
+      alert('Специализация обновлена')
+    } else {
+      await createSpecialization(specializationForm.value)
+      alert('Специализация создана')
+    }
+    closeSpecializationModal()
+    await searchSpecializations()
+  } catch (error: any) {
+    alert('Ошибка: ' + (error.message || 'Неизвестная ошибка'))
+  }
+}
+
+async function deleteSpecializationItem(id: number) {
+  if (!confirm('Вы уверены, что хотите удалить специализацию?')) return
+
+  try {
+    await deleteSpecialization(id)
+    alert('Специализация удалена')
+    await searchSpecializations()
+  } catch (error: any) {
+    alert('Ошибка удаления: ' + (error.message || 'Неизвестная ошибка'))
+  }
+}
+
 async function logout() {
   const httpClient = useHttpClient()
   httpClient.clearAuth()
@@ -947,13 +1305,20 @@ watch(activeTab, async (newTab) => {
     await searchSubjects()
   } else if (newTab === 'groups') {
     await searchGroups()
+  } else if (newTab === 'faculties') {
+    await searchFaculties()
+  } else if (newTab === 'specializations') {
+    await searchSpecializations()
   }
 })
 
 onMounted(async () => {
   await searchStudents()
   await searchGroups()
+  await searchFaculties()
+  await searchSpecializations()
   await loadAllTeachers()
+  await searchSubjects()
 })
 </script>
 
@@ -1258,6 +1623,36 @@ tbody tr:hover {
 
 .submit-btn:hover {
   background: #096dd9;
+}
+
+.multiselect-container {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  padding: 10px;
+  background: #f8f9fa;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+}
+
+.checkbox-label:hover {
+  background: #e9ecef;
+  border-radius: 4px;
+}
+
+.checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
 }
 
 @media (max-width: 768px) {

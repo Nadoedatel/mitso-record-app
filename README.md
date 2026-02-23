@@ -8,15 +8,19 @@
 - **NestJS** - Серверный фреймворк
 - **PostgreSQL** - База данных
 - **Prisma** - ORM
-- **JWT** - Аутентификация
+- **Passport.js + JWT** - Аутентификация (access + refresh токены)
+- **Swagger** - API документация
 - **TypeScript** - Строгая типизация
+- **class-validator** - Валидация DTO
 
 ### Frontend
-- **Nuxt 3** - Full-stack Vue фреймворк
+- **Nuxt 3** - Full-stack Vue фреймворк (v3.11.0)
 - **Vue 3** - UI библиотека
 - **Pinia** - State management
+- **TailwindCSS** - Utility-first CSS
 - **TypeScript** - Строгая типизация
 - **FSD** - Feature-Sliced Design архитектура
+- Node.js ^20.19.0 || >=22.12.0
 
 ## Быстрый старт
 
@@ -55,7 +59,14 @@ npx prisma generate
 npx prisma migrate dev
 ```
 
-### 4. Запуск приложения
+### 4. Заполнение тестовыми данными (опционально)
+
+```bash
+cd backend
+npx prisma db seed
+```
+
+### 5. Запуск приложения
 
 ```bash
 # Backend (в одном терминале)
@@ -70,7 +81,7 @@ npm run dev
 Приложение будет доступно по адресу:
 - **Frontend:** http://localhost:3000
 - **Backend API:** http://localhost:8080/api
-- **API Docs:** http://localhost:8080/api/docs
+- **API Docs (Swagger):** http://localhost:8080/api/docs
 
 ## Структура проекта
 
@@ -83,46 +94,99 @@ mitso-record-app/
 │   │   ├── teachers/     # Модуль преподавателей
 │   │   ├── grades/       # Модуль оценок
 │   │   ├── subjects/     # Модуль предметов
+│   │   ├── faculties/    # Модуль факультетов
+│   │   ├── groups/       # Модуль групп
 │   │   ├── prisma/       # Prisma сервис
-│   │   └── common/       # Общие утилиты
-│   ├── prisma/           # Prisma схема и миграции
+│   │   └── common/       # Guards, Decorators, Filters
+│   ├── prisma/
+│   │   ├── schema.prisma # Схема БД
+│   │   ├── migrations/   # Миграции
+│   │   └── seed.ts       # Seed данные
 │   └── package.json
 │
 ├── frontend/             # Nuxt 3 приложение
 │   ├── src/
 │   │   ├── pages/        # Страницы (роутинг)
-│   │   ├── features/     # Фичи с бизнес-логикой
+│   │   │   ├── index.vue
+│   │   │   ├── login.vue
+│   │   │   ├── student.vue
+│   │   │   ├── teacher.vue
+│   │   │   ├── admin.vue
+│   │   │   └── students/
+│   │   ├── features/     # Фичи с API
+│   │   │   ├── auth/
+│   │   │   ├── students/
+│   │   │   ├── teachers/
+│   │   │   ├── grades/
+│   │   │   ├── subjects/
+│   │   │   ├── faculties/
+│   │   │   ├── groups/
+│   │   │   └── specializations/
 │   │   ├── entities/     # Бизнес-сущности
 │   │   ├── shared/       # Переиспользуемый код
-│   │   └── app/          # Конфигурация приложения
+│   │   ├── middleware/   # Auth & Admin middleware
+│   │   └── app.vue       # Корневой компонент
 │   └── package.json
 │
-└── docker-compose.yml    # Docker конфигурация
+├── docker-compose.yml    # Docker конфигурация
+└── CLAUDE.md             # Инструкции для Claude Code
 ```
 
 ## API Endpoints
 
 ### Аутентификация
-- `POST /api/auth/login` - Вход
+- `POST /api/auth/login` - Вход (email + password)
 - `POST /api/auth/register` - Регистрация
-- `POST /api/auth/refresh` - Обновление токена
+- `POST /api/auth/refresh` - Обновление access токена
 - `POST /api/auth/logout` - Выход
 
 ### Студенты
-- `GET /api/students` - Список студентов (с поиском)
+- `GET /api/students` - Список студентов (с поиском и фильтрами)
 - `GET /api/students/:id` - Студент по ID
+- `POST /api/students` - Создать студента (ADMIN)
+- `PATCH /api/students/:id` - Обновить студента (ADMIN)
+- `DELETE /api/students/:id` - Удалить студента (ADMIN)
 
 ### Преподаватели
 - `GET /api/teachers` - Список преподавателей
 - `GET /api/teachers/:id` - Преподаватель по ID
+- `POST /api/teachers` - Создать преподавателя (ADMIN)
+- `PATCH /api/teachers/:id` - Обновить преподавателя (ADMIN)
+- `DELETE /api/teachers/:id` - Удалить преподавателя (ADMIN)
+- `POST /api/teachers/:id/subjects` - Назначить предметы (ADMIN)
 
 ### Оценки
 - `GET /api/grades/student/:id` - Оценки студента
-- `GET /api/grades` - Список оценок с фильтрами
+- `GET /api/grades` - Список оценок (с фильтрами)
+- `POST /api/grades` - Создать оценку (TEACHER, ADMIN)
+- `POST /api/grades/batch` - Создать несколько оценок (TEACHER, ADMIN)
+- `PATCH /api/grades/:id` - Обновить оценку (TEACHER, ADMIN)
+- `DELETE /api/grades/:id` - Удалить оценку (ADMIN)
 
 ### Предметы
 - `GET /api/subjects` - Список предметов
 - `GET /api/subjects/:id` - Предмет по ID
+- `POST /api/subjects` - Создать предмет (ADMIN)
+- `PATCH /api/subjects/:id` - Обновить предмет (ADMIN)
+- `DELETE /api/subjects/:id` - Удалить предмет (ADMIN)
+
+### Факультеты
+- `GET /api/faculties` - Список факультетов
+- `GET /api/faculties/:id` - Факультет по ID
+- `POST /api/faculties` - Создать факультет (ADMIN)
+- `PATCH /api/faculties/:id` - Обновить факультет (ADMIN)
+- `DELETE /api/faculties/:id` - Удалить факультет (ADMIN)
+
+### Группы
+- `GET /api/groups` - Список групп
+- `GET /api/groups/:id` - Группа по ID
+- `POST /api/groups` - Создать группу (ADMIN)
+- `PATCH /api/groups/:id` - Обновить группу (ADMIN)
+- `DELETE /api/groups/:id` - Удалить группу (ADMIN)
+
+> Все эндпоинты (кроме login/register) требуют JWT токен в заголовке Authorization.
+> Эндпоинты сометкой (ADMIN) доступны только администраторам.
+> Эндпоинты с пометкой (TEACHER, ADMIN) доступны преподавателям и администраторам.
 
 ## Переменные окружения
 
@@ -131,6 +195,9 @@ mitso-record-app/
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mitso_db"
 JWT_ACCESS_SECRET="mitso-access-secret-key-2024"
 JWT_REFRESH_SECRET="mitso-refresh-secret-key-2024"
+JWT_ACCESS_EXPIRES_IN="15m"
+JWT_REFRESH_EXPIRES_IN="7d"
+FRONTEND_URL="http://localhost:3000"
 PORT=8080
 ```
 
@@ -138,6 +205,23 @@ PORT=8080
 ```env
 NUXT_PUBLIC_API_URL=http://localhost:8080/api
 ```
+
+## База данных
+
+Схема базы данных включает следующие модели:
+
+- **User** - пользователи системы (с ролями: STUDENT, TEACHER, ADMIN)
+- **Student** - профили студентов
+- **Teacher** - профили преподавателей
+- **Subject** - предметы
+- **Grade** - оценки (типы: EXAM, CREDIT, COURSEWORK, TEST, LAB)
+- **Group** - учебные группы
+- **Faculty** - факультеты
+- **Specialization** - специальности
+- **TeacherSubject** - связь преподавателей и предметов
+- **SubjectGroup** - связь предметов и групп
+
+Все связи настроены с каскадным удалением где необходимо.
 
 ## Разработка
 
@@ -156,6 +240,12 @@ npm run start:prod
 npx prisma studio          # GUI для БД
 npx prisma migrate dev     # Создать миграцию
 npx prisma generate        # Сгенерировать клиент
+npx prisma db seed         # Заполнить тестовыми данными
+npx prisma migrate deploy  # Применить миграции (production)
+npx prisma migrate reset   # Сбросить БД (dev only!)
+
+# Линтинг
+npm run lint
 ```
 
 ### Frontend
@@ -187,15 +277,29 @@ npm run typecheck
    npm run typecheck
    ```
 
-## Следующие шаги для полного функционала
+## Основные возможности
 
-Приложение готово к использованию, но для production рекомендуется:
+- Аутентификация с JWT (access + refresh токены)
+- Управление пользователями с тремя ролями (студент, преподаватель, админ)
+- CRUD операции для студентов, преподавателей, предметов
+- Управление факультетами, специальностями и группами
+- Выставление и просмотр оценок (экзамены, зачёты, курсовые, и т.д.)
+- Связь преподавателей с предметами
+- Связь предметов с группами
+- Поиск и фильтрация данных
+- Swagger документация API
+- Middleware для защиты роутов (auth, admin)
 
-1. **База данных:** Запустить PostgreSQL (`docker-compose up -d postgres` или локально)
-2. **Миграции:** Выполнить `npx prisma migrate dev` в backend
-3. **Seed data:** Добавить тестовые данные для демонстрации
-4. **Тесты:** Добавить unit и e2e тесты
-5. **Деплой:** Настроить CI/CD для автоматического деплоя
+## Production Deployment
+
+Для деплоя на production:
+
+1. **Переменные окружения:** Обновить секреты JWT и DATABASE_URL
+2. **База данных:** Настроить PostgreSQL на production сервере
+3. **Миграции:** Выполнить `npx prisma migrate deploy`
+4. **Seed:** Создать начальные данные через seed или админ панель
+5. **Build:** Собрать фронтенд и бекенд
+6. **Деплой:** Настроить CI/CD (например, через GitHub Actions)
 
 ## Troubleshooting
 

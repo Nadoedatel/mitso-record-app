@@ -37,7 +37,7 @@
           >
             <div class="student-info">
               <h3>{{ student.lastName }} {{ student.firstName }} {{ student.middleName }}</h3>
-              <p class="student-group">Группа: {{ student.group }}</p>
+              <p class="student-group">Группа: {{ student.group?.name || '-' }}</p>
             </div>
 
             <div class="grades-container">
@@ -77,7 +77,7 @@
             <select v-model="gradeForm.studentId" required>
               <option value="">Выберите студента</option>
               <option v-for="student in students" :key="student.id" :value="student.id">
-                {{ student.lastName }} {{ student.firstName }} ({{ student.group }})
+                {{ student.lastName }} {{ student.firstName }} ({{ student.group?.name || 'Без группы' }})
               </option>
             </select>
           </div>
