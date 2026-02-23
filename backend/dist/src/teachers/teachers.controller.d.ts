@@ -35,11 +35,11 @@ export declare class TeachersController {
                 subjectGroups: ({
                     group: {
                         name: string;
-                        course: number;
-                        faculty: string;
                         createdAt: Date;
                         updatedAt: Date;
                         id: number;
+                        facultyId: number | null;
+                        course: number;
                     };
                 } & {
                     createdAt: Date;
@@ -122,11 +122,11 @@ export declare class TeachersController {
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 createdAt: Date;
                 updatedAt: Date;
                 id: number;
+                facultyId: number | null;
+                course: number;
             };
         } & {
             createdAt: Date;
@@ -149,15 +149,15 @@ export declare class TeachersController {
         semester: number;
         description: string | null;
     })[]>;
-    assignSubjects(id: number, dto: AssignSubjectsDto): Promise<({
+    setSubjects(id: number, dto: AssignSubjectsDto): Promise<({
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 createdAt: Date;
                 updatedAt: Date;
                 id: number;
+                facultyId: number | null;
+                course: number;
             };
         } & {
             createdAt: Date;

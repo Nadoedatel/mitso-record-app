@@ -18,4 +18,5 @@ __exportStar(require("./create-subject.dto"), exports);
 __exportStar(require("./update-subject.dto"), exports);
 __exportStar(require("./query-subject.dto"), exports);
 __exportStar(require("./assign-groups.dto"), exports);
+__exportStar(require("./set-subject-teachers.dto"), exports);
 //# sourceMappingURL=index.js.map

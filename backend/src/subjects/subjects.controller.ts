@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { SubjectsService } from './subjects.service';
-import { CreateSubjectDto, UpdateSubjectDto, QuerySubjectDto, AssignGroupsDto } from './dto';
+import { CreateSubjectDto, UpdateSubjectDto, QuerySubjectDto, AssignGroupsDto, SetSubjectTeachersDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
 import { Roles } from '../common/decorators';
 import { Role } from '@prisma/client';
@@ -114,5 +114,35 @@ export class SubjectsController {
     @Body() dto: AssignGroupsDto,
   ) {
     return this.subjectsService.assignGroups(id, dto.groupIds);
+  }
+
+  /**
+   * Get teachers for a subject
+   * GET /api/subjects/:id/teachers
+   */
+  @Get(':id/teachers')
+  @ApiOperation({ summary: 'Get teachers for a subject' })
+  @ApiResponse({ status: 200, description: 'Subject teachers retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Subject not found' })
+  getTeachers(@Param('id', ParseIntPipe) id: number) {
+    return this.subjectsService.getTeachers(id);
+  }
+
+  /**
+   * Set teachers for a subject (replaces all existing)
+   * POST /api/subjects/:id/teachers
+   */
+  @Post(':id/teachers')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Set teachers for a subject - replaces all existing (ADMIN only)' })
+  @ApiResponse({ status: 200, description: 'Teachers set successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Subject or teacher not found' })
+  setTeachers(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SetSubjectTeachersDto,
+  ) {
+    return this.subjectsService.setTeachers(id, dto.teacherIds);
   }
 }

@@ -7,7 +7,7 @@
             {{ authStore.user.student.lastName }} {{ authStore.user.student.firstName }}
           </h1>
           <p v-if="authStore.user?.student" class="subtitle">
-            {{ authStore.user.student.group }} • {{ authStore.user.student.faculty }}
+            Группа: {{ authStore.user.student.group?.name || authStore.user.student.group }}
           </p>
         </div>
         <button @click="logout" class="logout-button">Выйти</button>
@@ -36,19 +36,11 @@
             </div>
             <div class="info-item">
               <span class="label">Группа:</span>
-              <span class="value">{{ authStore.user.student.group }}</span>
+              <span class="value">{{ authStore.user.student.group?.name || authStore.user.student.group }}</span>
             </div>
             <div class="info-item">
               <span class="label">Курс:</span>
               <span class="value">{{ authStore.user.student.course }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Факультет:</span>
-              <span class="value">{{ authStore.user.student.faculty }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Специализация:</span>
-              <span class="value">{{ authStore.user.student.specialization }}</span>
             </div>
           </div>
         </div>

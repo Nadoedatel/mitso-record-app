@@ -42,8 +42,8 @@ let TeachersController = class TeachersController {
     getSubjects(id) {
         return this.teachersService.getSubjects(id);
     }
-    assignSubjects(id, dto) {
-        return this.teachersService.assignSubjects(id, dto.subjectIds);
+    setSubjects(id, dto) {
+        return this.teachersService.setSubjects(id, dto.subjectIds);
     }
     removeSubject(id, subjectId) {
         return this.teachersService.removeSubject(id, subjectId);
@@ -111,8 +111,8 @@ __decorate([
     (0, common_1.Post)(':id/subjects'),
     (0, common_1.UseGuards)(guards_1.RolesGuard),
     (0, decorators_1.Roles)(client_1.Role.ADMIN),
-    (0, swagger_1.ApiOperation)({ summary: 'Assign subjects to a teacher (ADMIN only)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Subjects assigned successfully' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Set subjects for a teacher - replaces all existing (ADMIN only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Subjects set successfully' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Teacher or subject not found' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
@@ -120,7 +120,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, dto_1.AssignSubjectsDto]),
     __metadata("design:returntype", void 0)
-], TeachersController.prototype, "assignSubjects", null);
+], TeachersController.prototype, "setSubjects", null);
 __decorate([
     (0, common_1.Delete)(':id/subjects/:subjectId'),
     (0, common_1.UseGuards)(guards_1.RolesGuard),

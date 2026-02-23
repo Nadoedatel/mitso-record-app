@@ -1,5 +1,5 @@
 import { SubjectsService } from './subjects.service';
-import { CreateSubjectDto, UpdateSubjectDto, QuerySubjectDto, AssignGroupsDto } from './dto';
+import { CreateSubjectDto, UpdateSubjectDto, QuerySubjectDto, AssignGroupsDto, SetSubjectTeachersDto } from './dto';
 export declare class SubjectsController {
     private subjectsService;
     constructor(subjectsService: SubjectsService);
@@ -7,11 +7,11 @@ export declare class SubjectsController {
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 createdAt: Date;
                 updatedAt: Date;
                 id: number;
+                facultyId: number | null;
+                course: number;
             };
         } & {
             createdAt: Date;
@@ -55,9 +55,14 @@ export declare class SubjectsController {
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 id: number;
+                faculty: {
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    id: number;
+                } | null;
+                course: number;
             };
         } & {
             createdAt: Date;
@@ -111,11 +116,11 @@ export declare class SubjectsController {
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 createdAt: Date;
                 updatedAt: Date;
                 id: number;
+                facultyId: number | null;
+                course: number;
             };
         } & {
             createdAt: Date;
@@ -161,9 +166,14 @@ export declare class SubjectsController {
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 id: number;
+                faculty: {
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    id: number;
+                } | null;
+                course: number;
             };
         } & {
             createdAt: Date;
@@ -213,4 +223,44 @@ export declare class SubjectsController {
         semester: number;
         description: string | null;
     }>;
+    getTeachers(id: number): Promise<({
+        user: {
+            id: number;
+            email: string;
+            role: import(".prisma/client").$Enums.Role;
+        };
+    } & {
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
+        firstName: string;
+        lastName: string;
+        middleName: string | null;
+        phone: string | null;
+        department: string;
+        position: string;
+        academicDegree: string | null;
+        officeNumber: string | null;
+        userId: number;
+    })[]>;
+    setTeachers(id: number, dto: SetSubjectTeachersDto): Promise<({
+        user: {
+            id: number;
+            email: string;
+            role: import(".prisma/client").$Enums.Role;
+        };
+    } & {
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
+        firstName: string;
+        lastName: string;
+        middleName: string | null;
+        phone: string | null;
+        department: string;
+        position: string;
+        academicDegree: string | null;
+        officeNumber: string | null;
+        userId: number;
+    })[]>;
 }

@@ -2,7 +2,7 @@ export interface Group {
   id: number;
   name: string;
   course: number;
-  faculty: string;
+  facultyId?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -10,11 +10,11 @@ export interface Group {
 export interface CreateGroupDto {
   name: string;
   course: number;
-  faculty: string;
+  facultyId?: number;
 }
 
 export interface UpdateGroupDto {
   name?: string;
   course?: number;
-  faculty?: string;
+  facultyId?: number;
 }

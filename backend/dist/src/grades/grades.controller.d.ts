@@ -5,21 +5,20 @@ export declare class GradesController {
     constructor(gradesService: GradesService);
     create(dto: CreateGradeDto): Promise<{
         student: {
-            course: number;
-            faculty: string;
             createdAt: Date;
             updatedAt: Date;
             id: number;
+            course: number;
             firstName: string;
             lastName: string;
             middleName: string | null;
             studentId: string;
-            specialization: string;
             enrollmentYear: number;
             phone: string | null;
             address: string | null;
             birthDate: Date | null;
             groupId: number | null;
+            specializationId: number | null;
             userId: number;
         };
         subject: {
@@ -143,21 +142,20 @@ export declare class GradesController {
     })[]>;
     findOne(id: number): Promise<{
         student: {
-            course: number;
-            faculty: string;
             createdAt: Date;
             updatedAt: Date;
             id: number;
+            course: number;
             firstName: string;
             lastName: string;
             middleName: string | null;
             studentId: string;
-            specialization: string;
             enrollmentYear: number;
             phone: string | null;
             address: string | null;
             birthDate: Date | null;
             groupId: number | null;
+            specializationId: number | null;
             userId: number;
         };
         subject: {
@@ -205,21 +203,20 @@ export declare class GradesController {
     }>;
     update(id: number, dto: UpdateGradeDto): Promise<{
         student: {
-            course: number;
-            faculty: string;
             createdAt: Date;
             updatedAt: Date;
             id: number;
+            course: number;
             firstName: string;
             lastName: string;
             middleName: string | null;
             studentId: string;
-            specialization: string;
             enrollmentYear: number;
             phone: string | null;
             address: string | null;
             birthDate: Date | null;
             groupId: number | null;
+            specializationId: number | null;
             userId: number;
         };
         subject: {

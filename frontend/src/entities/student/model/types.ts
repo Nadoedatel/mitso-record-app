@@ -1,4 +1,5 @@
 import type { User } from '../../user/model/types'
+import type { Group } from '../../group/model/types'
 
 export interface Student {
   id: number
@@ -7,10 +8,10 @@ export interface Student {
   lastName: string
   middleName?: string
   studentId: string // Номер зачетной книжки
-  group: string
+  groupId?: number
+  group?: Group
   course: number
-  faculty: string
-  specialization: string
+  specializationId?: number
   enrollmentYear: number
   phone?: string
   address?: string

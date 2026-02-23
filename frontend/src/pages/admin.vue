@@ -55,7 +55,7 @@
               <tbody>
                 <tr v-for="student in students" :key="student.id">
                   <td>{{ student.lastName }} {{ student.firstName }} {{ student.middleName }}</td>
-                  <td>{{ student.group }}</td>
+                  <td>{{ student.group?.name || '-' }}</td>
                   <td>{{ student.user?.email || '-' }}</td>
                   <td>{{ student.studentId }}</td>
                   <td class="actions">
@@ -189,7 +189,7 @@
                 <tr v-for="group in groups" :key="group.id">
                   <td>{{ group.name }}</td>
                   <td>{{ group.course }}</td>
-                  <td>{{ group.faculty }}</td>
+                  <td>-</td>
                   <td class="actions">
                     <button @click="openGroupModal(group)" class="edit-btn">Редактировать</button>
                     <button @click="deleteGroup(group.id)" class="delete-btn">Удалить</button>
@@ -235,8 +235,13 @@
           </div>
           <div class="form-row">
             <div class="form-field">
-              <label>Группа *</label>
-              <input v-model="studentForm.group" required type="text" />
+              <label>Группа</label>
+              <select v-model.number="studentForm.groupId">
+                <option :value="undefined">Не выбрана</option>
+                <option v-for="group in groups" :key="group.id" :value="group.id">
+                  {{ group.name }}
+                </option>
+              </select>
             </div>
             <div class="form-field">
               <label>Курс *</label>
@@ -245,12 +250,8 @@
           </div>
           <div class="form-row">
             <div class="form-field">
-              <label>Факультет *</label>
-              <input v-model="studentForm.faculty" required type="text" />
-            </div>
-            <div class="form-field">
-              <label>Специализация *</label>
-              <input v-model="studentForm.specialization" required type="text" />
+              <label>Специализация</label>
+              <input v-model.number="studentForm.specializationId" type="number" placeholder="ID специализации (опционально)" />
             </div>
           </div>
           <div class="form-row">
@@ -423,10 +424,6 @@
               <label>Курс *</label>
               <input v-model.number="groupForm.course" required type="number" min="1" max="6" />
             </div>
-            <div class="form-field">
-              <label>Факультет *</label>
-              <input v-model="groupForm.faculty" required type="text" />
-            </div>
           </div>
 
           <div class="modal-actions">
@@ -442,7 +439,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHttpClient } from '~/shared/api/httpClient'
 import { studentsApi } from '~/features/students/api/studentsApi'
@@ -453,10 +450,6 @@ import type { Student } from '~/entities/student'
 import type { Teacher } from '~/entities/teacher'
 import type { Subject } from '~/entities/subject'
 import type { Group } from '~/entities/group'
-import type { CreateStudentDto, UpdateStudentDto } from '~/features/students/api/studentsApi'
-import type { CreateTeacherDto, UpdateTeacherDto } from '~/features/teachers/api/teachersApi'
-import type { CreateSubjectDto } from '~/features/subjects/api/subjectsApi'
-import type { CreateGroupDto } from '~/entities/group'
 
 definePageMeta({
   middleware: 'admin',
@@ -480,16 +473,15 @@ const studentsSearch = ref('')
 const studentsGroupFilter = ref('')
 const showStudentModal = ref(false)
 const editingStudent = ref<Student | null>(null)
-const studentForm = ref<CreateStudentDto>({
+const studentForm = ref<any>({
   firstName: '',
   lastName: '',
   middleName: '',
   email: '',
   password: '',
-  group: '',
+  groupId: undefined,
   course: 1,
-  faculty: '',
-  specialization: '',
+  specializationId: undefined,
   studentId: '',
   enrollmentYear: new Date().getFullYear(),
   phone: '',
@@ -504,7 +496,7 @@ const loadingTeachers = ref(false)
 const teachersSearch = ref('')
 const showTeacherModal = ref(false)
 const editingTeacher = ref<Teacher | null>(null)
-const teacherForm = ref<CreateTeacherDto>({
+const teacherForm = ref<any>({
   firstName: '',
   lastName: '',
   middleName: '',
@@ -523,7 +515,7 @@ const loadingSubjects = ref(false)
 const subjectsSearch = ref('')
 const showSubjectModal = ref(false)
 const editingSubject = ref<Subject | null>(null)
-const subjectForm = ref<CreateSubjectDto>({
+const subjectForm = ref<any>({
   name: '',
   code: '',
   credits: 1,
@@ -538,10 +530,10 @@ const loadingGroups = ref(false)
 const groupsSearch = ref('')
 const showGroupModal = ref(false)
 const editingGroup = ref<Group | null>(null)
-const groupForm = ref<CreateGroupDto>({
+const groupForm = ref<any>({
   name: '',
   course: 1,
-  faculty: '',
+  facultyId: undefined,
 })
 
 // Students methods
@@ -555,7 +547,7 @@ async function searchStudents() {
     students.value = result.data
 
     if (studentsGroupFilter.value) {
-      students.value = students.value.filter((s: Student) => s.group === studentsGroupFilter.value)
+      students.value = students.value.filter((s: Student) => s.group?.name === studentsGroupFilter.value)
     }
   } catch (error: any) {
     alert('Ошибка загрузки студентов: ' + (error.message || 'Неизвестная ошибка'))
@@ -573,10 +565,9 @@ function openStudentModal(student?: Student) {
       middleName: student.middleName,
       email: student.user?.email || '',
       password: '',
-      group: student.group,
+      groupId: student.groupId,
       course: student.course,
-      faculty: student.faculty,
-      specialization: student.specialization,
+      specializationId: student.specializationId,
       studentId: student.studentId,
       enrollmentYear: student.enrollmentYear,
       phone: student.phone,
@@ -591,10 +582,9 @@ function openStudentModal(student?: Student) {
       middleName: '',
       email: '',
       password: '',
-      group: '',
+      groupId: undefined,
       course: 1,
-      faculty: '',
-      specialization: '',
+      specializationId: undefined,
       studentId: '',
       enrollmentYear: new Date().getFullYear(),
       phone: '',
@@ -613,13 +603,50 @@ function closeStudentModal() {
 async function saveStudent() {
   try {
     if (editingStudent.value) {
-      const updateData: UpdateStudentDto = { ...studentForm.value }
-      delete (updateData as any).password
-      delete (updateData as any).email
-      await studentsApi.updateStudent(editingStudent.value.id, updateData)
+      // Update student - only send fields that backend accepts
+      const updateData = {
+        firstName: studentForm.value.firstName,
+        lastName: studentForm.value.lastName,
+        middleName: studentForm.value.middleName,
+        groupId: studentForm.value.groupId,
+        course: studentForm.value.course,
+        specializationId: studentForm.value.specializationId,
+        studentId: studentForm.value.studentId,
+        enrollmentYear: studentForm.value.enrollmentYear,
+        phone: studentForm.value.phone,
+        address: studentForm.value.address,
+        birthDate: studentForm.value.birthDate,
+      }
+      await studentsApi.updateStudent(editingStudent.value.id, updateData as any)
       alert('Студент обновлён')
     } else {
-      await studentsApi.createStudent(studentForm.value)
+      // First, register the user
+      const httpClient = useHttpClient()
+      const registerResponse = await httpClient.post<{ user: { id: number }; accessToken: string }>(
+        '/auth/register',
+        {
+          email: studentForm.value.email,
+          password: studentForm.value.password,
+          role: 'STUDENT',
+        }
+      )
+
+      // Then create the student with the userId
+      const createData = {
+        userId: registerResponse.user.id,
+        firstName: studentForm.value.firstName,
+        lastName: studentForm.value.lastName,
+        middleName: studentForm.value.middleName,
+        studentId: studentForm.value.studentId,
+        groupId: studentForm.value.groupId,
+        course: studentForm.value.course,
+        specializationId: studentForm.value.specializationId,
+        enrollmentYear: studentForm.value.enrollmentYear,
+        phone: studentForm.value.phone,
+        address: studentForm.value.address,
+        birthDate: studentForm.value.birthDate ? new Date(studentForm.value.birthDate).toISOString() : undefined,
+      }
+      await studentsApi.createStudent(createData as any)
       alert('Студент создан')
     }
     closeStudentModal()
@@ -698,13 +725,43 @@ function closeTeacherModal() {
 async function saveTeacher() {
   try {
     if (editingTeacher.value) {
-      const updateData: UpdateTeacherDto = { ...teacherForm.value }
-      delete (updateData as any).password
-      delete (updateData as any).email
+      const updateData: any = {
+        firstName: teacherForm.value.firstName,
+        lastName: teacherForm.value.lastName,
+        middleName: teacherForm.value.middleName,
+        department: teacherForm.value.department,
+        position: teacherForm.value.position,
+        academicDegree: teacherForm.value.academicDegree,
+        phone: teacherForm.value.phone,
+        officeNumber: teacherForm.value.officeNumber,
+      }
       await teachersApi.updateTeacher(editingTeacher.value.id, updateData)
       alert('Преподаватель обновлён')
     } else {
-      await teachersApi.createTeacher(teacherForm.value)
+      // First, register the user
+      const httpClient = useHttpClient()
+      const registerResponse = await httpClient.post<{ user: { id: number }; accessToken: string }>(
+        '/auth/register',
+        {
+          email: teacherForm.value.email,
+          password: teacherForm.value.password,
+          role: 'TEACHER',
+        }
+      )
+
+      // Then create the teacher with the userId
+      const createData = {
+        userId: registerResponse.user.id,
+        firstName: teacherForm.value.firstName,
+        lastName: teacherForm.value.lastName,
+        middleName: teacherForm.value.middleName,
+        department: teacherForm.value.department,
+        position: teacherForm.value.position,
+        academicDegree: teacherForm.value.academicDegree,
+        phone: teacherForm.value.phone,
+        officeNumber: teacherForm.value.officeNumber,
+      }
+      await teachersApi.createTeacher(createData as any)
       alert('Преподаватель создан')
     }
     closeTeacherModal()
@@ -819,14 +876,14 @@ function openGroupModal(group?: Group) {
     groupForm.value = {
       name: group.name,
       course: group.course,
-      faculty: group.faculty,
+      facultyId: group.facultyId,
     }
   } else {
     editingGroup.value = null
     groupForm.value = {
       name: '',
       course: 1,
-      faculty: '',
+      facultyId: undefined,
     }
   }
   showGroupModal.value = true
@@ -879,6 +936,19 @@ async function loadAllTeachers() {
     console.error('Failed to load teachers for dropdown:', error)
   }
 }
+
+// Watch for tab changes and load data
+watch(activeTab, async (newTab) => {
+  if (newTab === 'students') {
+    await searchStudents()
+  } else if (newTab === 'teachers') {
+    await searchTeachers()
+  } else if (newTab === 'subjects') {
+    await searchSubjects()
+  } else if (newTab === 'groups') {
+    await searchGroups()
+  }
+})
 
 onMounted(async () => {
   await searchStudents()

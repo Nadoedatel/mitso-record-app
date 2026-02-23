@@ -9,6 +9,8 @@ import { TeachersModule } from './teachers/teachers.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { GradesModule } from './grades/grades.module';
 import { GroupsModule } from './groups/groups.module';
+import { FacultiesModule } from './faculties/faculties.module';
+import { SpecializationsModule } from './specializations/specializations.module';
 
 /**
  * AppModule - root application module
@@ -36,6 +38,8 @@ import { GroupsModule } from './groups/groups.module';
     SubjectsModule,
     GradesModule,
     GroupsModule,
+    FacultiesModule,
+    SpecializationsModule,
   ],
   providers: [
     // Global throttler guard for rate limiting

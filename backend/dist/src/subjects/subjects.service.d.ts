@@ -8,11 +8,11 @@ export declare class SubjectsService {
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 createdAt: Date;
                 updatedAt: Date;
                 id: number;
+                facultyId: number | null;
+                course: number;
             };
         } & {
             createdAt: Date;
@@ -56,9 +56,14 @@ export declare class SubjectsService {
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 id: number;
+                faculty: {
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    id: number;
+                } | null;
+                course: number;
             };
         } & {
             createdAt: Date;
@@ -112,11 +117,11 @@ export declare class SubjectsService {
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 createdAt: Date;
                 updatedAt: Date;
                 id: number;
+                facultyId: number | null;
+                course: number;
             };
         } & {
             createdAt: Date;
@@ -162,9 +167,14 @@ export declare class SubjectsService {
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 id: number;
+                faculty: {
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    id: number;
+                } | null;
+                course: number;
             };
         } & {
             createdAt: Date;
@@ -214,4 +224,44 @@ export declare class SubjectsService {
         semester: number;
         description: string | null;
     }>;
+    getTeachers(subjectId: number): Promise<({
+        user: {
+            id: number;
+            email: string;
+            role: import(".prisma/client").$Enums.Role;
+        };
+    } & {
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
+        firstName: string;
+        lastName: string;
+        middleName: string | null;
+        phone: string | null;
+        department: string;
+        position: string;
+        academicDegree: string | null;
+        officeNumber: string | null;
+        userId: number;
+    })[]>;
+    setTeachers(subjectId: number, teacherIds: number[]): Promise<({
+        user: {
+            id: number;
+            email: string;
+            role: import(".prisma/client").$Enums.Role;
+        };
+    } & {
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
+        firstName: string;
+        lastName: string;
+        middleName: string | null;
+        phone: string | null;
+        department: string;
+        position: string;
+        academicDegree: string | null;
+        officeNumber: string | null;
+        userId: number;
+    })[]>;
 }

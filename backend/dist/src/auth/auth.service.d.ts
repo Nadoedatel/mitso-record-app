@@ -32,21 +32,20 @@ export declare class AuthService {
         email: string;
         role: import(".prisma/client").$Enums.Role;
         student: {
-            course: number;
-            faculty: string;
             createdAt: Date;
             updatedAt: Date;
             id: number;
+            course: number;
             firstName: string;
             lastName: string;
             middleName: string | null;
             studentId: string;
-            specialization: string;
             enrollmentYear: number;
             phone: string | null;
             address: string | null;
             birthDate: Date | null;
             groupId: number | null;
+            specializationId: number | null;
             userId: number;
         } | null;
         teacher: {

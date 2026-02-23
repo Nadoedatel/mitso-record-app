@@ -36,11 +36,11 @@ export declare class TeachersService {
                 subjectGroups: ({
                     group: {
                         name: string;
-                        course: number;
-                        faculty: string;
                         createdAt: Date;
                         updatedAt: Date;
                         id: number;
+                        facultyId: number | null;
+                        course: number;
                     };
                 } & {
                     createdAt: Date;
@@ -160,11 +160,11 @@ export declare class TeachersService {
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 createdAt: Date;
                 updatedAt: Date;
                 id: number;
+                facultyId: number | null;
+                course: number;
             };
         } & {
             createdAt: Date;
@@ -191,11 +191,11 @@ export declare class TeachersService {
         subjectGroups: ({
             group: {
                 name: string;
-                course: number;
-                faculty: string;
                 createdAt: Date;
                 updatedAt: Date;
                 id: number;
+                facultyId: number | null;
+                course: number;
             };
         } & {
             createdAt: Date;
@@ -221,4 +221,35 @@ export declare class TeachersService {
     removeSubject(teacherId: number, subjectId: number): Promise<{
         message: string;
     }>;
+    setSubjects(teacherId: number, subjectIds: number[]): Promise<({
+        subjectGroups: ({
+            group: {
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                id: number;
+                facultyId: number | null;
+                course: number;
+            };
+        } & {
+            createdAt: Date;
+            id: number;
+            groupId: number;
+            subjectId: number;
+        })[];
+        grades: {
+            id: number;
+            gradeValue: number;
+            gradeType: import(".prisma/client").$Enums.GradeType;
+        }[];
+    } & {
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
+        code: string;
+        credits: number;
+        semester: number;
+        description: string | null;
+    })[]>;
 }

@@ -12,21 +12,44 @@ async function main() {
     await prisma.student.deleteMany();
     await prisma.teacher.deleteMany();
     await prisma.group.deleteMany();
+    await prisma.specialization.deleteMany();
+    await prisma.faculty.deleteMany();
     await prisma.user.deleteMany();
     console.log('✅ Cleaned existing data');
     const passwordHash = await bcrypt.hash('password123', 10);
+    const faculty1 = await prisma.faculty.create({
+        data: {
+            name: 'Факультет информационных технологий',
+        },
+    });
+    console.log('✅ Created faculties');
+    const spec1 = await prisma.specialization.create({
+        data: {
+            name: 'Информационные системы',
+            code: '1-40 01 01',
+            facultyId: faculty1.id,
+        },
+    });
+    const spec2 = await prisma.specialization.create({
+        data: {
+            name: 'Программная инженерия',
+            code: '1-40 01 02',
+            facultyId: faculty1.id,
+        },
+    });
+    console.log('✅ Created specializations');
     const group1 = await prisma.group.create({
         data: {
             name: 'ИС-21',
             course: 2,
-            faculty: 'Информационных технологий',
+            facultyId: faculty1.id,
         },
     });
     const group2 = await prisma.group.create({
         data: {
             name: 'ПИ-22',
             course: 1,
-            faculty: 'Информационных технологий',
+            facultyId: faculty1.id,
         },
     });
     console.log('✅ Created 2 groups');
@@ -43,8 +66,7 @@ async function main() {
                     studentId: 'ST2024001',
                     groupId: group1.id,
                     course: 2,
-                    faculty: 'Информационных технологий',
-                    specialization: 'Информационные системы',
+                    specializationId: spec1.id,
                     enrollmentYear: 2023,
                     phone: '+375291234567',
                     birthDate: new Date('2005-03-15'),
@@ -66,8 +88,7 @@ async function main() {
                     studentId: 'ST2024002',
                     groupId: group1.id,
                     course: 2,
-                    faculty: 'Информационных технологий',
-                    specialization: 'Информационные системы',
+                    specializationId: spec1.id,
                     enrollmentYear: 2023,
                     phone: '+375297654321',
                     birthDate: new Date('2005-07-22'),
@@ -89,8 +110,7 @@ async function main() {
                     studentId: 'ST2024003',
                     groupId: group2.id,
                     course: 1,
-                    faculty: 'Информационных технологий',
-                    specialization: 'Программная инженерия',
+                    specializationId: spec2.id,
                     enrollmentYear: 2024,
                     phone: '+375259876543',
                     birthDate: new Date('2006-01-10'),

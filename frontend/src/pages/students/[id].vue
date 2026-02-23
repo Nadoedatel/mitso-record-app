@@ -15,7 +15,7 @@
           <div class="info-grid">
             <div class="info-item">
               <span class="label">Группа:</span>
-              <span class="value">{{ student.group }}</span>
+              <span class="value">{{ student.group?.name || '-' }}</span>
             </div>
             <div class="info-item">
               <span class="label">Зачётная книжка:</span>
@@ -24,10 +24,6 @@
             <div class="info-item">
               <span class="label">Курс:</span>
               <span class="value">{{ student.course }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Факультет:</span>
-              <span class="value">{{ student.faculty }}</span>
             </div>
           </div>
         </div>
