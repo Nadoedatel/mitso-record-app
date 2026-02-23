@@ -1,4 +1,6 @@
 import type { Grade } from '~/entities/grade'
+import type { Group } from '~/entities/group'
+import type { Student } from '~/entities/student'
 import { useHttpClient } from '~/shared/api/httpClient'
 
 export interface CreateGradeDto {
@@ -17,21 +19,6 @@ export interface GradeBatchDto {
   gradeType: 'EXAM' | 'CREDIT' | 'COURSEWORK' | 'LAB' | 'TEST'
   examDate?: string
   notes?: string
-}
-
-export interface GroupInfo {
-  group: string
-  studentCount: number
-}
-
-export interface StudentWithGrades {
-  id: number
-  firstName: string
-  lastName: string
-  middleName?: string
-  group: string
-  studentId: string
-  grades?: Grade[]
 }
 
 export const gradesApi = {
@@ -93,67 +80,21 @@ export const gradesApi = {
   },
 
   /**
-   * Get unique groups for a specific subject
-   * Fetches all students and filters by those who have grades in this subject
+   * Get groups assigned to a specific subject via SubjectGroup table
+   * Uses new backend endpoint
    */
-  async fetchGroupsBySubject(subjectId: number): Promise<GroupInfo[]> {
+  async fetchGroupsBySubject(subjectId: number): Promise<Group[]> {
     const httpClient = useHttpClient()
-
-    // Fetch all grades for this subject
-    const gradesResponse = await httpClient.get<{ data: Grade[] }>(`/grades?subjectId=${subjectId}`)
-
-    // Get unique student IDs
-    const studentIds = [...new Set(gradesResponse.data.map(g => g.studentId))]
-
-    // Fetch all students to get their groups
-    const studentsResponse = await httpClient.get<{ data: StudentWithGrades[] }>(`/students?limit=1000`)
-
-    // Filter students who have grades in this subject and group them
-    const groupMap = new Map<string, Set<number>>()
-    studentsResponse.data.forEach((student) => {
-      if (studentIds.includes(student.id)) {
-        if (!groupMap.has(student.group)) {
-          groupMap.set(student.group, new Set())
-        }
-        groupMap.get(student.group)!.add(student.id)
-      }
-    })
-
-    return Array.from(groupMap.entries()).map(([group, studentSet]) => ({
-      group,
-      studentCount: studentSet.size,
-    }))
+    return httpClient.get<Group[]>(`/grades/subject/${subjectId}/groups`)
   },
 
   /**
-   * Get students by group with their grades for a specific subject
+   * Get students by group and subject with their grades
+   * Uses new backend endpoint
    */
-  async fetchStudentsByGroupAndSubject(group: string, subjectId: number): Promise<StudentWithGrades[]> {
+  async fetchStudentsByGroupAndSubject(groupId: number, subjectId: number): Promise<Student[]> {
     const httpClient = useHttpClient()
-
-    // Fetch all students and filter by group
-    const studentsResponse = await httpClient.get<{ data: StudentWithGrades[] }>(`/students?limit=1000`)
-    const groupStudents = studentsResponse.data.filter(s => s.group === group)
-
-    // Fetch grades for each student for this specific subject
-    const studentsWithGrades = await Promise.all(
-      groupStudents.map(async (student) => {
-        try {
-          const grades = await httpClient.get<{ data: Grade[] }>(`/grades?studentId=${student.id}&subjectId=${subjectId}`)
-          return {
-            ...student,
-            grades: grades.data,
-          }
-        } catch {
-          return {
-            ...student,
-            grades: [],
-          }
-        }
-      })
-    )
-
-    return studentsWithGrades
+    return httpClient.get<Student[]>(`/grades/subject/${subjectId}/group/${groupId}/students`)
   },
 
   /**

@@ -235,6 +235,61 @@ export declare class GradesService {
     remove(id: number): Promise<{
         message: string;
     }>;
+    findGroupsBySubject(subjectId: number): Promise<{
+        id: number;
+        name: string;
+        course: number;
+        facultyId: number | null;
+        faculty: {
+            name: string;
+            id: number;
+        } | null;
+        studentCount: number;
+    }[]>;
+    findStudentsByGroupAndSubject(groupId: number, subjectId: number): Promise<({
+        group: {
+            name: string;
+            id: number;
+            course: number;
+        } | null;
+        grades: ({
+            subject: {
+                name: string;
+                id: number;
+                code: string;
+            };
+        } & {
+            createdAt: Date;
+            updatedAt: Date;
+            id: number;
+            studentId: number;
+            notes: string | null;
+            examDate: Date | null;
+            subjectId: number;
+            gradeValue: number;
+            gradeType: import(".prisma/client").$Enums.GradeType;
+        })[];
+        user: {
+            id: number;
+            email: string;
+        };
+    } & {
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
+        course: number;
+        firstName: string;
+        lastName: string;
+        middleName: string | null;
+        studentId: string;
+        enrollmentYear: number;
+        phone: string | null;
+        address: string | null;
+        birthDate: Date | null;
+        groupId: number | null;
+        specializationId: number | null;
+        userId: number;
+    })[]>;
     batchCreate(grades: CreateGradeDto[]): Promise<{
         total: number;
         succeeded: number;

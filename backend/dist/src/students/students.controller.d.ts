@@ -28,13 +28,20 @@ export declare class StudentsController {
     }>;
     findAll(query: QueryStudentDto): Promise<import("../common/dto").PaginatedResponse<any>>;
     findOne(id: number): Promise<{
+        specialization: {
+            name: string;
+            id: number;
+            faculty: {
+                name: string;
+                id: number;
+            };
+            code: string | null;
+        } | null;
         group: {
             name: string;
             id: number;
             faculty: {
                 name: string;
-                createdAt: Date;
-                updatedAt: Date;
                 id: number;
             } | null;
             course: number;

@@ -1,6 +1,6 @@
 # MITSO Record App - Backend
 
-NestJS приложение для управления студенческими зачётками с полной системой аутентификации и авторизации.
+NestJS приложение для управления студенческими зачётками с полной системой аутентификации и авторизации. Версия: **v1.2.0**
 
 ## Предварительные требования
 
@@ -155,19 +155,38 @@ src/
 ├── faculties/                 # Модуль факультетов
 │   ├── faculties.controller.ts
 │   ├── faculties.service.ts
-│   └── faculties.module.ts
+│   ├── faculties.module.ts
+│   └── dto/
+│       ├── create-faculty.dto.ts
+│       └── update-faculty.dto.ts
 ├── groups/                    # Модуль групп
 │   ├── groups.controller.ts
 │   ├── groups.service.ts
-│   └── groups.module.ts
+│   ├── groups.module.ts
+│   └── dto/
+│       ├── create-group.dto.ts
+│       └── update-group.dto.ts
+├── specializations/           # Модуль специальностей
+│   ├── specializations.controller.ts
+│   ├── specializations.service.ts
+│   ├── specializations.module.ts
+│   └── dto/
+│       ├── create-specialization.dto.ts
+│       └── update-specialization.dto.ts
 ├── prisma/                    # Prisma Service (singleton)
 │   ├── prisma.service.ts
 │   └── prisma.module.ts
 └── common/                    # Общие утилиты
     ├── guards/
+    │   ├── jwt-auth.guard.ts
+    │   └── roles.guard.ts
     ├── decorators/
+    │   ├── current-user.decorator.ts
+    │   └── roles.decorator.ts
     ├── filters/
+    │   └── http-exception.filter.ts
     └── interceptors/
+        └── response.interceptor.ts
 ```
 
 ## API Endpoints
@@ -222,24 +241,86 @@ src/
 - `PATCH /api/groups/:id` - Обновить группу (ADMIN)
 - `DELETE /api/groups/:id` - Удалить группу (ADMIN)
 
+### Специальности
+- `GET /api/specializations` - Список специальностей
+- `GET /api/specializations/:id` - Специальность по ID
+- `POST /api/specializations` - Создать специальность (ADMIN)
+- `PATCH /api/specializations/:id` - Обновить специальность (ADMIN)
+- `DELETE /api/specializations/:id` - Удалить специальность (ADMIN)
+
 > **Swagger документация:** Полная интерактивная документация доступна по адресу `/api/docs`
 
 ## База данных (Prisma Schema)
 
 Приложение использует следующие модели:
 
-- **User** - Пользователи системы (роли: STUDENT, TEACHER, ADMIN)
-- **Student** - Профили студентов (связь с User)
-- **Teacher** - Профили преподавателей (связь с User)
-- **Subject** - Предметы (код, название, семестр, кредиты)
-- **Grade** - Оценки (типы: EXAM, CREDIT, COURSEWORK, TEST, LAB)
-- **Group** - Учебные группы
-- **Faculty** - Факультеты
-- **Specialization** - Специальности (связь с Faculty)
-- **TeacherSubject** - Связь преподавателей и предметов (many-to-many)
-- **SubjectGroup** - Связь предметов и групп (many-to-many)
+### Основные модели
 
-Все модели используют `snake_case` на уровне базы данных и `camelCase` в TypeScript.
+- **User** - Пользователи системы
+  - email (уникальный)
+  - password (хешированный bcrypt)
+  - role (enum: STUDENT, TEACHER, ADMIN)
+  - refreshToken (для JWT refresh flow)
+  - связи: Student (1:1), Teacher (1:1)
+
+- **Student** - Профили студентов
+  - userId (связь с User, уникальный)
+  - firstName, lastName, middleName
+  - studentId (номер зачётной книжки, уникальный)
+  - course, enrollmentYear
+  - groupId, specializationId (опционально)
+  - phone, address, birthDate (опционально)
+  - связи: User, Group, Specialization, Grade[]
+
+- **Teacher** - Профили преподавателей
+  - userId (связь с User, уникальный)
+  - firstName, lastName, middleName
+  - department, position
+  - academicDegree, phone, officeNumber (опционально)
+  - связи: User, TeacherSubject[]
+
+- **Subject** - Предметы
+  - name, code (уникальный), credits, semester
+  - description (опционально)
+  - связи: TeacherSubject[], SubjectGroup[], Grade[]
+
+- **Grade** - Оценки
+  - studentId, subjectId
+  - gradeValue (1-10 или 0-100)
+  - gradeType (enum: EXAM, CREDIT, COURSEWORK, TEST, LAB)
+  - examDate, notes (опционально)
+  - уникальный индекс: (studentId, subjectId, gradeType)
+  - связи: Student, Subject
+
+- **Group** - Учебные группы
+  - name (уникальное), course
+  - facultyId (опционально)
+  - связи: Faculty, Student[], SubjectGroup[]
+
+- **Faculty** - Факультеты
+  - name (уникальное)
+  - связи: Specialization[], Group[]
+
+- **Specialization** - Специальности
+  - name, code, facultyId
+  - связи: Faculty, Student[]
+
+### Связующие модели (many-to-many)
+
+- **TeacherSubject** - Связь преподавателей и предметов
+  - teacherId, subjectId
+  - уникальный индекс: (teacherId, subjectId)
+
+- **SubjectGroup** - Связь предметов и групп
+  - subjectId, groupId
+  - уникальный индекс: (subjectId, groupId)
+
+### Особенности схемы
+- Все модели используют `snake_case` в БД и `camelCase` в TypeScript
+- Каскадное удаление: User → Student/Teacher, Faculty → Specialization
+- SetNull при удалении: Group/Specialization при удалении не удаляют Student
+- Timestamps (createdAt, updatedAt) на всех моделях
+- Уникальные индексы для предотвращения дублирования
 
 ### Миграции
 

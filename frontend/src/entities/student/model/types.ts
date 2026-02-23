@@ -1,5 +1,6 @@
 import type { User } from '../../user/model/types'
 import type { Group } from '../../group/model/types'
+import type { Specialization } from '../../specialization/model/types'
 
 export interface Student {
   id: number
@@ -12,6 +13,7 @@ export interface Student {
   group?: Group
   course: number
   specializationId?: number
+  specialization?: Specialization
   enrollmentYear: number
   phone?: string
   address?: string
