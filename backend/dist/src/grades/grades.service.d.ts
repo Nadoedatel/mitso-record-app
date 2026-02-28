@@ -60,8 +60,8 @@ export declare class GradesService {
         id: number;
         studentId: number;
         notes: string | null;
-        examDate: Date | null;
         subjectId: number;
+        examDate: Date | null;
         gradeValue: number;
         gradeType: import(".prisma/client").$Enums.GradeType;
     }>;
@@ -105,8 +105,8 @@ export declare class GradesService {
         id: number;
         studentId: number;
         notes: string | null;
-        examDate: Date | null;
         subjectId: number;
+        examDate: Date | null;
         gradeValue: number;
         gradeType: import(".prisma/client").$Enums.GradeType;
     })[]>;
@@ -166,8 +166,8 @@ export declare class GradesService {
         id: number;
         studentId: number;
         notes: string | null;
-        examDate: Date | null;
         subjectId: number;
+        examDate: Date | null;
         gradeValue: number;
         gradeType: import(".prisma/client").$Enums.GradeType;
     }>;
@@ -227,8 +227,8 @@ export declare class GradesService {
         id: number;
         studentId: number;
         notes: string | null;
-        examDate: Date | null;
         subjectId: number;
+        examDate: Date | null;
         gradeValue: number;
         gradeType: import(".prisma/client").$Enums.GradeType;
     }>;
@@ -264,8 +264,8 @@ export declare class GradesService {
             id: number;
             studentId: number;
             notes: string | null;
-            examDate: Date | null;
             subjectId: number;
+            examDate: Date | null;
             gradeValue: number;
             gradeType: import(".prisma/client").$Enums.GradeType;
         })[];
@@ -315,8 +315,8 @@ export declare class GradesService {
             id: number;
             studentId: number;
             notes: string | null;
-            examDate: Date | null;
             subjectId: number;
+            examDate: Date | null;
             gradeValue: number;
             gradeType: import(".prisma/client").$Enums.GradeType;
         }) | null)[];

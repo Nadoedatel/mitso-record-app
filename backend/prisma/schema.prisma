@@ -183,5 +183,6 @@ model Specialization {
   faculty  Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
   students Student[]
 
+  @@unique([name, facultyId])
   @@map("specializations")
 }

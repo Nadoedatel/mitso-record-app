@@ -47,14 +47,21 @@ export declare class AuthService {
                 code: string | null;
                 facultyId: number;
             }) | null;
-            group: {
+            group: ({
+                faculty: {
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    id: number;
+                } | null;
+            } & {
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 id: number;
                 facultyId: number | null;
                 course: number;
-            } | null;
+            }) | null;
         } & {
             createdAt: Date;
             updatedAt: Date;
@@ -72,7 +79,48 @@ export declare class AuthService {
             specializationId: number | null;
             userId: number;
         }) | null;
-        teacher: {
+        teacher: ({
+            teacherSubjects: ({
+                subject: {
+                    subjectGroups: ({
+                        group: {
+                            faculty: {
+                                name: string;
+                                createdAt: Date;
+                                updatedAt: Date;
+                                id: number;
+                            } | null;
+                        } & {
+                            name: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            id: number;
+                            facultyId: number | null;
+                            course: number;
+                        };
+                    } & {
+                        createdAt: Date;
+                        id: number;
+                        groupId: number;
+                        subjectId: number;
+                    })[];
+                } & {
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    id: number;
+                    code: string;
+                    credits: number;
+                    semester: number;
+                    description: string | null;
+                };
+            } & {
+                createdAt: Date;
+                id: number;
+                teacherId: number;
+                subjectId: number;
+            })[];
+        } & {
             createdAt: Date;
             updatedAt: Date;
             id: number;
@@ -85,7 +133,7 @@ export declare class AuthService {
             academicDegree: string | null;
             officeNumber: string | null;
             userId: number;
-        } | null;
+        }) | null;
     }>;
     logout(userId: number): Promise<{
         message: string;

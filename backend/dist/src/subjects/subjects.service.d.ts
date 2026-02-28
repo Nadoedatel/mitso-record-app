@@ -84,8 +84,8 @@ export declare class SubjectsService {
             id: number;
             studentId: number;
             notes: string | null;
-            examDate: Date | null;
             subjectId: number;
+            examDate: Date | null;
             gradeValue: number;
             gradeType: import(".prisma/client").$Enums.GradeType;
         })[];
@@ -195,8 +195,8 @@ export declare class SubjectsService {
             id: number;
             studentId: number;
             notes: string | null;
-            examDate: Date | null;
             subjectId: number;
+            examDate: Date | null;
             gradeValue: number;
             gradeType: import(".prisma/client").$Enums.GradeType;
         })[];

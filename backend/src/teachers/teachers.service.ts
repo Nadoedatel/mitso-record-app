@@ -188,30 +188,19 @@ export class TeachersService {
   }
 
   /**
-   * Delete teacher with transaction
+   * Delete teacher (cascades to user and teacherSubjects via Prisma schema)
+   * - User deletion: onDelete: Cascade (teacher.prisma line 73)
+   * - TeacherSubject deletion: onDelete: Cascade (teacher_subject.prisma line 143)
    */
   async remove(id: number) {
     // Check if teacher exists
-    const teacher = await this.findOne(id);
+    await this.findOne(id);
 
-    // Use transaction to ensure all related data is deleted atomically
-    await this.prisma.$transaction(async (tx) => {
-      // Delete teacher-subject relations
-      await tx.teacherSubject.deleteMany({
-        where: { teacherId: id },
-      });
-
-      // Delete teacher
-      await tx.teacher.delete({
-        where: { id },
-      });
-
-      // If teacher has userId, optionally delete user account
-      if (teacher.userId) {
-        await tx.user.delete({
-          where: { id: teacher.userId },
-        });
-      }
+    // Simply delete teacher - Prisma will cascade delete:
+    // 1. Related user (due to onDelete: Cascade on teacher.user relation)
+    // 2. Related teacherSubjects (due to onDelete: Cascade on teacherSubject.teacher relation)
+    await this.prisma.teacher.delete({
+      where: { id },
     });
 
     return { message: 'Teacher deleted successfully' };

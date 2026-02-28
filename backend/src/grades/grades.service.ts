@@ -178,38 +178,54 @@ export class GradesService {
   }
 
   /**
-   * Get all groups in the system (not filtered by subject)
-   * Returns groups with student count
-   * This allows teachers to see all groups when managing grades
+   * Get groups assigned to a specific subject
+   * Returns only groups that have this subject in their curriculum
+   * This allows teachers to see which groups they can grade for this subject
    */
   async findGroupsBySubject(subjectId: number) {
-    // Get ALL groups in the system (not filtered by subjectId)
-    const groups = await this.prisma.group.findMany({
+    // Verify subject exists
+    const subject = await this.prisma.subject.findUnique({
+      where: { id: subjectId },
+    });
+
+    if (!subject) {
+      throw new NotFoundException(`Subject with ID ${subjectId} not found`);
+    }
+
+    // Get only groups that are assigned to this subject via SubjectGroup relation
+    const subjectGroups = await this.prisma.subjectGroup.findMany({
+      where: { subjectId },
       include: {
-        faculty: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        students: {
-          select: {
-            id: true,
+        group: {
+          include: {
+            faculty: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            students: {
+              select: {
+                id: true,
+              },
+            },
           },
         },
       },
       orderBy: {
-        name: 'asc',
+        group: {
+          name: 'asc',
+        },
       },
     });
 
-    return groups.map((group) => ({
-      id: group.id,
-      name: group.name,
-      course: group.course,
-      facultyId: group.facultyId,
-      faculty: group.faculty,
-      studentCount: group.students.length,
+    return subjectGroups.map((sg) => ({
+      id: sg.group.id,
+      name: sg.group.name,
+      course: sg.group.course,
+      facultyId: sg.group.facultyId,
+      faculty: sg.group.faculty,
+      studentCount: sg.group.students.length,
     }));
   }
 
