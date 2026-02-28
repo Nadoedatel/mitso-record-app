@@ -1,9 +1,9 @@
 {
-  "_hash": "ArMOvP0zJIyzQHZ73en_WfPBef-ON-NWbQpvUG4gPCI",
+  "_hash": "Pvk8I473Od_-SDJGvh50FO8ehiuFX073o65laCnajVc",
   "project": {
     "rootDir": "/Users/nadoe/WebstormProjects/mitso-record-app/frontend"
   },
   "versions": {
-    "nuxt": "3.14.1592"
+    "nuxt": "3.21.1"
   }
 }

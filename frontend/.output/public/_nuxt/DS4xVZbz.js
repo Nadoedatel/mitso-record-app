@@ -1,2 +1,0 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./BLcgtOTp.js","./Ca01pLiL.js","./entry.Dy_BXpGQ.css"])))=>i.map(i=>d[i]);
-import{X as r,Y as i,_ as c,P as n}from"./Ca01pLiL.js";const u=r(async()=>{let e,o;{const{useHttpClient:a}=([e,o]=i(()=>c(()=>import("./BLcgtOTp.js"),__vite__mapDeps([0,1,2]),import.meta.url)),e=await e,o(),e),s=a();if(!s.getAccessToken())return n("/login");const t=s.getUserData();if((t==null?void 0:t.role)!=="ADMIN")return n("/")}});export{u as default};
