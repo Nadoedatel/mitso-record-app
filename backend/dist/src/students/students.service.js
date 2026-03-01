@@ -232,19 +232,9 @@ let StudentsService = class StudentsService {
         });
     }
     async remove(id) {
-        const student = await this.findOne(id);
-        await this.prisma.$transaction(async (tx) => {
-            await tx.grade.deleteMany({
-                where: { studentId: id },
-            });
-            await tx.student.delete({
-                where: { id },
-            });
-            if (student.userId) {
-                await tx.user.delete({
-                    where: { id: student.userId },
-                });
-            }
+        await this.findOne(id);
+        await this.prisma.student.delete({
+            where: { id },
         });
         return { message: 'Student deleted successfully' };
     }

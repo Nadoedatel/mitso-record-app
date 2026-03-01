@@ -5,96 +5,58 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="84e2545b-d8eb-4548-923c-c64e34bcb856" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/prompt.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/app.module.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/app.module.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/app.module.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/app.module.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/auth/auth.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/auth/auth.controller.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/auth/auth.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/auth/auth.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/auth/auth.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/auth/auth.controller.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/auth/auth.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/auth/auth.service.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/auth/auth.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/auth/auth.service.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/auth/auth.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/auth/auth.service.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/auth/dto/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/auth/dto/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/auth/dto/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/auth/dto/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/auth/dto/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/auth/dto/index.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/grades/dto/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/grades/dto/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/grades/dto/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/grades/dto/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/grades/dto/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/grades/dto/index.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/grades/grades.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/grades/grades.controller.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/grades/grades.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/grades/grades.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/grades/grades.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/grades/grades.controller.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/grades/grades.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/grades/grades.service.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/grades/grades.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/grades/grades.service.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/grades/grades.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/grades/grades.service.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/main.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/main.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/main.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/students/dto/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/students/dto/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/students/dto/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/students/dto/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/students/dto/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/students/dto/index.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/students/students.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/students/students.controller.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/students/students.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/students/students.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/students/students.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/students/students.controller.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/students/students.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/students/students.service.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/students/students.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/students/students.service.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/students/students.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/students/students.service.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/subjects/dto/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/subjects/dto/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/subjects/dto/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/subjects/dto/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/subjects/dto/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/subjects/dto/index.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.controller.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.controller.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.service.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.service.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/subjects/subjects.service.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/teachers/dto/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/teachers/dto/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/teachers/dto/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/teachers/dto/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/teachers/dto/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/teachers/dto/index.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.controller.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.controller.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.service.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.service.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.service.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/dist/tsconfig.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/tsconfig.tsbuildinfo" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/app.module.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/auth/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/auth/auth.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/prisma/schema.prisma" beforeDir="false" afterPath="$PROJECT_DIR$/backend/prisma/schema.prisma" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/auth/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/auth/auth.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/auth/dto/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/auth/dto/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/grades/dto/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/grades/dto/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/grades/grades.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/grades/grades.controller.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/grades/grades.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/grades/grades.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/students/dto/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/students/dto/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/students/students.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/students/students.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/groups/groups.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/groups/groups.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/students/students.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/students/students.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/subjects/dto/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/subjects/dto/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/subjects/subjects.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/subjects/subjects.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/subjects/subjects.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/subjects/subjects.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/teachers/dto/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/teachers/dto/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/teachers/teachers.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/teachers/teachers.controller.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/teachers/teachers.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/teachers/teachers.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/manifest/latest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/manifest/latest.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/manifest/meta/dev.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/manifest/meta/dev.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.nuxt/manifest/meta/e43dec17-bf85-45b5-9102-72665dc45262.json" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/nitro.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/nitro.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/nuxt.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/nuxt.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/tailwind/postcss.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/tailwind/postcss.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.nuxt/types/imports.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/types/imports.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.nuxt/types/middleware.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/types/middleware.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/features/auth/api/authApi.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/features/auth/api/authApi.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/features/grades/api/gradesApi.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/features/grades/api/gradesApi.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/features/students/api/studentsApi.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/features/students/api/studentsApi.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/index.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/student.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/student.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/teacher.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/teacher.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/shared/api/httpClient.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/shared/api/httpClient.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.nuxt/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/admin.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/admin.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Dockerfile" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Merge.Settings">
+    <option name="BRANCH" value="origin/v1.1.0" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -121,11 +83,12 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "JavaScript Debug.localhost:3000.executor": "Debug",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "v.1.0.0",
+    "git-widget-placeholder": "v.2.0.0",
     "last_opened_file_path": "/Users/nadoe/WebstormProjects/mitso-record-app",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -145,6 +108,16 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
+  <component name="RunManager">
+    <configuration name="localhost:3000" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:3000/">
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JavaScript Debug.localhost:3000" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -162,6 +135,9 @@
       <workItem from="1771596080485" duration="352000" />
       <workItem from="1771691018897" duration="4218000" />
       <workItem from="1771698887299" duration="1737000" />
+      <workItem from="1771920825510" duration="614000" />
+      <workItem from="1772097005425" duration="260000" />
+      <workItem from="1772271568953" duration="1274000" />
     </task>
     <servers />
   </component>

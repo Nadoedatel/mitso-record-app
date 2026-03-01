@@ -608,6 +608,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'admin',
+})
+
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHttpClient } from '~/shared/api/httpClient'
@@ -621,10 +625,6 @@ import type { Student } from '~/entities/student'
 import type { Teacher } from '~/entities/teacher'
 import type { Subject } from '~/entities/subject'
 import type { Group } from '~/entities/group'
-
-definePageMeta({
-  middleware: 'admin',
-})
 
 const router = useRouter()
 

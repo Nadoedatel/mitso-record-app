@@ -172,7 +172,11 @@ export class AuthService {
       include: {
         student: {
           include: {
-            group: true,
+            group: {
+              include: {
+                faculty: true,
+              },
+            },
             specialization: {
               include: {
                 faculty: true,
@@ -180,7 +184,27 @@ export class AuthService {
             },
           },
         },
-        teacher: true,
+        teacher: {
+          include: {
+            teacherSubjects: {
+              include: {
+                subject: {
+                  include: {
+                    subjectGroups: {
+                      include: {
+                        group: {
+                          include: {
+                            faculty: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 

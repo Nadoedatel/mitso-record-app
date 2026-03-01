@@ -147,31 +147,44 @@ let GradesService = class GradesService {
         return { message: 'Grade deleted successfully' };
     }
     async findGroupsBySubject(subjectId) {
-        const groups = await this.prisma.group.findMany({
+        const subject = await this.prisma.subject.findUnique({
+            where: { id: subjectId },
+        });
+        if (!subject) {
+            throw new common_1.NotFoundException(`Subject with ID ${subjectId} not found`);
+        }
+        const subjectGroups = await this.prisma.subjectGroup.findMany({
+            where: { subjectId },
             include: {
-                faculty: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-                students: {
-                    select: {
-                        id: true,
+                group: {
+                    include: {
+                        faculty: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                        students: {
+                            select: {
+                                id: true,
+                            },
+                        },
                     },
                 },
             },
             orderBy: {
-                name: 'asc',
+                group: {
+                    name: 'asc',
+                },
             },
         });
-        return groups.map((group) => ({
-            id: group.id,
-            name: group.name,
-            course: group.course,
-            facultyId: group.facultyId,
-            faculty: group.faculty,
-            studentCount: group.students.length,
+        return subjectGroups.map((sg) => ({
+            id: sg.group.id,
+            name: sg.group.name,
+            course: sg.group.course,
+            facultyId: sg.group.facultyId,
+            faculty: sg.group.faculty,
+            studentCount: sg.group.students.length,
         }));
     }
     async findStudentsByGroupAndSubject(groupId, subjectId) {

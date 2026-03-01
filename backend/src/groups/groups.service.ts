@@ -48,6 +48,12 @@ export class GroupsService {
       this.prisma.group.findMany({
         where,
         include: {
+          faculty: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
           students: {
             select: {
               id: true,

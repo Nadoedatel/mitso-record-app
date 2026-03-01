@@ -260,30 +260,19 @@ export class StudentsService {
   }
 
   /**
-   * Delete student with transaction (also deletes related grades)
+   * Delete student (cascades to user and grades via Prisma schema)
+   * - User deletion: onDelete: Cascade (students.prisma line 51)
+   * - Grades deletion: onDelete: Cascade (grades.prisma line 107)
    */
   async remove(id: number) {
     // Check if student exists
-    const student = await this.findOne(id);
+    await this.findOne(id);
 
-    // Use transaction to ensure all related data is deleted atomically
-    await this.prisma.$transaction(async (tx) => {
-      // Delete all grades for this student
-      await tx.grade.deleteMany({
-        where: { studentId: id },
-      });
-
-      // Delete student
-      await tx.student.delete({
-        where: { id },
-      });
-
-      // If student has userId, optionally delete user account
-      if (student.userId) {
-        await tx.user.delete({
-          where: { id: student.userId },
-        });
-      }
+    // Simply delete student - Prisma will cascade delete:
+    // 1. Related user (due to onDelete: Cascade on student.user relation)
+    // 2. Related grades (due to onDelete: Cascade on grade.student relation)
+    await this.prisma.student.delete({
+      where: { id },
     });
 
     return { message: 'Student deleted successfully' };
