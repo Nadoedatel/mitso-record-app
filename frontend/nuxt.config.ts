@@ -33,5 +33,17 @@ export default defineNuxtConfig({
   },
 
   // CSS
-  css: ['@/app/styles/main.css'],
+  css: ['@/app/styles/main.scss'],
+
+  // Vite
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: {
+          loadPaths: ['./src'],
+          additionalData: "@import 'shared/styles/mixins';",
+        },
+      },
+    },
+  },
 })

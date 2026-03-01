@@ -1,0 +1,12 @@
+/**
+ * Main SCSS Entry Point
+ * Imports design tokens and global styles
+ */
+
+@import 'shared/styles/tokens';
+@import 'shared/styles/global';
+
+/* Nuxt root element */
+#__nuxt {
+  min-height: 100vh;
+}

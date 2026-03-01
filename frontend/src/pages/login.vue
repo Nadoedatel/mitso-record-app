@@ -109,8 +109,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-background);
-  padding: var(--spacing-5);
+  background: var(--color-bg-page);
+  padding: var(--spacing-10);
 }
 
 .login-container {
@@ -140,6 +140,7 @@ onMounted(() => {
 }
 
 .login-form {
+  align-items: center;
   margin-top: var(--spacing-6);
 }
 </style>

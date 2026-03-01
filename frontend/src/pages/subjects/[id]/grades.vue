@@ -355,7 +355,7 @@ onMounted(async () => {
 <style scoped>
 .grades-management-page {
   min-height: 100vh;
-  background: var(--color-background);
+  background: var(--color-bg-page);
   padding: var(--spacing-5);
 }
 
@@ -442,7 +442,7 @@ onMounted(async () => {
 .students-table-container {
   overflow-x: auto;
   margin: var(--spacing-5) 0;
-  background: var(--color-surface);
+  background: var(--color-bg-section);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
 }
@@ -460,7 +460,7 @@ onMounted(async () => {
 }
 
 .students-table th {
-  background: var(--color-surface-secondary);
+  background: var(--color-bg-page);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
