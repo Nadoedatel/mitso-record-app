@@ -1,77 +1,40 @@
 <template>
   <div class="student-page">
-    <div class="container">
-      <header class="header">
-        <div>
-          <h1 v-if="authStore.user?.student">
-            {{ authStore.user.student.lastName }} {{ authStore.user.student.firstName }}
-          </h1>
+    <Container maxWidth="xl">
+      <Header
+        v-if="authStore.user?.student"
+        :title="`${authStore.user.student.lastName} ${authStore.user.student.firstName}`"
+      >
+        <template #actions>
           <p v-if="authStore.user?.student" class="subtitle">
             {{ authStore.user.student.group?.name || 'Без группы' }} •
             {{ authStore.user.student.specialization?.name || 'Специализация не указана' }}
           </p>
-        </div>
-        <button @click="logout" class="logout-button">Выйти</button>
-      </header>
+          <Button variant="danger" @click="logout">Выйти</Button>
+        </template>
+      </Header>
 
-      <div v-if="loading" class="loading">Загрузка...</div>
+      <LoadingState v-if="loading" message="Загрузка данных студента..." />
 
-      <div v-else-if="error" class="error">{{ error }}</div>
+      <Alert v-else-if="error" variant="error" :title="error" closable @close="error = ''" />
 
       <div v-else class="content">
         <!-- Student Info Card -->
-        <div v-if="authStore.user?.student" class="info-card">
-          <h2>Информация о студенте</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="label">ФИО:</span>
-              <span class="value">
-                {{ authStore.user.student.lastName }}
-                {{ authStore.user.student.firstName }}
-                {{ authStore.user.student.middleName }}
-              </span>
-            </div>
-            <div class="info-item">
-              <span class="label">Номер зачётки:</span>
-              <span class="value">{{ authStore.user.student.studentId }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Группа:</span>
-              <span class="value">{{ authStore.user.student.group?.name || 'Не указана' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Курс:</span>
-              <span class="value">{{ authStore.user.student.course }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Специализация:</span>
-              <span class="value">
-                {{ authStore.user.student.specialization?.name || 'Не указана' }}
-              </span>
-            </div>
-            <div class="info-item">
-              <span class="label">Факультет:</span>
-              <span class="value">
-                {{
-                  authStore.user.student.group?.faculty?.name ||
-                  authStore.user.student.specialization?.faculty?.name ||
-                  'Не указан'
-                }}
-              </span>
-            </div>
-          </div>
-        </div>
+        <InfoCard
+          v-if="authStore.user?.student"
+          title="Информация о студенте"
+          :items="studentInfoItems"
+        />
 
-        <!-- Grades Table -->
-        <div class="grades-section">
-          <h2>Мои оценки</h2>
+        <!-- Grades Section -->
+        <Section title="Мои оценки">
+          <EmptyState
+            v-if="grades.length === 0"
+            message="У вас пока нет оценок"
+          />
 
-          <div v-if="grades.length === 0" class="empty">
-            У вас пока нет оценок
-          </div>
-
-          <div v-else class="grades-table">
-            <table>
+          <div v-else class="grades-table-wrapper">
+            <table class="grades-table">
               <thead>
                 <tr>
                   <th>Предмет</th>
@@ -93,14 +56,10 @@
                     }}
                   </td>
                   <td>
-                    <span :class="['grade-type', `type-${grade.gradeType.toLowerCase()}`]">
-                      {{ getGradeTypeLabel(grade.gradeType) }}
-                    </span>
+                    <GradeTypeBadge :type="grade.gradeType" size="sm" />
                   </td>
                   <td>
-                    <span :class="['grade-value', getGradeClass(grade.gradeValue)]">
-                      {{ grade.gradeValue }}
-                    </span>
+                    <GradeValueBadge :value="grade.gradeValue" />
                   </td>
                   <td>{{ formatDate(grade.examDate) }}</td>
                   <td>{{ grade.notes || '-' }}</td>
@@ -108,18 +67,30 @@
               </tbody>
             </table>
           </div>
-        </div>
+        </Section>
       </div>
-    </div>
+    </Container>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '~/features/auth/model/useAuth'
 import { useHttpClient } from '~/shared/api/httpClient'
 import { gradesApi } from '~/features/grades/api/gradesApi'
 import type { Grade } from '~/entities/grade'
+import {
+  Container,
+  Header,
+  Button,
+  LoadingState,
+  Alert,
+  InfoCard,
+  Section,
+  EmptyState,
+  GradeTypeBadge,
+  GradeValueBadge,
+} from '~/shared/ui'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -127,6 +98,34 @@ const router = useRouter()
 const grades = ref<Grade[]>([])
 const loading = ref(false)
 const error = ref('')
+
+// Computed property for student info items
+const studentInfoItems = computed(() => {
+  if (!authStore.user?.student) return []
+  const student = authStore.user.student
+
+  const items = [
+    {
+      label: 'ФИО',
+      value: `${student.lastName} ${student.firstName} ${student.middleName}`,
+    },
+    { label: 'Номер зачётки', value: student.studentId },
+    { label: 'Группа', value: student.group?.name || 'Не указана' },
+    { label: 'Курс', value: student.course },
+    { label: 'Специализация', value: student.specialization?.name || 'Не указана' },
+  ]
+
+  const facultyName =
+    student.group?.faculty?.name ||
+    student.specialization?.faculty?.name ||
+    null
+
+  if (facultyName) {
+    items.push({ label: 'Факультет', value: facultyName })
+  }
+
+  return items
+})
 
 async function fetchGrades() {
   if (!authStore.user?.student?.id) {
@@ -144,24 +143,6 @@ async function fetchGrades() {
   } finally {
     loading.value = false
   }
-}
-
-function getGradeTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    EXAM: 'Экзамен',
-    CREDIT: 'Зачёт',
-    COURSEWORK: 'Курсовая',
-    TEST: 'Контрольная',
-    LAB: 'Лабораторная',
-  }
-  return labels[type] || type
-}
-
-function getGradeClass(value: number): string {
-  if (value >= 9) return 'excellent'
-  if (value >= 7) return 'good'
-  if (value >= 5) return 'satisfactory'
-  return 'poor'
 }
 
 function formatDate(date: Date | string | null | undefined): string {
@@ -208,208 +189,57 @@ onMounted(async () => {
 <style scoped>
 .student-page {
   min-height: 100vh;
-  background: #f5f7fa;
-  padding: 20px;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.header h1 {
-  font-size: 28px;
-  color: #333;
-  margin: 0;
+  background: var(--color-background);
+  padding: var(--spacing-5);
 }
 
 .subtitle {
-  color: #666;
-  margin-top: 5px;
-}
-
-.logout-button {
-  padding: 10px 20px;
-  background: #e53e3e;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.logout-button:hover {
-  background: #c53030;
-}
-
-.loading,
-.error {
-  text-align: center;
-  padding: 40px;
-  font-size: 18px;
-}
-
-.loading {
-  color: #666;
-}
-
-.error {
-  color: #e53e3e;
-  background: #fff5f5;
-  border-radius: 8px;
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-1);
+  font-size: var(--font-size-sm);
 }
 
 .content {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: var(--spacing-6);
 }
 
-.info-card,
-.grades-section {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.info-card h2,
-.grades-section h2 {
-  margin: 0 0 20px 0;
-  font-size: 22px;
-  color: #333;
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.info-item .label {
-  font-size: 14px;
-  color: #666;
-  font-weight: 500;
-}
-
-.info-item .value {
-  font-size: 16px;
-  color: #333;
-}
-
-.empty {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-  font-size: 16px;
+.grades-table-wrapper {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .grades-table {
-  overflow-x: auto;
-}
-
-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-thead {
-  background: #f8f9fa;
+.grades-table thead {
+  background: var(--color-surface-secondary);
 }
 
-th,
-td {
-  padding: 12px;
+.grades-table th,
+.grades-table td {
+  padding: var(--spacing-3);
   text-align: left;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-border);
 }
 
-th {
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
+.grades-table th {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
 }
 
-td {
-  color: #666;
-  font-size: 14px;
+.grades-table td {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
-tbody tr:hover {
-  background: #f8f9fa;
-}
-
-.grade-type {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.type-exam {
-  background: #e6f3ff;
-  color: #0066cc;
-}
-
-.type-credit {
-  background: #e6ffe6;
-  color: #00a854;
-}
-
-.type-coursework {
-  background: #fff7e6;
-  color: #fa8c16;
-}
-
-.type-test {
-  background: #f0e6ff;
-  color: #722ed1;
-}
-
-.type-lab {
-  background: #ffe6f0;
-  color: #eb2f96;
-}
-
-.grade-value {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.excellent {
-  background: #e6f7ff;
-  color: #1890ff;
-}
-
-.good {
-  background: #f6ffed;
-  color: #52c41a;
-}
-
-.satisfactory {
-  background: #fffbe6;
-  color: #faad14;
-}
-
-.poor {
-  background: #fff1f0;
-  color: #f5222d;
+.grades-table tbody tr:hover {
+  background: var(--color-surface-hover);
 }
 </style>
