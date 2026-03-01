@@ -1,61 +1,47 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          MITSO Record App
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          Войдите в систему учёта зачётных книжек
-        </p>
-      </div>
-
-      <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
-        <div v-if="error" class="rounded-md bg-red-50 p-4">
-          <p class="text-sm text-red-800">{{ error }}</p>
+  <div class="login-page">
+    <Container maxWidth="sm" class="login-container">
+      <Card class="login-card">
+        <div class="login-header">
+          <h2>MITSO Record App</h2>
+          <p class="subtitle">Войдите в систему учёта зачётных книжек</p>
         </div>
 
-        <div class="rounded-md shadow-sm -space-y-px">
-          <div>
-            <label for="email" class="sr-only">Email</label>
-            <input
-              id="email"
+        <Alert v-if="error" variant="error" :title="error" closable @close="error = ''" />
+
+        <Form class="login-form" @submit="handleLogin">
+          <FormField label="Email" required>
+            <Input
               v-model="email"
-              name="email"
               type="email"
+              placeholder="Email адрес"
               autocomplete="email"
               required
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Email адрес"
             />
-          </div>
-          <div>
-            <label for="password" class="sr-only">Пароль</label>
-            <input
-              id="password"
+          </FormField>
+
+          <FormField label="Пароль" required>
+            <Input
               v-model="password"
-              name="password"
               type="password"
+              placeholder="Введите пароль"
               autocomplete="current-password"
               required
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Пароль"
             />
-          </div>
-        </div>
+          </FormField>
 
-        <div>
-          <button
+          <Button
             type="submit"
+            variant="primary"
+            fullWidth
+            :loading="loading"
             :disabled="loading"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            <span v-if="loading">Вход...</span>
-            <span v-else>Войти</span>
-          </button>
-        </div>
-      </form>
-    </div>
+            {{ loading ? 'Вход...' : 'Войти' }}
+          </Button>
+        </Form>
+      </Card>
+    </Container>
   </div>
 </template>
 
@@ -64,6 +50,15 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/features/auth/model/useAuth'
 import { useHttpClient } from '~/shared/api/httpClient'
+import {
+  Container,
+  Card,
+  Input,
+  Button,
+  Alert,
+  Form,
+  FormField,
+} from '~/shared/ui'
 
 const router = useRouter()
 const httpClient = useHttpClient()
@@ -107,3 +102,44 @@ onMounted(() => {
   }
 })
 </script>
+
+<style scoped>
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-background);
+  padding: var(--spacing-5);
+}
+
+.login-container {
+  width: 100%;
+}
+
+.login-card {
+  padding: var(--spacing-8);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: var(--spacing-6);
+}
+
+.login-header h2 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-2) 0;
+}
+
+.subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.login-form {
+  margin-top: var(--spacing-6);
+}
+</style>
