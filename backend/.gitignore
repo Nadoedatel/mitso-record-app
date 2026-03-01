@@ -1,9 +1,4 @@
-<<<<<<< Updated upstream
-node_modules/
-dist/
-.env
-=======
-# compiled output
+# Compiled output
 /dist
 /node_modules
 
@@ -22,6 +17,12 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
+
+# TypeScript
+*.tsbuildinfo
+
+# ESLint
+.eslintcache
 
 # IDEs and editors
 /.idea
@@ -43,4 +44,3 @@ lerna-debug.log*
 .env
 .env.local
 .env.*.local
->>>>>>> Stashed changes

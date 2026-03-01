@@ -1,15 +1,16 @@
 # MITSO Record App - Frontend
 
-Nuxt 3 приложение для учёта студенческих зачёток с админ панелью. Версия: **v2.0.0**
+Nuxt 3 приложение для учёта студенческих зачёток с админ панелью. Версия: **v2.2.5**
 
 ## Стек
 
 - **Nuxt 3** (v3.11.0) - Full-stack Vue фреймворк
 - **Vue 3** - Composition API с `<script setup>`
-- **TypeScript** - Строгая типизация
-- **Pinia** - State management
-- **TailwindCSS** - Utility-first CSS фреймворк
+- **TypeScript** - Строгая типизация (strict mode)
+- **Pinia** - State management (`@pinia/nuxt`)
+- **TailwindCSS** - Utility-first CSS фреймворк (`@nuxtjs/tailwindcss`)
 - **FSD Architecture** - Feature-Sliced Design
+- **Shared UI Library** - собственная библиотека переиспользуемых компонентов
 - Node.js ^20.19.0 || >=22.12.0
 
 ## Установка
@@ -38,26 +39,28 @@ npm run typecheck
 
 ```
 src/
-├── app.vue           # Корневой компонент
-├── middleware/       # Route middleware
-│   ├── auth.ts       # Проверка авторизации
-│   └── admin.ts      # Проверка прав администратора
-├── pages/            # Страницы (Nuxt файловый роутинг)
-│   ├── index.vue     # Главная страница
-│   ├── login.vue     # Страница входа
-│   ├── student.vue   # Страница студента
-│   ├── teacher.vue   # Страница преподавателя
-│   ├── admin.vue     # Админ панель
+├── app.vue                    # Корневой компонент
+├── app/
+│   └── styles/main.css        # Глобальные стили и CSS reset
+├── middleware/                # Route middleware
+│   ├── auth.ts                # Редирект на /login если нет токена
+│   └── admin.ts               # Редирект если роль != ADMIN
+├── pages/                     # Страницы (Nuxt файловый роутинг)
+│   ├── index.vue              # Главная страница
+│   ├── login.vue              # Страница входа
+│   ├── student.vue            # Личный кабинет студента
+│   ├── teacher.vue            # Личный кабинет преподавателя
+│   ├── admin.vue              # Админ панель (вкладки управления)
 │   ├── students/
-│   │   ├── index.vue # Список студентов
-│   │   └── [id].vue  # Детали студента
+│   │   ├── index.vue          # Список студентов с поиском и фильтрами
+│   │   └── [id].vue           # Детали студента и его оценки
 │   └── subjects/
 │       └── [id]/
-│           └── grades.vue  # Выставление оценок
-├── features/         # Фичи с API функциями
+│           └── grades.vue     # Выставление оценок по предмету
+├── features/                  # Фичи с API функциями
 │   ├── auth/
-│   │   ├── api/authApi.ts
-│   │   └── model/useAuth.ts
+│   │   ├── api/authApi.ts     # login, register, refresh, logout, getMe
+│   │   └── model/useAuth.ts   # Pinia store + composable
 │   ├── students/
 │   │   └── api/studentsApi.ts
 │   ├── teachers/
@@ -72,28 +75,37 @@ src/
 │   │   └── api/groupsApi.ts
 │   └── specializations/
 │       └── api/specializationsApi.ts
-├── entities/         # Бизнес-сущности с типами
-│   ├── user/
-│   │   └── model/types.ts       # User, Role enum
-│   ├── student/
-│   │   └── model/types.ts       # Student с полями
-│   ├── teacher/
-│   │   └── model/types.ts       # Teacher с полями
-│   ├── grade/
-│   │   └── model/types.ts       # Grade, GradeType enum
-│   ├── subject/
-│   │   └── model/types.ts       # Subject
-│   ├── faculty/
-│   │   └── model/types.ts       # Faculty
-│   ├── group/
-│   │   └── model/types.ts       # Group
-│   └── specialization/
-│       └── model/types.ts       # Specialization
-└── shared/           # Переиспользуемый код
+├── entities/                  # Бизнес-сущности с типами
+│   ├── user/model/types.ts    # User, Role enum
+│   ├── student/model/types.ts # Student со всеми полями
+│   ├── teacher/model/types.ts # Teacher со всеми полями
+│   ├── grade/model/types.ts   # Grade, GradeType enum
+│   ├── subject/model/types.ts # Subject
+│   ├── faculty/model/types.ts # Faculty
+│   ├── group/model/types.ts   # Group
+│   └── specialization/model/types.ts  # Specialization
+└── shared/                    # Переиспользуемый код
     ├── api/
-    │   └── httpClient.ts  # Базовый HTTP клиент с auth
-    └── lib/
-        └── storage.ts     # Утилиты для localStorage
+    │   └── httpClient.ts      # HTTP клиент: auto token, 401-refresh interceptor
+    ├── lib/
+    │   └── storage.ts         # Утилиты для localStorage
+    └── ui/                    # Shared UI библиотека компонентов
+        ├── Alert/             # Alert
+        ├── Badge/             # Badge, GradeTypeBadge, GradeValueBadge
+        ├── Button/            # Button
+        ├── Card/              # Card, InfoCard
+        ├── Checkbox/          # Checkbox
+        ├── Form/              # Form, FormField, FormRow
+        ├── Input/             # Input, NumberInput, SearchInput
+        ├── Layout/            # Container, Header, Section
+        ├── Loading/           # LoadingSpinner, LoadingState, EmptyState
+        ├── Modal/             # Modal, ModalActions, ModalHeader
+        ├── Pagination/        # Pagination
+        ├── Select/            # Select
+        ├── Table/             # Table, TableCell, TableRow
+        ├── Tabs/              # Tabs
+        └── index.ts           # Barrel export всех компонентов
+```
 
 ## Типы оценок (GradeType)
 
@@ -111,6 +123,31 @@ src/
 ```env
 NUXT_PUBLIC_API_URL=http://localhost:8080/api
 ```
+
+## Shared UI Library
+
+Все UI компоненты находятся в `src/shared/ui/` и импортируются через barrel:
+
+```typescript
+import { Button, Input, Modal, Table, Badge } from '@/shared/ui'
+```
+
+| Компонент | Описание |
+|-----------|----------|
+| `Button` | Кнопка (primary, secondary, success, danger, ghost) |
+| `Input`, `SearchInput`, `NumberInput` | Поля ввода |
+| `Select` | Выпадающий список |
+| `Checkbox` | Чекбокс |
+| `Form`, `FormField`, `FormRow` | Форма с сетками и валидацией |
+| `Modal`, `ModalActions`, `ModalHeader` | Модальные окна |
+| `Table`, `TableCell`, `TableRow` | Таблица с кастомными ячейками |
+| `Card`, `InfoCard` | Карточки |
+| `Badge`, `GradeTypeBadge`, `GradeValueBadge` | Бейджи и метки оценок |
+| `Alert` | Уведомления (success, error, warning, info) |
+| `Tabs` | Вкладки |
+| `Pagination` | Пагинация |
+| `LoadingSpinner`, `LoadingState`, `EmptyState` | Состояния загрузки |
+| `Container`, `Header`, `Section` | Layout компоненты |
 
 ## API Integration
 

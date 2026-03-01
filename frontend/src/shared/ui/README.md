@@ -258,11 +258,11 @@ import { Button, Input, Modal, Table } from '@/shared/ui'
 - `outlined`: boolean
 
 **GradeTypeBadge Props:**
-- `type`: 'ЭКЗАМЕН' | 'ЗАЧЕТ' | 'ДИФФЕРЕНЦИРОВАННЫЙ_ЗАЧЕТ' | ...
+- `type`: 'EXAM' | 'CREDIT' | 'COURSEWORK' | 'TEST' | 'LAB'
 - `size`: 'sm' | 'md' | 'lg'
 
 **GradeValueBadge Props:**
-- `value`: 'ОТЛИЧНО' | 'ХОРОШО' | 'УДОВЛЕТВОРИТЕЛЬНО' | number
+- `value`: number (1-10 или 0-100)
 - `size`: 'sm' | 'md' | 'lg'
 
 #### Alert
