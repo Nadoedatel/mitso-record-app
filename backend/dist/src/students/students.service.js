@@ -98,7 +98,25 @@ let StudentsService = class StudentsService {
                         id: true,
                         name: true,
                         course: true,
-                        faculty: true,
+                        faculty: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                specialization: {
+                    select: {
+                        id: true,
+                        name: true,
+                        code: true,
+                        faculty: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
                     },
                 },
                 grades: {
@@ -135,6 +153,32 @@ let StudentsService = class StudentsService {
                         role: true,
                     },
                 },
+                group: {
+                    select: {
+                        id: true,
+                        name: true,
+                        course: true,
+                        faculty: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                specialization: {
+                    select: {
+                        id: true,
+                        name: true,
+                        code: true,
+                        faculty: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
             },
         });
         if (!student) {
@@ -156,6 +200,32 @@ let StudentsService = class StudentsService {
                         id: true,
                         email: true,
                         role: true,
+                    },
+                },
+                group: {
+                    select: {
+                        id: true,
+                        name: true,
+                        course: true,
+                        faculty: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                specialization: {
+                    select: {
+                        id: true,
+                        name: true,
+                        code: true,
+                        faculty: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
                     },
                 },
             },

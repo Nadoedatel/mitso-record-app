@@ -30,7 +30,7 @@
           class="student-card"
         >
           <h3>{{ student.lastName }} {{ student.firstName }} {{ student.middleName }}</h3>
-          <p class="info"><strong>Группа:</strong> {{ student.group }}</p>
+          <p class="info"><strong>Группа:</strong> {{ student.group?.name || '-' }}</p>
           <p class="info"><strong>Зачётка:</strong> {{ student.studentId }}</p>
         </NuxtLink>
       </div>

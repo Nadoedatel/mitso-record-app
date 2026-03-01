@@ -80,6 +80,31 @@ export class GradesController {
   }
 
   /**
+   * Get groups for a specific subject
+   * GET /api/grades/subject/:subjectId/groups
+   */
+  @Get('subject/:subjectId/groups')
+  @ApiOperation({ summary: 'Get groups assigned to a specific subject' })
+  @ApiResponse({ status: 200, description: 'Subject groups retrieved successfully' })
+  findGroupsBySubject(@Param('subjectId', ParseIntPipe) subjectId: number) {
+    return this.gradesService.findGroupsBySubject(subjectId);
+  }
+
+  /**
+   * Get students for a specific group and subject
+   * GET /api/grades/subject/:subjectId/group/:groupId/students
+   */
+  @Get('subject/:subjectId/group/:groupId/students')
+  @ApiOperation({ summary: 'Get students for a specific group and subject with their grades' })
+  @ApiResponse({ status: 200, description: 'Students retrieved successfully' })
+  findStudentsByGroupAndSubject(
+    @Param('subjectId', ParseIntPipe) subjectId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+  ) {
+    return this.gradesService.findStudentsByGroupAndSubject(groupId, subjectId);
+  }
+
+  /**
    * Get grade by ID
    * GET /api/grades/:id
    */

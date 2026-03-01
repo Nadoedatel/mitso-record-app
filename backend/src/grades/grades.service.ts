@@ -178,6 +178,89 @@ export class GradesService {
   }
 
   /**
+   * Get groups assigned to a specific subject via SubjectGroup table
+   * Returns groups with student count
+   */
+  async findGroupsBySubject(subjectId: number) {
+    // Get all groups assigned to this subject
+    const subjectGroups = await this.prisma.subjectGroup.findMany({
+      where: { subjectId },
+      include: {
+        group: {
+          include: {
+            faculty: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            students: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return subjectGroups.map((sg) => ({
+      id: sg.group.id,
+      name: sg.group.name,
+      course: sg.group.course,
+      facultyId: sg.group.facultyId,
+      faculty: sg.group.faculty,
+      studentCount: sg.group.students.length,
+    }));
+  }
+
+  /**
+   * Get students for a specific group and subject
+   * Returns students with their grades for this subject
+   */
+  async findStudentsByGroupAndSubject(groupId: number, subjectId: number) {
+    // Get all students in the group
+    const students = await this.prisma.student.findMany({
+      where: { groupId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+        group: {
+          select: {
+            id: true,
+            name: true,
+            course: true,
+          },
+        },
+        grades: {
+          where: { subjectId },
+          include: {
+            subject: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+              },
+            },
+          },
+          orderBy: {
+            examDate: 'desc',
+          },
+        },
+      },
+      orderBy: {
+        lastName: 'asc',
+      },
+    });
+
+    return students;
+  }
+
+  /**
    * Batch create or update grades
    * Uses upsert to handle both creation and updates
    */

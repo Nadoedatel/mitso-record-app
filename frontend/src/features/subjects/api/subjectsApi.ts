@@ -102,7 +102,15 @@ export const subjectsApi = {
   },
 
   /**
-   * Assign teachers to subject
+   * Get teachers for a subject
+   */
+  async getSubjectTeachers(subjectId: number): Promise<any[]> {
+    const httpClient = useHttpClient()
+    return httpClient.get<any[]>(`/subjects/${subjectId}/teachers`)
+  },
+
+  /**
+   * Assign teachers to subject (replaces all existing)
    */
   async assignTeachers(subjectId: number, teacherIds: number[]): Promise<void> {
     const httpClient = useHttpClient()

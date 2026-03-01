@@ -146,6 +146,75 @@ let GradesService = class GradesService {
         });
         return { message: 'Grade deleted successfully' };
     }
+    async findGroupsBySubject(subjectId) {
+        const subjectGroups = await this.prisma.subjectGroup.findMany({
+            where: { subjectId },
+            include: {
+                group: {
+                    include: {
+                        faculty: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                        students: {
+                            select: {
+                                id: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        return subjectGroups.map((sg) => ({
+            id: sg.group.id,
+            name: sg.group.name,
+            course: sg.group.course,
+            facultyId: sg.group.facultyId,
+            faculty: sg.group.faculty,
+            studentCount: sg.group.students.length,
+        }));
+    }
+    async findStudentsByGroupAndSubject(groupId, subjectId) {
+        const students = await this.prisma.student.findMany({
+            where: { groupId },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                    },
+                },
+                group: {
+                    select: {
+                        id: true,
+                        name: true,
+                        course: true,
+                    },
+                },
+                grades: {
+                    where: { subjectId },
+                    include: {
+                        subject: {
+                            select: {
+                                id: true,
+                                name: true,
+                                code: true,
+                            },
+                        },
+                    },
+                    orderBy: {
+                        examDate: 'desc',
+                    },
+                },
+            },
+            orderBy: {
+                lastName: 'asc',
+            },
+        });
+        return students;
+    }
     async batchCreate(grades) {
         const results = await Promise.allSettled(grades.map((gradeDto) => this.prisma.grade.upsert({
             where: {

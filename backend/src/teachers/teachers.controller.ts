@@ -100,21 +100,21 @@ export class TeachersController {
   }
 
   /**
-   * Assign subjects to a teacher
+   * Set subjects for a teacher (replaces all existing)
    * POST /api/teachers/:id/subjects
    */
   @Post(':id/subjects')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Assign subjects to a teacher (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Subjects assigned successfully' })
+  @ApiOperation({ summary: 'Set subjects for a teacher - replaces all existing (ADMIN only)' })
+  @ApiResponse({ status: 200, description: 'Subjects set successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Teacher or subject not found' })
-  assignSubjects(
+  setSubjects(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AssignSubjectsDto,
   ) {
-    return this.teachersService.assignSubjects(id, dto.subjectIds);
+    return this.teachersService.setSubjects(id, dto.subjectIds);
   }
 
   /**

@@ -1,5 +1,5 @@
-import { IsString, IsInt, Min, Max } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsInt, Min, Max, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateGroupDto {
   @ApiProperty({ example: 'ИТ-21', description: 'Group name' })
@@ -12,7 +12,8 @@ export class CreateGroupDto {
   @Max(6)
   course: number;
 
-  @ApiProperty({ example: 'Информационные технологии', description: 'Faculty name' })
-  @IsString()
-  faculty: string;
+  @ApiPropertyOptional({ example: 1, description: 'Faculty ID' })
+  @IsInt()
+  @IsOptional()
+  facultyId?: number;
 }

@@ -229,4 +229,68 @@ export class SubjectsService {
     // Return updated subject with groups
     return this.findOne(subjectId);
   }
+
+  /**
+   * Get teachers for a subject
+   */
+  async getTeachers(subjectId: number) {
+    // Check if subject exists
+    await this.findOne(subjectId);
+
+    const teacherSubjects = await this.prisma.teacherSubject.findMany({
+      where: { subjectId },
+      include: {
+        teacher: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return teacherSubjects.map((ts) => ts.teacher);
+  }
+
+  /**
+   * Set teachers for a subject (replaces all existing)
+   */
+  async setTeachers(subjectId: number, teacherIds: number[]) {
+    // Check if subject exists
+    await this.findOne(subjectId);
+
+    // Check if all teachers exist
+    const teachers = await this.prisma.teacher.findMany({
+      where: { id: { in: teacherIds } },
+    });
+
+    if (teachers.length !== teacherIds.length) {
+      throw new NotFoundException('One or more teachers not found');
+    }
+
+    // Use transaction to replace all teachers
+    await this.prisma.$transaction(async (tx) => {
+      // Delete all existing relations
+      await tx.teacherSubject.deleteMany({
+        where: { subjectId },
+      });
+
+      // Create new relations
+      if (teacherIds.length > 0) {
+        await tx.teacherSubject.createMany({
+          data: teacherIds.map((teacherId) => ({
+            teacherId,
+            subjectId,
+          })),
+        });
+      }
+    });
+
+    return this.getTeachers(subjectId);
+  }
 }

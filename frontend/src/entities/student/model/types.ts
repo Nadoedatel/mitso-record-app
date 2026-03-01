@@ -1,4 +1,7 @@
 import type { User } from '../../user/model/types'
+import type { Group } from '../../group/model/types'
+import type { Specialization } from '../../specialization/model/types'
+import type { Grade } from '../../grade/model/types'
 
 export interface Student {
   id: number
@@ -7,10 +10,11 @@ export interface Student {
   lastName: string
   middleName?: string
   studentId: string // Номер зачетной книжки
-  group: string
+  groupId?: number
+  group?: Group
   course: number
-  faculty: string
-  specialization: string
+  specializationId?: number
+  specialization?: Specialization
   enrollmentYear: number
   phone?: string
   address?: string
@@ -18,4 +22,5 @@ export interface Student {
   createdAt: string
   updatedAt: string
   user?: User
+  grades?: Grade[]
 }

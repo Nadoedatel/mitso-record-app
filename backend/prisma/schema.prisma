@@ -32,26 +32,26 @@ enum Role {
 }
 
 model Student {
-  id             Int       @id @default(autoincrement())
-  userId         Int       @unique @map("user_id")
-  firstName      String    @map("first_name")
-  lastName       String    @map("last_name")
-  middleName     String?   @map("middle_name")
-  studentId      String    @unique @map("student_id") // Номер зачетной книжки
-  groupId        Int?      @map("group_id")
-  course         Int
-  faculty        String
-  specialization String
-  enrollmentYear Int       @map("enrollment_year")
-  phone          String?
-  address        String?
-  birthDate      DateTime? @map("birth_date")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id               Int       @id @default(autoincrement())
+  userId           Int       @unique @map("user_id")
+  firstName        String    @map("first_name")
+  lastName         String    @map("last_name")
+  middleName       String?   @map("middle_name")
+  studentId        String    @unique @map("student_id") // Номер зачетной книжки
+  groupId          Int?      @map("group_id")
+  course           Int
+  specializationId Int?      @map("specialization_id")
+  enrollmentYear   Int       @map("enrollment_year")
+  phone            String?
+  address          String?
+  birthDate        DateTime? @map("birth_date")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group  Group?  @relation(fields: [groupId], references: [id], onDelete: SetNull)
-  grades Grade[]
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group          Group?          @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  specialization Specialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
+  grades         Grade[]
 
   @@map("students")
 }
@@ -123,10 +123,11 @@ model Group {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   course    Int
-  faculty   String
+  facultyId Int?     @map("faculty_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  faculty       Faculty?       @relation(fields: [facultyId], references: [id], onDelete: SetNull)
   students      Student[]
   subjectGroups SubjectGroup[]
 
@@ -157,4 +158,30 @@ model SubjectGroup {
 
   @@unique([subjectId, groupId])
   @@map("subject_groups")
+}
+
+model Faculty {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  specializations Specialization[]
+  groups          Group[]
+
+  @@map("faculties")
+}
+
+model Specialization {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String?
+  facultyId Int      @map("faculty_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  faculty  Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  students Student[]
+
+  @@map("specializations")
 }

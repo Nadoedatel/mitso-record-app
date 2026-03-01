@@ -189,6 +189,49 @@ let SubjectsService = class SubjectsService {
         await Promise.all(createPromises);
         return this.findOne(subjectId);
     }
+    async getTeachers(subjectId) {
+        await this.findOne(subjectId);
+        const teacherSubjects = await this.prisma.teacherSubject.findMany({
+            where: { subjectId },
+            include: {
+                teacher: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                email: true,
+                                role: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        return teacherSubjects.map((ts) => ts.teacher);
+    }
+    async setTeachers(subjectId, teacherIds) {
+        await this.findOne(subjectId);
+        const teachers = await this.prisma.teacher.findMany({
+            where: { id: { in: teacherIds } },
+        });
+        if (teachers.length !== teacherIds.length) {
+            throw new common_1.NotFoundException('One or more teachers not found');
+        }
+        await this.prisma.$transaction(async (tx) => {
+            await tx.teacherSubject.deleteMany({
+                where: { subjectId },
+            });
+            if (teacherIds.length > 0) {
+                await tx.teacherSubject.createMany({
+                    data: teacherIds.map((teacherId) => ({
+                        teacherId,
+                        subjectId,
+                    })),
+                });
+            }
+        });
+        return this.getTeachers(subjectId);
+    }
 };
 exports.SubjectsService = SubjectsService;
 exports.SubjectsService = SubjectsService = __decorate([

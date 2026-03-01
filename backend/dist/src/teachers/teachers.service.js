@@ -242,6 +242,29 @@ let TeachersService = class TeachersService {
         }
         return { message: 'Subject removed from teacher successfully' };
     }
+    async setSubjects(teacherId, subjectIds) {
+        await this.findOne(teacherId);
+        const subjects = await this.prisma.subject.findMany({
+            where: { id: { in: subjectIds } },
+        });
+        if (subjects.length !== subjectIds.length) {
+            throw new common_1.NotFoundException('One or more subjects not found');
+        }
+        await this.prisma.$transaction(async (tx) => {
+            await tx.teacherSubject.deleteMany({
+                where: { teacherId },
+            });
+            if (subjectIds.length > 0) {
+                await tx.teacherSubject.createMany({
+                    data: subjectIds.map((subjectId) => ({
+                        teacherId,
+                        subjectId,
+                    })),
+                });
+            }
+        });
+        return this.getSubjects(teacherId);
+    }
 };
 exports.TeachersService = TeachersService;
 exports.TeachersService = TeachersService = __decorate([

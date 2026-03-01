@@ -33,11 +33,9 @@ export class CreateStudentDto {
   @Max(6)
   course: number;
 
-  @IsString()
-  faculty: string;
-
-  @IsString()
-  specialization: string;
+  @IsInt()
+  @IsOptional()
+  specializationId?: number;
 
   @IsInt()
   @Min(2000)

@@ -10,30 +10,41 @@ export declare class StudentsController {
             role: import(".prisma/client").$Enums.Role;
         };
     } & {
-        course: number;
-        faculty: string;
         createdAt: Date;
         updatedAt: Date;
         id: number;
+        course: number;
         firstName: string;
         lastName: string;
         middleName: string | null;
         studentId: string;
-        specialization: string;
         enrollmentYear: number;
         phone: string | null;
         address: string | null;
         birthDate: Date | null;
         groupId: number | null;
+        specializationId: number | null;
         userId: number;
     }>;
     findAll(query: QueryStudentDto): Promise<import("../common/dto").PaginatedResponse<any>>;
     findOne(id: number): Promise<{
+        specialization: {
+            name: string;
+            id: number;
+            faculty: {
+                name: string;
+                id: number;
+            };
+            code: string | null;
+        } | null;
         group: {
             name: string;
-            course: number;
-            faculty: string;
             id: number;
+            faculty: {
+                name: string;
+                id: number;
+            } | null;
+            course: number;
         } | null;
         grades: ({
             subject: {
@@ -85,45 +96,61 @@ export declare class StudentsController {
             role: import(".prisma/client").$Enums.Role;
         };
     } & {
-        course: number;
-        faculty: string;
         createdAt: Date;
         updatedAt: Date;
         id: number;
+        course: number;
         firstName: string;
         lastName: string;
         middleName: string | null;
         studentId: string;
-        specialization: string;
         enrollmentYear: number;
         phone: string | null;
         address: string | null;
         birthDate: Date | null;
         groupId: number | null;
+        specializationId: number | null;
         userId: number;
     }>;
     update(id: number, dto: UpdateStudentDto): Promise<{
+        specialization: {
+            name: string;
+            id: number;
+            faculty: {
+                name: string;
+                id: number;
+            };
+            code: string | null;
+        } | null;
+        group: {
+            name: string;
+            id: number;
+            faculty: {
+                name: string;
+                id: number;
+            } | null;
+            course: number;
+        } | null;
         user: {
             id: number;
             email: string;
             role: import(".prisma/client").$Enums.Role;
         };
     } & {
-        course: number;
-        faculty: string;
         createdAt: Date;
         updatedAt: Date;
         id: number;
+        course: number;
         firstName: string;
         lastName: string;
         middleName: string | null;
         studentId: string;
-        specialization: string;
         enrollmentYear: number;
         phone: string | null;
         address: string | null;
         birthDate: Date | null;
         groupId: number | null;
+        specializationId: number | null;
         userId: number;
     }>;
     remove(id: number): Promise<{

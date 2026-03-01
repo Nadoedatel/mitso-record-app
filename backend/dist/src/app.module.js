@@ -18,6 +18,8 @@ const teachers_module_1 = require("./teachers/teachers.module");
 const subjects_module_1 = require("./subjects/subjects.module");
 const grades_module_1 = require("./grades/grades.module");
 const groups_module_1 = require("./groups/groups.module");
+const faculties_module_1 = require("./faculties/faculties.module");
+const specializations_module_1 = require("./specializations/specializations.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -40,6 +42,8 @@ exports.AppModule = AppModule = __decorate([
             subjects_module_1.SubjectsModule,
             grades_module_1.GradesModule,
             groups_module_1.GroupsModule,
+            faculties_module_1.FacultiesModule,
+            specializations_module_1.SpecializationsModule,
         ],
         providers: [
             {

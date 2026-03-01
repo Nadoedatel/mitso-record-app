@@ -36,6 +36,12 @@ let GradesController = class GradesController {
     findByStudent(studentId) {
         return this.gradesService.findByStudent(studentId);
     }
+    findGroupsBySubject(subjectId) {
+        return this.gradesService.findGroupsBySubject(subjectId);
+    }
+    findStudentsByGroupAndSubject(subjectId, groupId) {
+        return this.gradesService.findStudentsByGroupAndSubject(groupId, subjectId);
+    }
     findOne(id) {
         return this.gradesService.findOne(id);
     }
@@ -89,6 +95,25 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "findByStudent", null);
+__decorate([
+    (0, common_1.Get)('subject/:subjectId/groups'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get groups assigned to a specific subject' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Subject groups retrieved successfully' }),
+    __param(0, (0, common_1.Param)('subjectId', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], GradesController.prototype, "findGroupsBySubject", null);
+__decorate([
+    (0, common_1.Get)('subject/:subjectId/group/:groupId/students'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get students for a specific group and subject with their grades' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Students retrieved successfully' }),
+    __param(0, (0, common_1.Param)('subjectId', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Param)('groupId', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number]),
+    __metadata("design:returntype", void 0)
+], GradesController.prototype, "findStudentsByGroupAndSubject", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Get grade by ID' }),

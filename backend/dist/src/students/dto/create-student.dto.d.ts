@@ -6,8 +6,7 @@ export declare class CreateStudentDto {
     studentId: string;
     groupId?: number;
     course: number;
-    faculty: string;
-    specialization: string;
+    specializationId?: number;
     enrollmentYear: number;
     phone?: string;
     address?: string;

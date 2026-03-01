@@ -42,6 +42,12 @@ let SubjectsController = class SubjectsController {
     assignGroups(id, dto) {
         return this.subjectsService.assignGroups(id, dto.groupIds);
     }
+    getTeachers(id) {
+        return this.subjectsService.getTeachers(id);
+    }
+    setTeachers(id, dto) {
+        return this.subjectsService.setTeachers(id, dto.teacherIds);
+    }
 };
 exports.SubjectsController = SubjectsController;
 __decorate([
@@ -116,6 +122,30 @@ __decorate([
     __metadata("design:paramtypes", [Number, dto_1.AssignGroupsDto]),
     __metadata("design:returntype", void 0)
 ], SubjectsController.prototype, "assignGroups", null);
+__decorate([
+    (0, common_1.Get)(':id/teachers'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get teachers for a subject' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Subject teachers retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Subject not found' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], SubjectsController.prototype, "getTeachers", null);
+__decorate([
+    (0, common_1.Post)(':id/teachers'),
+    (0, common_1.UseGuards)(guards_1.RolesGuard),
+    (0, decorators_1.Roles)(client_1.Role.ADMIN),
+    (0, swagger_1.ApiOperation)({ summary: 'Set teachers for a subject - replaces all existing (ADMIN only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Teachers set successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Subject or teacher not found' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, dto_1.SetSubjectTeachersDto]),
+    __metadata("design:returntype", void 0)
+], SubjectsController.prototype, "setTeachers", null);
 exports.SubjectsController = SubjectsController = __decorate([
     (0, swagger_1.ApiTags)('subjects'),
     (0, swagger_1.ApiBearerAuth)(),
