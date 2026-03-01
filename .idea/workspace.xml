@@ -6,17 +6,21 @@
   <component name="ChangeListManager">
     <list default="true" id="84e2545b-d8eb-4548-923c-c64e34bcb856" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+<<<<<<< Updated upstream
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/app.config.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/app.config.mjs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/components.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/components.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/dev/index.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/dev/index.mjs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/dev/index.mjs.map" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/dev/index.mjs.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/imports.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/imports.d.ts" afterDir="false" />
+=======
+>>>>>>> Stashed changes
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/manifest/latest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/manifest/latest.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/manifest/meta/dev.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/manifest/meta/dev.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/nitro.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/nitro.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/nuxt.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/nuxt.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/nuxt.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/nuxt.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/tailwind/postcss.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/tailwind/postcss.mjs" afterDir="false" />
+<<<<<<< Updated upstream
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/tsconfig.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/tsconfig.server.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/tsconfig.server.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/types/app-defaults.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/types/app-defaults.d.ts" afterDir="false" />
@@ -182,6 +186,13 @@
       <change beforePath="$PROJECT_DIR$/frontend/.output/server/index.mjs.map" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.output/server/package.json" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/admin.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/admin.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/login.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/login.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/students/[id].vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/students/[id].vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/students/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/students/index.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/subjects/[id]/grades.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/subjects/[id]/grades.vue" afterDir="false" />
+>>>>>>> Stashed changes
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -228,7 +239,11 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
     "RunOnceActivity.git.unshallow": "true",
+<<<<<<< Updated upstream
     "git-widget-placeholder": "v.2.0.0",
+=======
+    "git-widget-placeholder": "v.2.2.1",
+>>>>>>> Stashed changes
     "last_opened_file_path": "/Users/nadoe/WebstormProjects/mitso-record-app",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -279,7 +294,13 @@
       <workItem from="1772097005425" duration="260000" />
       <workItem from="1772271568953" duration="1274000" />
       <workItem from="1772272853854" duration="1821000" />
+<<<<<<< Updated upstream
       <workItem from="1772274696208" duration="403000" />
+=======
+      <workItem from="1772274696208" duration="2587000" />
+      <workItem from="1772297789476" duration="6120000" />
+      <workItem from="1772350575655" duration="6101000" />
+>>>>>>> Stashed changes
     </task>
     <servers />
   </component>
