@@ -1,25 +1,28 @@
 <template>
   <div class="home-page">
-    <div v-if="loading" class="loading">Загрузка...</div>
+    <LoadingState v-if="loading" message="Загрузка профиля..." />
 
-    <div v-else-if="error" class="error-container">
-      <p class="error">{{ error }}</p>
-      <button @click="handleLogout" class="logout-button">Выйти</button>
-    </div>
+    <Card v-else-if="error" variant="elevated" padding="lg">
+      <Alert variant="error" :title="error" />
+      <div class="error-actions">
+        <Button variant="danger" @click="handleLogout">Выйти</Button>
+      </div>
+    </Card>
 
-    <div v-else-if="user" class="container">
-      <div class="header">
+    <Card v-else-if="user" variant="elevated" padding="lg" class="welcome-card">
+      <div class="card-header">
         <h1 class="title">MITSO Record App</h1>
-        <button @click="handleLogout" class="logout-button">Выход</button>
+        <Button variant="danger" @click="handleLogout">Выход</Button>
       </div>
 
       <div class="welcome">
         <h2>Добро пожаловать, {{ user.email }}!</h2>
-        <p class="role-badge">{{ user.role === 'TEACHER' ? 'Преподаватель' : 'Студент' }}</p>
+        <Badge variant="primary" size="md" pill>
+          {{ user.role === 'TEACHER' ? 'Преподаватель' : 'Студент' }}
+        </Badge>
       </div>
 
-      <div class="navigation">
-        <h3>Навигация</h3>
+      <Section title="Навигация">
         <div class="nav-buttons">
           <NuxtLink
             v-if="user.role === 'STUDENT'"
@@ -36,8 +39,8 @@
             Управление оценками
           </NuxtLink>
         </div>
-      </div>
-    </div>
+      </Section>
+    </Card>
   </div>
 </template>
 
@@ -47,6 +50,14 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/features/auth/model/useAuth'
 import { useHttpClient } from '~/shared/api/httpClient'
 import type { User } from '~/entities/user'
+import {
+  LoadingState,
+  Card,
+  Alert,
+  Button,
+  Badge,
+  Section,
+} from '~/shared/ui'
 
 const router = useRouter()
 const httpClient = useHttpClient()
@@ -97,116 +108,62 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #764ba2 100%);
+  padding: var(--spacing-5);
 }
 
-.loading,
-.error-container {
-  background: white;
-  border-radius: 12px;
-  padding: 40px;
-  text-align: center;
-}
-
-.loading {
-  font-size: 18px;
-  color: #666;
-}
-
-.error {
-  color: #e53e3e;
-  background: #fff5f5;
-  padding: 12px;
-  border-radius: 6px;
-  margin-bottom: 20px;
-}
-
-.container {
-  background: white;
-  border-radius: 12px;
-  padding: 40px;
+.welcome-card {
   max-width: 600px;
   width: 100%;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
-.header {
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: var(--spacing-6);
 }
 
 .title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #333;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
-.logout-button {
-  padding: 10px 20px;
-  background: #e53e3e;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.logout-button:hover {
-  background: #c53030;
+.error-actions {
+  margin-top: var(--spacing-4);
+  display: flex;
+  justify-content: center;
 }
 
 .welcome {
-  margin-bottom: 30px;
+  margin-bottom: var(--spacing-6);
   text-align: center;
 }
 
 .welcome h2 {
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.role-badge {
-  display: inline-block;
-  padding: 6px 16px;
-  background: #667eea;
-  color: white;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.navigation {
-  margin-top: 40px;
-}
-
-.navigation h3 {
-  font-size: 18px;
-  color: #333;
-  margin-bottom: 20px;
+  font-size: var(--font-size-xl);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-3);
 }
 
 .nav-buttons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--spacing-3);
 }
 
 .nav-button {
   display: block;
-  padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: var(--spacing-4);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #764ba2 100%);
   color: white;
   text-align: center;
   text-decoration: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   transition: transform 0.3s, box-shadow 0.3s;
 }
 

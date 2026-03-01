@@ -1,60 +1,50 @@
 <template>
   <div class="students-page">
-    <div class="container">
-      <header class="header">
-        <h1>Поиск студентов</h1>
-        <NuxtLink to="/" class="back-button">На главную</NuxtLink>
-      </header>
+    <Container maxWidth="xl">
+      <Header title="Поиск студентов">
+        <template #actions>
+          <Button variant="secondary" @click="$router.push('/')">На главную</Button>
+        </template>
+      </Header>
 
       <div class="search-section">
-        <input
+        <SearchInput
           v-model="searchQuery"
-          type="text"
           placeholder="Поиск по ФИО или номеру зачётки..."
-          class="search-input"
-          @input="handleSearch"
+          @update:modelValue="handleSearch"
         />
       </div>
 
-      <div v-if="loading" class="loading">Загрузка...</div>
-      <div v-else-if="error" class="error">{{ error }}</div>
-      <div v-else-if="students.length === 0" class="empty">
-        Студенты не найдены
-      </div>
+      <LoadingState v-if="loading" message="Загрузка студентов..." />
+
+      <Alert v-else-if="error" variant="error" :title="error" closable @close="error = ''" />
+
+      <EmptyState v-else-if="students.length === 0" message="Студенты не найдены" />
 
       <div v-else class="students-grid">
         <NuxtLink
           v-for="student in students"
           :key="student.id"
           :to="`/students/${student.id}`"
-          class="student-card"
+          class="student-link"
         >
-          <h3>{{ student.lastName }} {{ student.firstName }} {{ student.middleName }}</h3>
-          <p class="info"><strong>Группа:</strong> {{ student.group?.name || '-' }}</p>
-          <p class="info"><strong>Зачётка:</strong> {{ student.studentId }}</p>
+          <Card hoverable>
+            <h3 class="student-name">
+              {{ student.lastName }} {{ student.firstName }} {{ student.middleName }}
+            </h3>
+            <p class="info"><strong>Группа:</strong> {{ student.group?.name || '-' }}</p>
+            <p class="info"><strong>Зачётка:</strong> {{ student.studentId }}</p>
+          </Card>
         </NuxtLink>
       </div>
 
-      <div v-if="pagination.totalPages > 1" class="pagination">
-        <button
-          :disabled="pagination.page === 1"
-          @click="changePage(pagination.page - 1)"
-          class="page-btn"
-        >
-          Назад
-        </button>
-        <span class="page-info">
-          Страница {{ pagination.page }} из {{ pagination.totalPages }}
-        </span>
-        <button
-          :disabled="pagination.page === pagination.totalPages"
-          @click="changePage(pagination.page + 1)"
-          class="page-btn"
-        >
-          Вперёд
-        </button>
-      </div>
-    </div>
+      <Pagination
+        v-if="pagination.totalPages > 1"
+        :currentPage="pagination.page"
+        :totalPages="pagination.totalPages"
+        @update:currentPage="changePage"
+      />
+    </Container>
   </div>
 </template>
 
@@ -62,6 +52,17 @@
 import { ref, onMounted } from 'vue'
 import { studentsApi } from '~/features/students/api/studentsApi'
 import type { Student } from '~/entities/student'
+import {
+  Container,
+  Header,
+  Button,
+  SearchInput,
+  Card,
+  Pagination,
+  LoadingState,
+  EmptyState,
+  Alert,
+} from '~/shared/ui'
 
 const searchQuery = ref('')
 const students = ref<Student[]>([])
@@ -119,140 +120,37 @@ onMounted(() => {
 <style scoped>
 .students-page {
   min-height: 100vh;
-  background: #f7fafc;
-  padding: 20px;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.header h1 {
-  font-size: 28px;
-  color: #2d3748;
-}
-
-.back-button {
-  padding: 10px 20px;
-  background: #667eea;
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: 600;
-  transition: background 0.3s;
-}
-
-.back-button:hover {
-  background: #5568d3;
+  background: var(--color-background);
+  padding: var(--spacing-5);
 }
 
 .search-section {
-  margin-bottom: 24px;
-}
-
-.search-input {
-  width: 100%;
-  padding: 14px;
-  font-size: 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  transition: border-color 0.3s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.loading,
-.error,
-.empty {
-  text-align: center;
-  padding: 40px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.error {
-  color: #e53e3e;
+  margin-bottom: var(--spacing-6);
 }
 
 .students-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+  gap: var(--spacing-5);
+  margin-bottom: var(--spacing-6);
 }
 
-.student-card {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.student-link {
   text-decoration: none;
   color: inherit;
-  transition: transform 0.2s, box-shadow 0.2s;
+  display: block;
 }
 
-.student-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.student-name {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-3) 0;
 }
 
-.student-card h3 {
-  font-size: 18px;
-  margin-bottom: 12px;
-  color: #2d3748;
-}
-
-.student-card .info {
-  font-size: 14px;
-  color: #718096;
-  margin: 6px 0;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.page-btn {
-  padding: 10px 20px;
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.page-btn:hover:not(:disabled) {
-  background: #5568d3;
-}
-
-.page-btn:disabled {
-  background: #cbd5e0;
-  cursor: not-allowed;
-}
-
-.page-info {
-  font-weight: 600;
-  color: #2d3748;
+.info {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: var(--spacing-2) 0;
 }
 </style>

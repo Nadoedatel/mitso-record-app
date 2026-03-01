@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="84e2545b-d8eb-4548-923c-c64e34bcb856" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/app.config.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/app.config.mjs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/components.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/components.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/dev/index.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/dev/index.mjs" afterDir="false" />
@@ -15,8 +16,12 @@
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/manifest/meta/dev.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/manifest/meta/dev.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/nitro.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/nitro.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/nuxt.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/nuxt.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.nuxt/nuxt.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/nuxt.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/tailwind/postcss.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/tailwind/postcss.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/styles/main.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/styles/main.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/index.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/student.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/student.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/teacher.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/teacher.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/tsconfig.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/tsconfig.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/tsconfig.server.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/tsconfig.server.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.nuxt/types/app-defaults.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/types/app-defaults.d.ts" afterDir="false" />
@@ -221,13 +226,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "JavaScript Debug.localhost:3000.executor": "Debug",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.git.unshallow": "true",
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;JavaScript Debug.localhost:3000.executor&quot;: &quot;Debug&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;v.2.0.6&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/nadoe/WebstormProjects/mitso-record-app&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/nadoe/WebstormProjects/mitso-record-app/backend/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
     "git-widget-placeholder": "v.2.0.0",
     "last_opened_file_path": "/Users/nadoe/WebstormProjects/mitso-record-app",
     "node.js.detected.package.eslint": "true",
@@ -239,7 +254,7 @@
     "ts.external.directory.path": "/Users/nadoe/WebstormProjects/mitso-record-app/backend/node_modules/typescript/lib",
     "vue.rearranger.settings.migration": "true"
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -279,6 +294,8 @@
       <workItem from="1772097005425" duration="260000" />
       <workItem from="1772271568953" duration="1274000" />
       <workItem from="1772272853854" duration="1821000" />
+      <workItem from="1772274696208" duration="2587000" />
+      <workItem from="1772297789476" duration="6120000" />
       <workItem from="1772274696208" duration="403000" />
     </task>
     <servers />
