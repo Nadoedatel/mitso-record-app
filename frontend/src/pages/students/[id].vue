@@ -1,81 +1,68 @@
 <template>
   <div class="student-detail-page">
-    <div class="container">
-      <header class="header">
-        <h1>Карточка студента</h1>
-        <NuxtLink to="/students" class="back-button">К списку</NuxtLink>
-      </header>
+    <Container maxWidth="xl">
+      <Header title="Карточка студента">
+        <template #actions>
+          <Button variant="secondary" @click="$router.push('/students')">К списку</Button>
+        </template>
+      </Header>
 
-      <div v-if="loading" class="loading">Загрузка...</div>
-      <div v-else-if="error" class="error">{{ error }}</div>
+      <LoadingState v-if="loading" message="Загрузка данных студента..." />
+
+      <Alert v-else-if="error" variant="error" :title="error" />
 
       <div v-else-if="student" class="content">
-        <div class="student-info">
-          <h2>{{ student.lastName }} {{ student.firstName }} {{ student.middleName }}</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="label">Группа:</span>
-              <span class="value">{{ student.group?.name || '-' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Зачётная книжка:</span>
-              <span class="value">{{ student.studentId }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Курс:</span>
-              <span class="value">{{ student.course }}</span>
-            </div>
-          </div>
-        </div>
+        <InfoCard
+          :title="`${student.lastName} ${student.firstName} ${student.middleName}`"
+          :items="[
+            { label: 'Группа', value: student.group?.name || '-' },
+            { label: 'Зачётная книжка', value: student.studentId },
+            { label: 'Курс', value: String(student.course) }
+          ]"
+        />
 
-        <div class="grades-section">
-          <h3>Оценки</h3>
-
-          <div v-if="!grades || grades.length === 0" class="empty">
-            Оценок пока нет
-          </div>
+        <Section title="Оценки">
+          <EmptyState v-if="!grades || grades.length === 0" message="Оценок пока нет" />
 
           <div v-else>
             <div v-for="semester in groupedGrades" :key="semester.semester" class="semester-group">
-              <h4>Семестр {{ semester.semester }}</h4>
-              <div class="grades-table">
-                <div class="table-header">
-                  <div>Предмет</div>
-                  <div>Преподаватель</div>
-                  <div>Тип</div>
-                  <div>Оценка</div>
-                  <div>Дата</div>
-                </div>
-                <div
-                  v-for="grade in semester.grades"
-                  :key="grade.id"
-                  class="table-row"
-                >
-                  <div>{{ grade.subject?.name || 'Н/Д' }}</div>
-                  <div>
-                    {{ grade.subject?.teacher
-                      ? `${grade.subject.teacher.lastName} ${grade.subject.teacher.firstName.charAt(0)}.`
-                      : 'Н/Д'
-                    }}
-                  </div>
-                  <div>
-                    <span :class="['grade-type-badge', getGradeTypeClass(grade.gradeType)]">
-                      {{ formatGradeType(grade.gradeType) }}
-                    </span>
-                  </div>
-                  <div>
-                    <span :class="['grade-value', getGradeClass(grade.gradeValue)]">
-                      {{ grade.gradeValue }}
-                    </span>
-                  </div>
-                  <div>{{ formatDate(grade.examDate) }}</div>
-                </div>
+              <h4 class="semester-title">Семестр {{ semester.semester }}</h4>
+              <div class="grades-table-wrapper">
+                <table class="grades-table">
+                  <thead>
+                    <tr>
+                      <th>Предмет</th>
+                      <th>Преподаватель</th>
+                      <th>Тип</th>
+                      <th>Оценка</th>
+                      <th>Дата</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="grade in semester.grades" :key="grade.id">
+                      <td>{{ grade.subject?.name || 'Н/Д' }}</td>
+                      <td>
+                        {{ grade.subject?.teacher
+                          ? `${grade.subject.teacher.lastName} ${grade.subject.teacher.firstName.charAt(0)}.`
+                          : 'Н/Д'
+                        }}
+                      </td>
+                      <td>
+                        <GradeTypeBadge :type="grade.gradeType" size="sm" />
+                      </td>
+                      <td>
+                        <GradeValueBadge :value="grade.gradeValue" />
+                      </td>
+                      <td>{{ formatDate(grade.examDate) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
-        </div>
+        </Section>
       </div>
-    </div>
+    </Container>
   </div>
 </template>
 
@@ -86,6 +73,18 @@ import { studentsApi } from '~/features/students/api/studentsApi'
 import { gradesApi } from '~/features/grades/api/gradesApi'
 import type { Student } from '~/entities/student'
 import type { Grade } from '~/entities/grade'
+import {
+  Container,
+  Header,
+  Button,
+  InfoCard,
+  Section,
+  LoadingState,
+  EmptyState,
+  Alert,
+  GradeTypeBadge,
+  GradeValueBadge,
+} from '~/shared/ui'
 
 const route = useRoute()
 const studentId = computed(() => parseInt(route.params.id as string))
@@ -119,38 +118,9 @@ const groupedGrades = computed(() => {
     .sort((a, b) => a.semester - b.semester)
 })
 
-const formatGradeType = (type: string) => {
-  const types: Record<string, string> = {
-    EXAM: 'Экзамен',
-    CREDIT: 'Зачёт',
-    COURSEWORK: 'Курсовая',
-    LAB: 'Лаб. работа',
-    TEST: 'Тест',
-  }
-  return types[type] || type
-}
-
 const formatDate = (date?: string) => {
   if (!date) return 'Н/Д'
   return new Date(date).toLocaleDateString('ru-RU')
-}
-
-const getGradeTypeClass = (type: string) => {
-  const classes: Record<string, string> = {
-    EXAM: 'type-exam',
-    CREDIT: 'type-credit',
-    COURSEWORK: 'type-coursework',
-    LAB: 'type-lab',
-    TEST: 'type-test',
-  }
-  return classes[type] || ''
-}
-
-const getGradeClass = (value: number) => {
-  if (value >= 90) return 'grade-excellent'
-  if (value >= 70) return 'grade-good'
-  if (value >= 50) return 'grade-satisfactory'
-  return 'grade-poor'
 }
 
 onMounted(async () => {
@@ -173,195 +143,64 @@ onMounted(async () => {
 <style scoped>
 .student-detail-page {
   min-height: 100vh;
-  background: #f7fafc;
-  padding: 20px;
+  background: var(--color-background);
+  padding: var(--spacing-5);
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.header h1 {
-  font-size: 28px;
-  color: #2d3748;
-}
-
-.back-button {
-  padding: 10px 20px;
-  background: #667eea;
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
-.back-button:hover {
-  background: #5568d3;
-}
-
-.loading,
-.error {
-  text-align: center;
-  padding: 40px;
-  background: white;
-  border-radius: 8px;
-}
-
-.error {
-  color: #e53e3e;
-}
-
-.student-info {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.student-info h2 {
-  font-size: 24px;
-  color: #2d3748;
-  margin-bottom: 20px;
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.info-item {
+.content {
   display: flex;
   flex-direction: column;
-}
-
-.label {
-  font-size: 14px;
-  color: #718096;
-  margin-bottom: 4px;
-}
-
-.value {
-  font-size: 16px;
-  color: #2d3748;
-  font-weight: 600;
-}
-
-.grades-section {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.grades-section h3 {
-  font-size: 22px;
-  color: #2d3748;
-  margin-bottom: 20px;
+  gap: var(--spacing-6);
 }
 
 .semester-group {
-  margin-bottom: 30px;
+  margin-bottom: var(--spacing-6);
 }
 
-.semester-group h4 {
-  font-size: 18px;
-  color: #667eea;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #e2e8f0;
+.semester-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  margin: 0 0 var(--spacing-3) 0;
+  padding-bottom: var(--spacing-2);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.grades-table-wrapper {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .grades-table {
-  display: flex;
-  flex-direction: column;
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.table-header,
-.table-row {
-  display: grid;
-  grid-template-columns: 2fr 1.5fr 1fr 0.7fr 1fr;
-  gap: 12px;
-  padding: 12px;
+.grades-table thead {
+  background: var(--color-surface-secondary);
 }
 
-.table-header {
-  background: #f7fafc;
-  font-weight: 600;
-  color: #4a5568;
-  border-radius: 6px;
+.grades-table th,
+.grades-table td {
+  padding: var(--spacing-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.table-row {
-  border-bottom: 1px solid #e2e8f0;
+.grades-table th {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
 }
 
-.grade-type-badge {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
+.grades-table td {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
-.type-exam {
-  background: #fef5e7;
-  color: #d68910;
-}
-
-.type-credit {
-  background: #e8f4fd;
-  color: #1e88e5;
-}
-
-.type-coursework {
-  background: #f3e5f5;
-  color: #8e24aa;
-}
-
-.type-lab {
-  background: #e8f5e9;
-  color: #43a047;
-}
-
-.type-test {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.grade-value {
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.grade-excellent {
-  color: #22c55e;
-}
-
-.grade-good {
-  color: #3b82f6;
-}
-
-.grade-satisfactory {
-  color: #f59e0b;
-}
-
-.grade-poor {
-  color: #ef4444;
-}
-
-.empty {
-  text-align: center;
-  padding: 40px;
-  color: #718096;
+.grades-table tbody tr:hover {
+  background: var(--color-surface-hover);
 }
 </style>
