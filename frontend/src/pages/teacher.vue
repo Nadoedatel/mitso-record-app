@@ -1,71 +1,48 @@
 <template>
   <div class="teacher-page">
-    <div class="container">
-      <header class="header">
-        <div>
-          <h1 v-if="authStore.user?.teacher">
-            {{ authStore.user.teacher.lastName }} {{ authStore.user.teacher.firstName }}
-          </h1>
+    <Container maxWidth="xl">
+      <Header
+        v-if="authStore.user?.teacher"
+        :title="`${authStore.user.teacher.lastName} ${authStore.user.teacher.firstName}`"
+      >
+        <template #actions>
           <p v-if="authStore.user?.teacher" class="subtitle">
             {{ authStore.user.teacher.position }} • {{ authStore.user.teacher.department }}
           </p>
-        </div>
-        <button @click="logout" class="logout-button">Выйти</button>
-      </header>
+          <Button variant="danger" @click="logout">Выйти</Button>
+        </template>
+      </Header>
 
-      <div v-if="loading" class="loading">Загрузка...</div>
+      <LoadingState v-if="loading" message="Загрузка данных преподавателя..." />
 
-      <div v-else-if="error" class="error">{{ error }}</div>
+      <Alert v-else-if="error" variant="error" :title="error" closable @close="error = ''" />
 
       <div v-else class="content">
         <!-- Teacher Info Card -->
-        <div v-if="authStore.user?.teacher" class="info-card">
-          <h2>Информация о преподавателе</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="label">ФИО:</span>
-              <span class="value">
-                {{ authStore.user.teacher.lastName }}
-                {{ authStore.user.teacher.firstName }}
-                {{ authStore.user.teacher.middleName }}
-              </span>
-            </div>
-            <div class="info-item">
-              <span class="label">Кафедра:</span>
-              <span class="value">{{ authStore.user.teacher.department }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Должность:</span>
-              <span class="value">{{ authStore.user.teacher.position }}</span>
-            </div>
-            <div v-if="authStore.user.teacher.academicDegree" class="info-item">
-              <span class="label">Учёная степень:</span>
-              <span class="value">{{ authStore.user.teacher.academicDegree }}</span>
-            </div>
-            <div v-if="authStore.user.teacher.phone" class="info-item">
-              <span class="label">Телефон:</span>
-              <span class="value">{{ authStore.user.teacher.phone }}</span>
-            </div>
-            <div v-if="authStore.user.teacher.officeNumber" class="info-item">
-              <span class="label">Кабинет:</span>
-              <span class="value">{{ authStore.user.teacher.officeNumber }}</span>
-            </div>
-          </div>
-        </div>
+        <InfoCard
+          v-if="authStore.user?.teacher"
+          title="Информация о преподавателе"
+          :items="teacherInfoItems"
+        />
 
         <!-- Subjects Section -->
-        <div class="subjects-section">
-          <h2>Мои предметы</h2>
-
-          <div v-if="subjects.length === 0" class="empty">
-            У вас пока нет назначенных предметов
-          </div>
+        <Section title="Мои предметы">
+          <EmptyState
+            v-if="subjects.length === 0"
+            message="У вас пока нет назначенных предметов"
+          />
 
           <div v-else class="subjects-grid">
-            <div v-for="subject in subjects" :key="subject.id" class="subject-card">
+            <Card
+              v-for="subject in subjects"
+              :key="subject.id"
+              variant="bordered"
+              hoverable
+              padding="md"
+            >
               <div class="subject-header">
                 <h3>{{ subject.name }}</h3>
-                <span class="subject-code">{{ subject.code }}</span>
+                <Badge variant="secondary" size="sm">{{ subject.code }}</Badge>
               </div>
               <div class="subject-details">
                 <div class="detail-item">
@@ -80,65 +57,65 @@
               <p v-if="subject.description" class="subject-description">
                 {{ subject.description }}
               </p>
-              <button @click="viewSubjectDetails(subject)" class="view-button">
+              <Button
+                variant="primary"
+                fullWidth
+                @click="viewSubjectDetails(subject)"
+              >
                 Управление оценками
-              </button>
-            </div>
+              </Button>
+            </Card>
           </div>
-        </div>
+        </Section>
 
         <!-- Grade Assignment Section -->
-        <div class="grade-assignment-section">
-          <h2>Выставление оценок</h2>
-
+        <Section title="Выставление оценок">
           <!-- Subject Selection -->
-          <div class="selection-row">
-            <div class="selection-group">
-              <label for="subject-select">Выберите предмет:</label>
-              <select
-                id="subject-select"
-                v-model="selectedSubjectId"
-                @change="onSubjectChange"
-                class="select-input"
-              >
-                <option :value="null">-- Выберите предмет --</option>
-                <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
-                  {{ subject.name }} ({{ subject.code }})
-                </option>
-              </select>
-            </div>
-          </div>
+          <FormField label="Выберите предмет" html-for="subject-select">
+            <Select
+              id="subject-select"
+              v-model="selectedSubjectId"
+              :options="subjectOptions"
+              placeholder="-- Выберите предмет --"
+              fullWidth
+              @change="onSubjectChange"
+            />
+          </FormField>
 
           <!-- Group Selection -->
-          <div v-if="selectedSubjectId && groups.length > 0" class="selection-row">
-            <div class="selection-group">
-              <label for="group-select">Выберите группу:</label>
-              <select
-                id="group-select"
-                v-model="selectedGroup"
-                @change="onGroupChange"
-                class="select-input"
-              >
-                <option :value="null">-- Выберите группу --</option>
-                <option v-for="group in groups" :key="group.id" :value="group.id">
-                  {{ group.name }} ({{ group.studentCount || 0 }} студентов)
-                </option>
-              </select>
-            </div>
-          </div>
+          <FormField
+            v-if="selectedSubjectId && groups.length > 0"
+            label="Выберите группу"
+            html-for="group-select"
+          >
+            <Select
+              id="group-select"
+              v-model="selectedGroup"
+              :options="groupOptions"
+              placeholder="-- Выберите группу --"
+              fullWidth
+              @change="onGroupChange"
+            />
+          </FormField>
 
           <!-- Loading indicator for groups -->
-          <div v-if="selectedSubjectId && groupsLoading" class="loading-small">
-            Загрузка групп...
-          </div>
+          <LoadingState
+            v-if="selectedSubjectId && groupsLoading"
+            message="Загрузка групп..."
+            size="sm"
+          />
 
           <!-- Students Table -->
-          <div v-if="selectedGroup && students.length > 0" class="students-table-container">
-            <h3>Студенты группы {{ groups.find(g => g.id === selectedGroup)?.name || selectedGroup }}</h3>
+          <div v-if="selectedGroup && students.length > 0">
+            <h3 class="table-title">
+              Студенты группы {{ groups.find(g => g.id === selectedGroup)?.name || selectedGroup }}
+            </h3>
 
-            <div v-if="studentsLoading" class="loading-small">
-              Загрузка студентов...
-            </div>
+            <LoadingState
+              v-if="studentsLoading"
+              message="Загрузка студентов..."
+              size="sm"
+            />
 
             <div v-else class="grades-table">
               <table>
@@ -162,52 +139,46 @@
                     <td>{{ student.studentId }}</td>
                     <td>
                       <div v-if="student.grades && student.grades.length > 0" class="current-grades">
-                        <span
+                        <GradeValueBadge
                           v-for="grade in student.grades"
                           :key="grade.id"
-                          :class="['grade-badge', getGradeClass(grade.gradeValue)]"
-                        >
-                          {{ getGradeTypeLabel(grade.gradeType) }}: {{ grade.gradeValue }}
-                        </span>
+                          :value="grade.gradeValue"
+                          size="sm"
+                        />
                       </div>
                       <span v-else class="no-grades">Нет оценок</span>
                     </td>
                     <td>
-                      <select
+                      <Select
                         v-model="gradesForm[student.id].gradeType"
-                        class="table-select"
-                      >
-                        <option value="">-- Выберите --</option>
-                        <option value="EXAM">Экзамен</option>
-                        <option value="CREDIT">Зачёт</option>
-                        <option value="COURSEWORK">Курсовая</option>
-                        <option value="TEST">Контрольная</option>
-                        <option value="LAB">Лабораторная</option>
-                      </select>
-                    </td>
-                    <td>
-                      <input
-                        v-model.number="gradesForm[student.id].gradeValue"
-                        type="number"
-                        min="1"
-                        max="10"
-                        class="table-input"
-                        placeholder="1-10"
+                        :options="gradeTypeOptions"
+                        placeholder="-- Выберите --"
+                        size="sm"
+                        fullWidth
                       />
                     </td>
                     <td>
-                      <input
+                      <NumberInput
+                        v-model="gradesForm[student.id].gradeValue"
+                        :min="1"
+                        :max="10"
+                        placeholder="1-10"
+                        size="sm"
+                      />
+                    </td>
+                    <td>
+                      <Input
                         v-model="gradesForm[student.id].examDate"
                         type="date"
-                        class="table-input"
+                        size="sm"
                       />
                     </td>
                     <td>
-                      <input
+                      <Input
                         v-model="gradesForm[student.id].notes"
                         type="text"
-                        class="table-input"
                         placeholder="Примечания"
+                        size="sm"
                       />
                     </td>
                   </tr>
@@ -215,40 +186,50 @@
               </table>
             </div>
 
-            <!-- Save Button -->
+            <!-- Save Buttons -->
             <div class="actions">
-              <button
-                @click="saveBatchGrades"
+              <Button
+                variant="success"
                 :disabled="isSaving || !hasValidGrades"
-                class="save-button"
+                :loading="isSaving"
+                @click="saveBatchGrades"
               >
                 {{ isSaving ? 'Сохранение...' : 'Сохранить оценки' }}
-              </button>
-              <button
-                @click="clearGradesForm"
+              </Button>
+              <Button
+                variant="danger"
                 :disabled="isSaving"
-                class="clear-button"
+                @click="clearGradesForm"
               >
                 Очистить форму
-              </button>
+              </Button>
             </div>
 
             <!-- Success/Error Messages -->
-            <div v-if="saveSuccess" class="success-message">
-              Оценки успешно сохранены!
-            </div>
-            <div v-if="saveError" class="error-message">
-              {{ saveError }}
-            </div>
+            <Alert
+              v-if="saveSuccess"
+              variant="success"
+              title="Оценки успешно сохранены!"
+              closable
+              @close="saveSuccess = false"
+            />
+            <Alert
+              v-if="saveError"
+              variant="error"
+              :title="saveError"
+              closable
+              @close="saveError = ''"
+            />
           </div>
 
           <!-- Empty state when no students -->
-          <div v-else-if="selectedGroup && !studentsLoading && students.length === 0" class="empty">
-            В выбранной группе нет студентов
-          </div>
-        </div>
+          <EmptyState
+            v-else-if="selectedGroup && !studentsLoading && students.length === 0"
+            message="В выбранной группе нет студентов"
+          />
+        </Section>
       </div>
-    </div>
+    </Container>
   </div>
 </template>
 
@@ -262,6 +243,25 @@ import type { Subject } from '~/entities/subject'
 import type { Group } from '~/entities/group'
 import type { Student } from '~/entities/student'
 import { GradeType } from '~/entities/grade'
+
+// UI Components
+import {
+  Container,
+  Header,
+  Button,
+  LoadingState,
+  Alert,
+  InfoCard,
+  Section,
+  EmptyState,
+  Card,
+  Badge,
+  FormField,
+  Select,
+  Input,
+  NumberInput,
+  GradeValueBadge,
+} from '~/shared/ui'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -296,6 +296,58 @@ const hasValidGrades = computed(() => {
     return grade.gradeType && grade.gradeValue && grade.gradeValue >= 1 && grade.gradeValue <= 10
   })
 })
+
+// Computed: Teacher info items for InfoCard
+const teacherInfoItems = computed(() => {
+  if (!authStore.user?.teacher) return []
+
+  const teacher = authStore.user.teacher
+  const items = [
+    {
+      label: 'ФИО',
+      value: `${teacher.lastName} ${teacher.firstName} ${teacher.middleName}`,
+    },
+    { label: 'Кафедра', value: teacher.department },
+    { label: 'Должность', value: teacher.position },
+  ]
+
+  if (teacher.academicDegree) {
+    items.push({ label: 'Учёная степень', value: teacher.academicDegree })
+  }
+  if (teacher.phone) {
+    items.push({ label: 'Телефон', value: teacher.phone })
+  }
+  if (teacher.officeNumber) {
+    items.push({ label: 'Кабинет', value: teacher.officeNumber })
+  }
+
+  return items
+})
+
+// Computed: Subject options for Select
+const subjectOptions = computed(() => {
+  return subjects.value.map(subject => ({
+    value: subject.id,
+    label: `${subject.name} (${subject.code})`,
+  }))
+})
+
+// Computed: Group options for Select
+const groupOptions = computed(() => {
+  return groups.value.map(group => ({
+    value: group.id,
+    label: `${group.name} (${group.studentCount || 0} студентов)`,
+  }))
+})
+
+// Computed: Grade type options
+const gradeTypeOptions = [
+  { value: 'EXAM', label: 'Экзамен' },
+  { value: 'CREDIT', label: 'Зачёт' },
+  { value: 'COURSEWORK', label: 'Курсовая' },
+  { value: 'TEST', label: 'Контрольная' },
+  { value: 'LAB', label: 'Лабораторная' },
+]
 
 async function fetchSubjects() {
   if (!authStore.user?.teacher?.id) {
@@ -367,24 +419,6 @@ async function onGroupChange() {
   } finally {
     studentsLoading.value = false
   }
-}
-
-function getGradeTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    EXAM: 'Экзамен',
-    CREDIT: 'Зачёт',
-    COURSEWORK: 'Курсовая',
-    TEST: 'Контрольная',
-    LAB: 'Лабораторная',
-  }
-  return labels[type] || type
-}
-
-function getGradeClass(value: number): string {
-  if (value >= 9) return 'excellent'
-  if (value >= 7) return 'good'
-  if (value >= 5) return 'satisfactory'
-  return 'poor'
 }
 
 async function saveBatchGrades() {
@@ -497,367 +531,135 @@ onMounted(async () => {
 <style scoped>
 .teacher-page {
   min-height: 100vh;
-  background: #f5f7fa;
-  padding: 20px;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.header h1 {
-  font-size: 28px;
-  color: #333;
-  margin: 0;
+  background: var(--color-bg-secondary);
+  padding: var(--spacing-5);
 }
 
 .subtitle {
-  color: #666;
-  margin-top: 5px;
-}
-
-.logout-button {
-  padding: 10px 20px;
-  background: #e53e3e;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.logout-button:hover {
-  background: #c53030;
-}
-
-.loading,
-.error {
-  text-align: center;
-  padding: 40px;
-  font-size: 18px;
-}
-
-.loading {
-  color: #666;
-}
-
-.error {
-  color: #e53e3e;
-  background: #fff5f5;
-  border-radius: 8px;
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-1);
+  font-size: var(--font-size-sm);
 }
 
 .content {
   display: flex;
   flex-direction: column;
-  gap: 30px;
-}
-
-.info-card,
-.subjects-section {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.info-card h2,
-.subjects-section h2 {
-  margin: 0 0 20px 0;
-  font-size: 22px;
-  color: #333;
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.info-item .label {
-  font-size: 14px;
-  color: #666;
-  font-weight: 500;
-}
-
-.info-item .value {
-  font-size: 16px;
-  color: #333;
-}
-
-.empty {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-  font-size: 16px;
+  gap: var(--spacing-6);
 }
 
 .subjects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
-}
-
-.subject-card {
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 20px;
-  transition: all 0.3s;
-}
-
-.subject-card:hover {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+  gap: var(--spacing-5);
 }
 
 .subject-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-4);
+  gap: var(--spacing-3);
 }
 
 .subject-header h3 {
   margin: 0;
-  font-size: 18px;
-  color: #333;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
   flex: 1;
-}
-
-.subject-code {
-  background: #f0f0f0;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
 }
 
 .subject-details {
   display: flex;
-  gap: 20px;
-  margin-bottom: 12px;
+  gap: var(--spacing-5);
+  margin-bottom: var(--spacing-3);
 }
 
 .detail-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: #666;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .detail-item .icon {
-  font-size: 16px;
+  font-size: var(--font-size-md);
 }
 
 .subject-description {
-  color: #666;
-  font-size: 14px;
-  line-height: 1.5;
-  margin: 12px 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  margin: var(--spacing-3) 0;
 }
 
-.view-button {
+.table-title {
+  margin: var(--spacing-5) 0 var(--spacing-4) 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.grades-table {
+  overflow-x: auto;
+  margin: var(--spacing-4) 0;
+}
+
+.grades-table table {
   width: 100%;
-  padding: 10px;
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s;
-  margin-top: 12px;
+  border-collapse: collapse;
 }
 
-.view-button:hover {
-  background: #5568d3;
+.grades-table th,
+.grades-table td {
+  padding: var(--spacing-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-primary);
 }
 
-/* Grade Assignment Section */
-.grade-assignment-section {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.grades-table th {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-tertiary);
+  font-size: var(--font-size-sm);
 }
 
-.selection-row {
-  margin-bottom: 20px;
-}
-
-.selection-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.selection-group label {
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
-}
-
-.select-input {
-  padding: 10px 15px;
-  border: 2px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #333;
-  background: white;
-  cursor: pointer;
-  transition: border-color 0.3s;
-}
-
-.select-input:hover {
-  border-color: #667eea;
-}
-
-.select-input:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.loading-small {
-  text-align: center;
-  padding: 20px;
-  color: #666;
-  font-size: 14px;
-}
-
-.students-table-container {
-  margin-top: 20px;
-}
-
-.students-table-container h3 {
-  margin: 0 0 15px 0;
-  font-size: 18px;
-  color: #333;
-}
-
-.table-select,
-.table-input {
-  width: 100%;
-  padding: 6px 10px;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.table-select:focus,
-.table-input:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.table-input[type="number"] {
-  max-width: 80px;
-}
-
-.table-input[type="date"] {
-  max-width: 140px;
+.grades-table td {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
 }
 
 .current-grades {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-}
-
-.grade-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
+  gap: var(--spacing-1);
 }
 
 .no-grades {
-  color: #999;
-  font-size: 12px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
   font-style: italic;
 }
 
 .actions {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-5);
   align-items: center;
 }
 
-.save-button {
-  padding: 12px 24px;
-  background: #52c41a;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s;
-}
+@media (max-width: 768px) {
+  .subjects-grid {
+    grid-template-columns: 1fr;
+  }
 
-.save-button:hover:not(:disabled) {
-  background: #389e0d;
-}
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
 
-.save-button:disabled {
-  background: #d9d9d9;
-  cursor: not-allowed;
-}
-
-.clear-button {
-  padding: 12px 24px;
-  background: #ff7875;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.clear-button:hover:not(:disabled) {
-  background: #ff4d4f;
-}
-
-.clear-button:disabled {
-  background: #d9d9d9;
-  cursor: not-allowed;
-}
-
-.success-message {
-  padding: 12px 20px;
-  background: #f6ffed;
-  border: 1px solid #b7eb8f;
-  border-radius: 6px;
-  color: #52c41a;
-  font-weight: 600;
-  margin-top: 15px;
-}
-
-.error-message {
-  padding: 12px 20px;
-  background: #fff1f0;
-  border: 1px solid #ffccc7;
-  border-radius: 6px;
-  color: #ff4d4f;
-  font-weight: 600;
-  margin-top: 15px;
+  .actions > * {
+    width: 100%;
+  }
 }
 </style>

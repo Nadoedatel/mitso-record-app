@@ -1,17 +1,15 @@
-/* Global styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/**
+ * Main CSS Entry Point
+ * Imports design tokens and global styles
+ */
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  line-height: 1.6;
-}
+/* Design Tokens - CSS Variables */
+@import '@/shared/styles/tokens.css';
 
+/* Global Styles and Reset */
+@import '@/shared/styles/global.css';
+
+/* Nuxt root element */
 #__nuxt {
   min-height: 100vh;
 }
