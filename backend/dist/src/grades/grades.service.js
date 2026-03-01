@@ -147,33 +147,31 @@ let GradesService = class GradesService {
         return { message: 'Grade deleted successfully' };
     }
     async findGroupsBySubject(subjectId) {
-        const subjectGroups = await this.prisma.subjectGroup.findMany({
-            where: { subjectId },
+        const groups = await this.prisma.group.findMany({
             include: {
-                group: {
-                    include: {
-                        faculty: {
-                            select: {
-                                id: true,
-                                name: true,
-                            },
-                        },
-                        students: {
-                            select: {
-                                id: true,
-                            },
-                        },
+                faculty: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                students: {
+                    select: {
+                        id: true,
                     },
                 },
             },
+            orderBy: {
+                name: 'asc',
+            },
         });
-        return subjectGroups.map((sg) => ({
-            id: sg.group.id,
-            name: sg.group.name,
-            course: sg.group.course,
-            facultyId: sg.group.facultyId,
-            faculty: sg.group.faculty,
-            studentCount: sg.group.students.length,
+        return groups.map((group) => ({
+            id: group.id,
+            name: group.name,
+            course: group.course,
+            facultyId: group.facultyId,
+            faculty: group.faculty,
+            studentCount: group.students.length,
         }));
     }
     async findStudentsByGroupAndSubject(groupId, subjectId) {
