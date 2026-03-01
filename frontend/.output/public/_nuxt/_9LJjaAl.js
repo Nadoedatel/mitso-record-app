@@ -1,0 +1,1 @@
+const e={USER_ROLE:"mitso_user_role"},r={getUserRole(){return typeof window>"u"?null:localStorage.getItem(e.USER_ROLE)},setUserRole(o){typeof window>"u"||localStorage.setItem(e.USER_ROLE,o)},removeUserRole(){typeof window>"u"||localStorage.removeItem(e.USER_ROLE)},clear(){typeof window>"u"||localStorage.clear()}};export{r as storage};
