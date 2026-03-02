@@ -1,8 +1,13 @@
-import { IsString, IsInt, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsEmail, MinLength, MaxLength } from 'class-validator';
 
 export class CreateTeacherDto {
-  @IsInt()
-  userId: number;
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(6)
+  @MaxLength(128)
+  password: string;
 
   @IsString()
   firstName: string;

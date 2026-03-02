@@ -15,9 +15,15 @@ class CreateTeacherDto {
 }
 exports.CreateTeacherDto = CreateTeacherDto;
 __decorate([
-    (0, class_validator_1.IsInt)(),
-    __metadata("design:type", Number)
-], CreateTeacherDto.prototype, "userId", void 0);
+    (0, class_validator_1.IsEmail)(),
+    __metadata("design:type", String)
+], CreateTeacherDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(6),
+    (0, class_validator_1.MaxLength)(128),
+    __metadata("design:type", String)
+], CreateTeacherDto.prototype, "password", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
