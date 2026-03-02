@@ -2,34 +2,13 @@ class HttpClient {
   private baseURL: string
   private accessToken: string | null = null
   private userData: any = null
-  private readonly TOKEN_KEY = 'mitso_access_token'
-  private readonly USER_DATA_KEY = 'mitso_user_data'
 
   constructor(baseURL: string) {
     this.baseURL = baseURL
-    // Load token from localStorage on initialization
-    if (process.client) {
-      this.accessToken = localStorage.getItem(this.TOKEN_KEY)
-      const storedUserData = localStorage.getItem(this.USER_DATA_KEY)
-      if (storedUserData) {
-        try {
-          this.userData = JSON.parse(storedUserData)
-        } catch (e) {
-          console.error('Failed to parse user data:', e)
-        }
-      }
-    }
   }
 
   setAccessToken(token: string | null) {
     this.accessToken = token
-    if (process.client) {
-      if (token) {
-        localStorage.setItem(this.TOKEN_KEY, token)
-      } else {
-        localStorage.removeItem(this.TOKEN_KEY)
-      }
-    }
   }
 
   getAccessToken() {
@@ -38,13 +17,6 @@ class HttpClient {
 
   setUserData(data: any) {
     this.userData = data
-    if (process.client) {
-      if (data) {
-        localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(data))
-      } else {
-        localStorage.removeItem(this.USER_DATA_KEY)
-      }
-    }
   }
 
   getUserData() {
@@ -52,8 +24,8 @@ class HttpClient {
   }
 
   clearAuth() {
-    this.setAccessToken(null)
-    this.setUserData(null)
+    this.accessToken = null
+    this.userData = null
   }
 
   private async request<T>(
@@ -130,16 +102,15 @@ class HttpClient {
 
       if (response.ok) {
         const data = await response.json()
-        // Use setAccessToken to also update localStorage
-        this.setAccessToken(data.accessToken || data.data?.accessToken)
+        this.accessToken = data.accessToken || data.data?.accessToken
         return true
       }
 
-      this.setAccessToken(null)
+      this.accessToken = null
       return false
     } catch (error) {
       console.error('Token refresh failed:', error)
-      this.setAccessToken(null)
+      this.accessToken = null
       return false
     }
   }

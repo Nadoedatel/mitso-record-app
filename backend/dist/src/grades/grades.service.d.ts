@@ -1,10 +1,12 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGradeDto, UpdateGradeDto, QueryGradeDto } from './dto';
 import { PaginatedResponse } from '../common/dto';
+import { AuthUser } from '../auth/interfaces/auth-user.interface';
 export declare class GradesService {
     private prisma;
     constructor(prisma: PrismaService);
-    create(dto: CreateGradeDto): Promise<{
+    private assertTeacherOwnsSubject;
+    create(dto: CreateGradeDto, user: AuthUser): Promise<{
         student: {
             createdAt: Date;
             updatedAt: Date;
@@ -65,8 +67,8 @@ export declare class GradesService {
         gradeValue: number;
         gradeType: import(".prisma/client").$Enums.GradeType;
     }>;
-    findAll(query: QueryGradeDto): Promise<PaginatedResponse<any>>;
-    findByStudent(studentId: number): Promise<({
+    findAll(query: QueryGradeDto, user: AuthUser): Promise<PaginatedResponse<any>>;
+    findByStudent(studentId: number, user: AuthUser): Promise<({
         subject: {
             teacherSubjects: ({
                 teacher: {
@@ -290,7 +292,7 @@ export declare class GradesService {
         specializationId: number | null;
         userId: number;
     })[]>;
-    batchCreate(grades: CreateGradeDto[]): Promise<{
+    batchCreate(grades: CreateGradeDto[], user: AuthUser): Promise<{
         total: number;
         succeeded: number;
         failed: number;

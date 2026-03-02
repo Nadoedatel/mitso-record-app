@@ -58,7 +58,15 @@ export class AuthController {
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Set userRole cookie (readable by JS for SSR middleware)
+    res.cookie('userRole', result.user.role, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -94,7 +102,15 @@ export class AuthController {
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Set userRole cookie (readable by JS for SSR middleware)
+    res.cookie('userRole', result.user.role, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -111,6 +127,7 @@ export class AuthController {
    */
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiCookieAuth('refreshToken')
   @ApiOperation({ summary: 'Refresh access token using httpOnly cookie' })
   @ApiResponse({
@@ -129,7 +146,7 @@ export class AuthController {
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -171,8 +188,9 @@ export class AuthController {
     @CurrentUser() user: AuthUser,
     @Res({ passthrough: true }) res: Response,
   ) {
-    // Clear refresh token cookie
+    // Clear auth cookies
     res.clearCookie('refreshToken');
+    res.clearCookie('userRole');
 
     return this.authService.logout(user.id);
   }

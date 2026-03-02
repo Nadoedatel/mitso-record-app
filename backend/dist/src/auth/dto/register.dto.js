@@ -25,10 +25,11 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(6),
+    (0, class_validator_1.MaxLength)(128),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password", void 0);
 __decorate([
-    (0, class_validator_1.IsEnum)(client_1.Role),
+    (0, class_validator_1.IsIn)([client_1.Role.STUDENT, client_1.Role.TEACHER]),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "role", void 0);

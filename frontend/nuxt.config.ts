@@ -41,7 +41,7 @@ export default defineNuxtConfig({
       preprocessorOptions: {
         scss: {
           loadPaths: ['./src'],
-          additionalData: "@import 'shared/styles/mixins';",
+          additionalData: "@use 'shared/styles/mixins' as *;",
         },
       },
     },

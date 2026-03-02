@@ -1,6 +1,7 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStudentDto, UpdateStudentDto, QueryStudentDto } from './dto';
 import { PaginatedResponse } from '../common/dto';
+import { AuthUser } from '../auth/interfaces/auth-user.interface';
 export declare class StudentsService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -28,7 +29,8 @@ export declare class StudentsService {
         userId: number;
     }>;
     findAll(query: QueryStudentDto): Promise<PaginatedResponse<any>>;
-    findOne(id: number): Promise<{
+    private findById;
+    findOne(id: number, user: AuthUser): Promise<{
         specialization: {
             name: string;
             id: number;

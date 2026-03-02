@@ -14,8 +14,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { GradesService } from './grades.service';
 import { CreateGradeDto, UpdateGradeDto, QueryGradeDto, BatchCreateGradeDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser } from '../common/decorators';
 import { Role } from '@prisma/client';
+import { AuthUser } from '../auth/interfaces/auth-user.interface';
 
 /**
  * GradesController - handles grade-related endpoints
@@ -38,8 +39,8 @@ export class GradesController {
   @ApiOperation({ summary: 'Create new grade (ADMIN/TEACHER only)' })
   @ApiResponse({ status: 201, description: 'Grade created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  create(@Body() dto: CreateGradeDto) {
-    return this.gradesService.create(dto);
+  create(@Body() dto: CreateGradeDto, @CurrentUser() user: AuthUser) {
+    return this.gradesService.create(dto, user);
   }
 
   /**
@@ -52,8 +53,8 @@ export class GradesController {
   @ApiOperation({ summary: 'Batch create or update grades (ADMIN/TEACHER only)' })
   @ApiResponse({ status: 201, description: 'Grades processed successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  batchCreate(@Body() dto: BatchCreateGradeDto) {
-    return this.gradesService.batchCreate(dto.grades);
+  batchCreate(@Body() dto: BatchCreateGradeDto, @CurrentUser() user: AuthUser) {
+    return this.gradesService.batchCreate(dto.grades, user);
   }
 
   /**
@@ -63,8 +64,8 @@ export class GradesController {
   @Get()
   @ApiOperation({ summary: 'Get all grades with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Grades retrieved successfully' })
-  findAll(@Query() query: QueryGradeDto) {
-    return this.gradesService.findAll(query);
+  findAll(@Query() query: QueryGradeDto, @CurrentUser() user: AuthUser) {
+    return this.gradesService.findAll(query, user);
   }
 
   /**
@@ -75,8 +76,11 @@ export class GradesController {
   @Get('student/:id')
   @ApiOperation({ summary: 'Get all grades for a specific student' })
   @ApiResponse({ status: 200, description: 'Student grades retrieved successfully' })
-  findByStudent(@Param('id', ParseIntPipe) studentId: number) {
-    return this.gradesService.findByStudent(studentId);
+  findByStudent(
+    @Param('id', ParseIntPipe) studentId: number,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.gradesService.findByStudent(studentId, user);
   }
 
   /**

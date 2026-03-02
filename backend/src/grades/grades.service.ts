@@ -1,7 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGradeDto, UpdateGradeDto, QueryGradeDto } from './dto';
 import { PaginatedResponse } from '../common/dto';
+import { AuthUser } from '../auth/interfaces/auth-user.interface';
+import { Role } from '@prisma/client';
 
 /**
  * GradesService - business logic for grade management
@@ -11,9 +13,33 @@ export class GradesService {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * Create a new grade
+   * Assert that a teacher owns the subject they are grading
    */
-  async create(dto: CreateGradeDto) {
+  private async assertTeacherOwnsSubject(userId: number, subjectId: number) {
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (!teacher) {
+      throw new ForbiddenException('Teacher profile not found');
+    }
+    const link = await this.prisma.teacherSubject.findFirst({
+      where: { teacherId: teacher.id, subjectId },
+    });
+    if (!link) {
+      throw new ForbiddenException('You are not assigned to this subject');
+    }
+  }
+
+  /**
+   * Create a new grade
+   * Teachers can only create grades for their own subjects
+   */
+  async create(dto: CreateGradeDto, user: AuthUser) {
+    if (user.role === Role.TEACHER) {
+      await this.assertTeacherOwnsSubject(user.id, dto.subjectId);
+    }
+
     return this.prisma.grade.create({
       data: {
         ...dto,
@@ -36,14 +62,27 @@ export class GradesService {
 
   /**
    * Find all grades with optional filters and pagination
+   * Students are forcibly filtered to their own records
    */
-  async findAll(query: QueryGradeDto): Promise<PaginatedResponse<any>> {
+  async findAll(query: QueryGradeDto, user: AuthUser): Promise<PaginatedResponse<any>> {
     const { studentId, subjectId, page = 1, limit = 20 } = query;
 
     const where: any = {};
 
-    if (studentId) {
-      where.studentId = studentId;
+    if (user.role === Role.STUDENT) {
+      // Force-filter to current student's records only
+      const ownStudent = await this.prisma.student.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+      if (!ownStudent) {
+        throw new ForbiddenException('Student profile not found');
+      }
+      where.studentId = ownStudent.id;
+    } else {
+      if (studentId) {
+        where.studentId = studentId;
+      }
     }
 
     if (subjectId) {
@@ -85,9 +124,19 @@ export class GradesService {
 
   /**
    * Find grades for a specific student
-   * This is the key endpoint mentioned in API conventions
+   * Students can only access their own grades
    */
-  async findByStudent(studentId: number) {
+  async findByStudent(studentId: number, user: AuthUser) {
+    if (user.role === Role.STUDENT) {
+      const ownStudent = await this.prisma.student.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+      if (!ownStudent || ownStudent.id !== studentId) {
+        throw new ForbiddenException('Access denied');
+      }
+    }
+
     return this.prisma.grade.findMany({
       where: { studentId },
       include: {
@@ -277,9 +326,15 @@ export class GradesService {
 
   /**
    * Batch create or update grades
-   * Uses upsert to handle both creation and updates
+   * Teachers can only create grades for their own subjects
    */
-  async batchCreate(grades: CreateGradeDto[]) {
+  async batchCreate(grades: CreateGradeDto[], user: AuthUser) {
+    if (user.role === Role.TEACHER) {
+      const subjectIds = [...new Set(grades.map((g) => g.subjectId))];
+      for (const subjectId of subjectIds) {
+        await this.assertTeacherOwnsSubject(user.id, subjectId);
+      }
+    }
     const results = await Promise.allSettled(
       grades.map((gradeDto) =>
         this.prisma.grade.upsert({

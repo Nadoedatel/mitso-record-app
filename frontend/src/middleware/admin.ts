@@ -1,27 +1,31 @@
 /**
  * Admin middleware - protects admin routes
- * Checks if user is authenticated and has ADMIN role
- * Redirects to /login if not authenticated
- * Redirects to / if not ADMIN
+ * Uses userRole cookie (works on SSR and client)
  */
 export default defineNuxtRouteMiddleware(async () => {
-  // Check if running on client side
+  const userRole = useCookie('userRole')
+
+  if (!userRole.value) {
+    return navigateTo('/login')
+  }
+
+  if (userRole.value !== 'ADMIN') {
+    return navigateTo('/')
+  }
+
+  // On client: ensure access token is present, refresh if needed
   if (process.client) {
     const { useHttpClient } = await import('~/shared/api/httpClient')
     const httpClient = useHttpClient()
-    const accessToken = httpClient.getAccessToken()
 
-    // If no access token, redirect to login
-    if (!accessToken) {
-      return navigateTo('/login')
-    }
-
-    // Get user role from token or user data
-    const userData = httpClient.getUserData()
-
-    // Check if user has ADMIN role
-    if (userData?.role !== 'ADMIN') {
-      return navigateTo('/')
+    if (!httpClient.getAccessToken()) {
+      try {
+        const { authApi } = await import('~/features/auth/api/authApi')
+        const result = await authApi.refresh()
+        httpClient.setAccessToken(result.accessToken)
+      } catch {
+        return navigateTo('/login')
+      }
     }
   }
 })

@@ -1,5 +1,6 @@
 import { StudentsService } from './students.service';
 import { CreateStudentDto, UpdateStudentDto, QueryStudentDto } from './dto';
+import { AuthUser } from '../auth/interfaces/auth-user.interface';
 export declare class StudentsController {
     private studentsService;
     constructor(studentsService: StudentsService);
@@ -27,7 +28,7 @@ export declare class StudentsController {
         userId: number;
     }>;
     findAll(query: QueryStudentDto): Promise<import("../common/dto").PaginatedResponse<any>>;
-    findOne(id: number): Promise<{
+    findOne(id: number, user: AuthUser): Promise<{
         specialization: {
             name: string;
             id: number;

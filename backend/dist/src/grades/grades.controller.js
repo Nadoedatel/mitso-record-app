@@ -24,17 +24,17 @@ let GradesController = class GradesController {
     constructor(gradesService) {
         this.gradesService = gradesService;
     }
-    create(dto) {
-        return this.gradesService.create(dto);
+    create(dto, user) {
+        return this.gradesService.create(dto, user);
     }
-    batchCreate(dto) {
-        return this.gradesService.batchCreate(dto.grades);
+    batchCreate(dto, user) {
+        return this.gradesService.batchCreate(dto.grades, user);
     }
-    findAll(query) {
-        return this.gradesService.findAll(query);
+    findAll(query, user) {
+        return this.gradesService.findAll(query, user);
     }
-    findByStudent(studentId) {
-        return this.gradesService.findByStudent(studentId);
+    findByStudent(studentId, user) {
+        return this.gradesService.findByStudent(studentId, user);
     }
     findGroupsBySubject(subjectId) {
         return this.gradesService.findGroupsBySubject(subjectId);
@@ -61,8 +61,9 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Grade created successfully' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, decorators_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [dto_1.CreateGradeDto]),
+    __metadata("design:paramtypes", [dto_1.CreateGradeDto, Object]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "create", null);
 __decorate([
@@ -73,8 +74,9 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Grades processed successfully' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, decorators_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [dto_1.BatchCreateGradeDto]),
+    __metadata("design:paramtypes", [dto_1.BatchCreateGradeDto, Object]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "batchCreate", null);
 __decorate([
@@ -82,8 +84,9 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get all grades with filters and pagination' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Grades retrieved successfully' }),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, decorators_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [dto_1.QueryGradeDto]),
+    __metadata("design:paramtypes", [dto_1.QueryGradeDto, Object]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "findAll", null);
 __decorate([
@@ -91,8 +94,9 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get all grades for a specific student' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Student grades retrieved successfully' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, decorators_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "findByStudent", null);
 __decorate([

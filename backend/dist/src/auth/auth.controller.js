@@ -29,7 +29,13 @@ let AuthController = class AuthController {
         res.cookie('refreshToken', result.refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+        res.cookie('userRole', result.user.role, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         return {
@@ -42,7 +48,13 @@ let AuthController = class AuthController {
         res.cookie('refreshToken', result.refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+        res.cookie('userRole', result.user.role, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         return {
@@ -56,7 +68,7 @@ let AuthController = class AuthController {
         res.cookie('refreshToken', result.refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            sameSite: 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         return {
@@ -68,6 +80,7 @@ let AuthController = class AuthController {
     }
     async logout(user, res) {
         res.clearCookie('refreshToken');
+        res.clearCookie('userRole');
         return this.authService.logout(user.id);
     }
 };
@@ -109,6 +122,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('refresh'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60000 } }),
     (0, swagger_1.ApiCookieAuth)('refreshToken'),
     (0, swagger_1.ApiOperation)({ summary: 'Refresh access token using httpOnly cookie' }),
     (0, swagger_1.ApiResponse)({

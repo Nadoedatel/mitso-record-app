@@ -12,11 +12,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GradesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const client_1 = require("@prisma/client");
 let GradesService = class GradesService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(dto) {
+    async assertTeacherOwnsSubject(userId, subjectId) {
+        const teacher = await this.prisma.teacher.findUnique({
+            where: { userId },
+            select: { id: true },
+        });
+        if (!teacher) {
+            throw new common_1.ForbiddenException('Teacher profile not found');
+        }
+        const link = await this.prisma.teacherSubject.findFirst({
+            where: { teacherId: teacher.id, subjectId },
+        });
+        if (!link) {
+            throw new common_1.ForbiddenException('You are not assigned to this subject');
+        }
+    }
+    async create(dto, user) {
+        if (user.role === client_1.Role.TEACHER) {
+            await this.assertTeacherOwnsSubject(user.id, dto.subjectId);
+        }
         return this.prisma.grade.create({
             data: {
                 ...dto,
@@ -36,11 +55,23 @@ let GradesService = class GradesService {
             },
         });
     }
-    async findAll(query) {
+    async findAll(query, user) {
         const { studentId, subjectId, page = 1, limit = 20 } = query;
         const where = {};
-        if (studentId) {
-            where.studentId = studentId;
+        if (user.role === client_1.Role.STUDENT) {
+            const ownStudent = await this.prisma.student.findUnique({
+                where: { userId: user.id },
+                select: { id: true },
+            });
+            if (!ownStudent) {
+                throw new common_1.ForbiddenException('Student profile not found');
+            }
+            where.studentId = ownStudent.id;
+        }
+        else {
+            if (studentId) {
+                where.studentId = studentId;
+            }
         }
         if (subjectId) {
             where.subjectId = subjectId;
@@ -76,7 +107,16 @@ let GradesService = class GradesService {
             totalPages: Math.ceil(total / limit),
         };
     }
-    async findByStudent(studentId) {
+    async findByStudent(studentId, user) {
+        if (user.role === client_1.Role.STUDENT) {
+            const ownStudent = await this.prisma.student.findUnique({
+                where: { userId: user.id },
+                select: { id: true },
+            });
+            if (!ownStudent || ownStudent.id !== studentId) {
+                throw new common_1.ForbiddenException('Access denied');
+            }
+        }
         return this.prisma.grade.findMany({
             where: { studentId },
             include: {
@@ -226,7 +266,13 @@ let GradesService = class GradesService {
         });
         return students;
     }
-    async batchCreate(grades) {
+    async batchCreate(grades, user) {
+        if (user.role === client_1.Role.TEACHER) {
+            const subjectIds = [...new Set(grades.map((g) => g.subjectId))];
+            for (const subjectId of subjectIds) {
+                await this.assertTeacherOwnsSubject(user.id, subjectId);
+            }
+        }
         const results = await Promise.allSettled(grades.map((gradeDto) => this.prisma.grade.upsert({
             where: {
                 studentId_subjectId_gradeType: {
