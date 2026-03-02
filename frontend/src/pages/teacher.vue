@@ -531,7 +531,7 @@ onMounted(async () => {
 <style scoped>
 .teacher-page {
   min-height: 100vh;
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-section);
   padding: var(--spacing-5);
 }
 
@@ -614,13 +614,13 @@ onMounted(async () => {
 .grades-table td {
   padding: var(--spacing-3);
   text-align: left;
-  border-bottom: 1px solid var(--color-border-primary);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .grades-table th {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  background-color: var(--color-bg-tertiary);
+  background-color: var(--color-text-tertiary);
   font-size: var(--font-size-sm);
 }
 

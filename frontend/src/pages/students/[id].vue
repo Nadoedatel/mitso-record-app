@@ -143,7 +143,7 @@ onMounted(async () => {
 <style scoped>
 .student-detail-page {
   min-height: 100vh;
-  background: var(--color-background);
+  background: var(--color-bg-page);
   padding: var(--spacing-5);
 }
 
@@ -168,7 +168,7 @@ onMounted(async () => {
 
 .grades-table-wrapper {
   overflow-x: auto;
-  background: var(--color-surface);
+  background: var(--color-bg-section);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
 }
@@ -179,7 +179,7 @@ onMounted(async () => {
 }
 
 .grades-table thead {
-  background: var(--color-surface-secondary);
+  background: var(--color-bg-page);
 }
 
 .grades-table th,
@@ -201,6 +201,6 @@ onMounted(async () => {
 }
 
 .grades-table tbody tr:hover {
-  background: var(--color-surface-hover);
+  background: var(--color-bg-hover);
 }
 </style>

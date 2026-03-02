@@ -26,6 +26,7 @@
     "@nuxt/typescript-build": "^3.0.2",
     "@nuxtjs/tailwindcss": "^6.12.0",
     "@types/node": "^20.11.30",
+    "sass": "^1.97.3",
     "typescript": "^5.4.3",
     "vue-tsc": "^2.0.7"
   }

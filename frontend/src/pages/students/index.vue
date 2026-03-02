@@ -120,7 +120,7 @@ onMounted(() => {
 <style scoped>
 .students-page {
   min-height: 100vh;
-  background: var(--color-background);
+  background: var(--color-bg-page);
   padding: var(--spacing-5);
 }
 
