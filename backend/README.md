@@ -1,6 +1,6 @@
 # MITSO Record App - Backend
 
-NestJS приложение для управления студенческими зачётками с полной системой аутентификации и авторизации. Версия: **v2.0.0**
+NestJS приложение для управления студенческими зачётками с полной системой аутентификации и авторизации. Версия: **v2.2.5**
 
 ## Предварительные требования
 
@@ -69,15 +69,14 @@ API документация (Swagger) доступна на `http://localhost:8
 
 - **NestJS** (v10) - Фреймворк
 - **Prisma** (v5.10) - ORM для PostgreSQL
-- **Passport.js** - Аутентификация
-- **JWT** - JSON Web Tokens для access/refresh токенов
+- **Passport.js** + **passport-jwt** - Аутентификация
+- **JWT** (`@nestjs/jwt`) - access/refresh токены
 - **bcrypt** - Хеширование паролей
-- **class-validator** - Валидация DTO
-- **class-transformer** - Трансформация данных
-- **Swagger** (@nestjs/swagger) - API документация
-- **Config** (@nestjs/config) - Управление переменными окружения
-- **Throttler** (@nestjs/throttler) - Rate limiting
-- **cookie-parser** - Парсинг cookies для refresh токенов
+- **class-validator** + **class-transformer** - Валидация и трансформация DTO
+- **Swagger** (`@nestjs/swagger`) - Интерактивная API документация
+- **ConfigModule** (`@nestjs/config`) - Управление переменными окружения
+- **ThrottlerModule** (`@nestjs/throttler`) - Rate limiting (60 req/min)
+- **cookie-parser** - Парсинг httpOnly cookies для refresh токенов
 
 ## Переменные окружения
 
@@ -176,17 +175,22 @@ src/
 ├── prisma/                    # Prisma Service (singleton)
 │   ├── prisma.service.ts
 │   └── prisma.module.ts
-└── common/                    # Общие утилиты
-    ├── guards/
-    │   ├── jwt-auth.guard.ts
-    │   └── roles.guard.ts
-    ├── decorators/
-    │   ├── current-user.decorator.ts
-    │   └── roles.decorator.ts
-    ├── filters/
-    │   └── http-exception.filter.ts
-    └── interceptors/
-        └── response.interceptor.ts
+├── common/                    # Общие утилиты
+│   ├── guards/
+│   │   ├── jwt-auth.guard.ts
+│   │   └── roles.guard.ts
+│   ├── decorators/
+│   │   ├── current-user.decorator.ts
+│   │   └── roles.decorator.ts
+│   ├── filters/
+│   │   └── http-exception.filter.ts
+│   ├── interceptors/
+│   │   └── response.interceptor.ts
+│   └── dto/
+│       └── pagination.dto.ts  # Общий DTO пагинации
+└── prisma/                    # Prisma Service (singleton)
+    ├── prisma.service.ts
+    └── prisma.module.ts
 ```
 
 ## API Endpoints

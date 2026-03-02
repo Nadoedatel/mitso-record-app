@@ -1,6 +1,6 @@
 # MITSO Record App
 
-Полноценное приложение для учёта студенческих зачёток, оценок и информации о предметах. Текущая версия: **v2.0.0**
+Полноценное приложение для учёта студенческих зачёток, оценок и информации о предметах. Текущая версия: **v2.2.5**
 
 ## Стек технологий
 
@@ -15,11 +15,12 @@
 
 ### Frontend
 - **Nuxt 3** - Full-stack Vue фреймворк (v3.11.0)
-- **Vue 3** - UI библиотека
+- **Vue 3** - UI библиотека (Composition API, `<script setup>`)
 - **Pinia** - State management
-- **TailwindCSS** - Utility-first CSS
+- **TailwindCSS** - Utility-first CSS (`@nuxtjs/tailwindcss`)
 - **TypeScript** - Строгая типизация
 - **FSD** - Feature-Sliced Design архитектура
+- **Shared UI Library** - переиспользуемые компоненты (Button, Input, Modal, Table, Badge и др.)
 - Node.js ^20.19.0 || >=22.12.0
 
 ## Быстрый старт
@@ -107,13 +108,20 @@ mitso-record-app/
 │
 ├── frontend/             # Nuxt 3 приложение
 │   ├── src/
+│   │   ├── app.vue       # Корневой компонент
+│   │   ├── app/
+│   │   │   └── styles/main.css  # Глобальные стили
 │   │   ├── pages/        # Страницы (роутинг)
 │   │   │   ├── index.vue
 │   │   │   ├── login.vue
 │   │   │   ├── student.vue
 │   │   │   ├── teacher.vue
 │   │   │   ├── admin.vue
-│   │   │   └── students/
+│   │   │   ├── students/
+│   │   │   │   ├── index.vue     # Список студентов
+│   │   │   │   └── [id].vue      # Детали студента
+│   │   │   └── subjects/
+│   │   │       └── [id]/grades.vue  # Выставление оценок
 │   │   ├── features/     # Фичи с API
 │   │   │   ├── auth/
 │   │   │   ├── students/
@@ -123,10 +131,12 @@ mitso-record-app/
 │   │   │   ├── faculties/
 │   │   │   ├── groups/
 │   │   │   └── specializations/
-│   │   ├── entities/     # Бизнес-сущности
+│   │   ├── entities/     # Бизнес-сущности (user, student, teacher, grade, subject, group, faculty, specialization)
 │   │   ├── shared/       # Переиспользуемый код
-│   │   ├── middleware/   # Auth & Admin middleware
-│   │   └── app.vue       # Корневой компонент
+│   │   │   ├── api/httpClient.ts # HTTP клиент с interceptor-ами
+│   │   │   ├── lib/storage.ts    # Утилиты LocalStorage
+│   │   │   └── ui/               # Shared UI библиотека
+│   │   └── middleware/   # Auth & Admin middleware
 │   └── package.json
 │
 ├── docker-compose.yml    # Docker конфигурация

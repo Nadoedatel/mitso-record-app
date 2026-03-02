@@ -34,3 +34,12 @@ coverage
 
 # Vitest
 __screenshots__/
+
+# Nuxt generated
+.nuxt/
+.output/
+
+# Environment
+.env
+.env.local
+.env.*.local
