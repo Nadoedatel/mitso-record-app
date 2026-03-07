@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StudentsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const client_1 = require("@prisma/client");
 let StudentsService = class StudentsService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -82,7 +83,25 @@ let StudentsService = class StudentsService {
             totalPages: Math.ceil(total / limit),
         };
     }
-    async findOne(id) {
+    async findById(id) {
+        const student = await this.prisma.student.findUnique({
+            where: { id },
+        });
+        if (!student) {
+            throw new common_1.NotFoundException(`Student with ID ${id} not found`);
+        }
+        return student;
+    }
+    async findOne(id, user) {
+        if (user.role === client_1.Role.STUDENT) {
+            const ownStudent = await this.prisma.student.findUnique({
+                where: { userId: user.id },
+                select: { id: true },
+            });
+            if (!ownStudent || ownStudent.id !== id) {
+                throw new common_1.ForbiddenException('Access denied');
+            }
+        }
         const student = await this.prisma.student.findUnique({
             where: { id },
             include: {
@@ -187,7 +206,7 @@ let StudentsService = class StudentsService {
         return student;
     }
     async update(id, dto) {
-        await this.findOne(id);
+        await this.findById(id);
         return this.prisma.student.update({
             where: { id },
             data: {
@@ -232,7 +251,7 @@ let StudentsService = class StudentsService {
         });
     }
     async remove(id) {
-        await this.findOne(id);
+        await this.findById(id);
         await this.prisma.student.delete({
             where: { id },
         });

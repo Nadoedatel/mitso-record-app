@@ -14,8 +14,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { StudentsService } from './students.service';
 import { CreateStudentDto, UpdateStudentDto, QueryStudentDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser } from '../common/decorators';
 import { Role } from '@prisma/client';
+import { AuthUser } from '../auth/interfaces/auth-user.interface';
 
 /**
  * StudentsController - handles student-related endpoints
@@ -58,8 +59,11 @@ export class StudentsController {
   @ApiOperation({ summary: 'Get student by ID' })
   @ApiResponse({ status: 200, description: 'Student found' })
   @ApiResponse({ status: 404, description: 'Student not found' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.studentsService.findOne(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.studentsService.findOne(id, user);
   }
 
   /**

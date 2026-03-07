@@ -1,6 +1,6 @@
 /**
  * Auth middleware - protects routes from unauthorized access
- * Checks if user is authenticated, if not redirects to /login
+ * Uses userRole cookie (works on SSR and client)
  */
 export default defineNuxtRouteMiddleware(async (to) => {
   // Skip middleware for login page
@@ -8,15 +8,25 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  // Check if running on client side
+  // Check role cookie — works on both SSR and client
+  const userRole = useCookie('userRole')
+  if (!userRole.value) {
+    return navigateTo('/login')
+  }
+
+  // On client: ensure access token is present, refresh if needed
   if (process.client) {
     const { useHttpClient } = await import('~/shared/api/httpClient')
     const httpClient = useHttpClient()
-    const accessToken = httpClient.getAccessToken()
 
-    // If no access token, redirect to login
-    if (!accessToken) {
-      return navigateTo('/login')
+    if (!httpClient.getAccessToken()) {
+      try {
+        const { authApi } = await import('~/features/auth/api/authApi')
+        const result = await authApi.refresh()
+        httpClient.setAccessToken(result.accessToken)
+      } catch {
+        return navigateTo('/login')
+      }
     }
   }
 })

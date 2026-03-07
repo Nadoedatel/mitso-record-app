@@ -30,8 +30,8 @@ let StudentsController = class StudentsController {
     findAll(query) {
         return this.studentsService.findAll(query);
     }
-    findOne(id) {
-        return this.studentsService.findOne(id);
+    findOne(id, user) {
+        return this.studentsService.findOne(id, user);
     }
     update(id, dto) {
         return this.studentsService.update(id, dto);
@@ -65,8 +65,9 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Student found' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Student not found' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, decorators_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", void 0)
 ], StudentsController.prototype, "findOne", null);
 __decorate([

@@ -9,6 +9,13 @@ import { HttpExceptionFilter } from './common/filters';
  * Bootstrap function - initializes and starts the application
  */
 async function bootstrap() {
+  // Validate required secrets before starting
+  if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
+    throw new Error(
+      'JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be set in environment variables',
+    );
+  }
+
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
 
@@ -20,7 +27,7 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'],
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   });
 
@@ -39,21 +46,23 @@ async function bootstrap() {
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Swagger API documentation
-  const config = new DocumentBuilder()
-    .setTitle('MITSO Record App API')
-    .setDescription('API for student record management system')
-    .setVersion('1.0')
-    .addTag('auth', 'Authentication endpoints')
-    .addTag('students', 'Student management endpoints')
-    .addTag('teachers', 'Teacher management endpoints')
-    .addTag('subjects', 'Subject management endpoints')
-    .addTag('grades', 'Grade management endpoints')
-    .addBearerAuth()
-    .build();
+  // Swagger API documentation (dev only)
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('MITSO Record App API')
+      .setDescription('API for student record management system')
+      .setVersion('2.0')
+      .addTag('auth', 'Authentication endpoints')
+      .addTag('students', 'Student management endpoints')
+      .addTag('teachers', 'Teacher management endpoints')
+      .addTag('subjects', 'Subject management endpoints')
+      .addTag('grades', 'Grade management endpoints')
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   // Start server
   const port = process.env.PORT || 8080;

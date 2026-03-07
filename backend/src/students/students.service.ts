@@ -1,7 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStudentDto, UpdateStudentDto, QueryStudentDto } from './dto';
 import { PaginatedResponse } from '../common/dto';
+import { AuthUser } from '../auth/interfaces/auth-user.interface';
+import { Role } from '@prisma/client';
 
 /**
  * StudentsService - business logic for student management
@@ -93,9 +95,33 @@ export class StudentsService {
   }
 
   /**
-   * Find student by ID
+   * Find student by ID (internal, no auth check)
    */
-  async findOne(id: number) {
+  private async findById(id: number) {
+    const student = await this.prisma.student.findUnique({
+      where: { id },
+    });
+    if (!student) {
+      throw new NotFoundException(`Student with ID ${id} not found`);
+    }
+    return student;
+  }
+
+  /**
+   * Find student by ID
+   * Students can only access their own record
+   */
+  async findOne(id: number, user: AuthUser) {
+    if (user.role === Role.STUDENT) {
+      const ownStudent = await this.prisma.student.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+      if (!ownStudent || ownStudent.id !== id) {
+        throw new ForbiddenException('Access denied');
+      }
+    }
+
     const student = await this.prisma.student.findUnique({
       where: { id },
       include: {
@@ -213,7 +239,7 @@ export class StudentsService {
    */
   async update(id: number, dto: UpdateStudentDto) {
     // Check if student exists
-    await this.findOne(id);
+    await this.findById(id);
 
     return this.prisma.student.update({
       where: { id },
@@ -266,7 +292,7 @@ export class StudentsService {
    */
   async remove(id: number) {
     // Check if student exists
-    await this.findOne(id);
+    await this.findById(id);
 
     // Simply delete student - Prisma will cascade delete:
     // 1. Related user (due to onDelete: Cascade on student.user relation)

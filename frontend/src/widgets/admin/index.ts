@@ -1,0 +1,6 @@
+export { default as StudentsSection } from './ui/StudentsSection.vue'
+export { default as TeachersSection } from './ui/TeachersSection.vue'
+export { default as SubjectsSection } from './ui/SubjectsSection.vue'
+export { default as GroupsSection } from './ui/GroupsSection.vue'
+export { default as FacultiesSection } from './ui/FacultiesSection.vue'
+export { default as SpecializationsSection } from './ui/SpecializationsSection.vue'

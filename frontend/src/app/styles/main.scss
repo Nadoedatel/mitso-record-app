@@ -1,10 +1,10 @@
+@use 'shared/styles/tokens';
+@use 'shared/styles/global';
+
 /**
  * Main SCSS Entry Point
  * Imports design tokens and global styles
  */
-
-@import 'shared/styles/tokens';
-@import 'shared/styles/global';
 
 /* Nuxt root element */
 #__nuxt {

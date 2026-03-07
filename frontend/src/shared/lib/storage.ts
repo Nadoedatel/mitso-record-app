@@ -24,6 +24,8 @@ export const storage = {
 
   clear() {
     if (typeof window === 'undefined') return
-    localStorage.clear()
+    localStorage.removeItem('mitso_access_token')
+    localStorage.removeItem('mitso_user_data')
+    localStorage.removeItem('mitso_user_role')
   },
 }
