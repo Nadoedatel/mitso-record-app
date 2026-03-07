@@ -6,8 +6,9 @@
 ## Стек
 
 - **Nuxt 3** (Vue 3, Composition API, `<script setup>`)
-- **TypeScript** — строгий, без `any`
-- **Pinia** — стейт менеджмент
+- **TypeScript** — строгий режим, без `any`
+- **Pinia** — стейт менеджмент (auth store)
+- **Tailwind CSS** + **SCSS** с токенами
 - **Файловый роутинг** через `pages/`
 - Node.js ^20.19.0 || >=22.12.0
 
@@ -29,58 +30,87 @@ npm run typecheck    # проверка типов
 
 ```
 src/
-├── app/
-│   └── App.vue                  # корневой компонент, глобальные стили
+├── app.vue                          # корневой компонент
+├── app/styles/main.scss             # точка входа глобальных стилей
 ├── pages/
-│   ├── index.vue                # главная, модальное окно выбора роли
-│   ├── student.vue              # страница студента
-│   └── teacher.vue             # страница преподавателя
+│   ├── index.vue                    # главная — приветствие, навигация по роли
+│   ├── login.vue                    # форма входа
+│   ├── student.vue                  # профиль студента + мои оценки
+│   ├── teacher.vue                  # профиль преподавателя + выставление оценок
+│   ├── admin.vue                    # панель администратора (табы)
+│   ├── students/
+│   │   ├── index.vue                # поиск и список студентов
+│   │   └── [id].vue                 # карточка студента с оценками
+│   └── subjects/[id]/
+│       └── grades.vue               # управление оценками по предмету
 ├── widgets/
-│   ├── student/
-│   │   ├── ui/StudentCard.vue
-│   │   └── index.ts
-│   ├── teacher/
-│   │   ├── ui/TeacherCard.vue
-│   │   └── index.ts
-│   ├── search/
-│   │   ├── ui/SearchBar.vue
-│   │   └── index.ts
-│   └── user-profile/
-│       ├── ui/UserProfile.vue
-│       └── index.ts
+│   ├── admin/
+│   │   ├── index.ts
+│   │   └── ui/
+│   │       ├── StudentsSection.vue
+│   │       ├── TeachersSection.vue
+│   │       ├── SubjectsSection.vue
+│   │       ├── GroupsSection.vue
+│   │       ├── FacultiesSection.vue
+│   │       └── SpecializationsSection.vue
+│   └── teacher/
+│       ├── index.ts
+│       └── ui/SubjectsGrid.vue
 ├── features/
 │   ├── auth/
-│   │   ├── api/authApi.ts       # login, refresh
-│   │   ├── model/useAuth.ts     # composable авторизации
-│   │   └── index.ts
+│   │   ├── api/authApi.ts           # login, register, refresh, logout, getMe
+│   │   └── model/useAuth.ts        # Pinia store авторизации
 │   ├── students/
-│   │   ├── api/studentsApi.ts   # fetchStudents, fetchStudentById
-│   │   └── index.ts
+│   │   ├── api/studentsApi.ts
+│   │   └── model/useStudentsAdmin.ts
 │   ├── teachers/
-│   │   ├── api/teachersApi.ts
-│   │   └── index.ts
-│   └── grades/
-│       ├── api/gradesApi.ts     # fetchGradeForStudent
-│       └── index.ts
+│   │   └── api/teachersApi.ts
+│   ├── subjects/
+│   │   └── api/subjectsApi.ts
+│   ├── grades/
+│   │   ├── api/gradesApi.ts
+│   │   └── model/useGradeAssignment.ts
+│   ├── groups/
+│   │   └── api/groupsApi.ts
+│   ├── faculties/
+│   │   └── api/facultiesApi.ts
+│   └── specializations/
+│       └── api/specializationsApi.ts
 ├── entities/
-│   ├── student/
-│   │   └── model/types.ts       # Student интерфейс
-│   ├── teacher/
-│   │   └── model/types.ts       # Teacher интерфейс
-│   ├── grade/
-│   │   └── model/types.ts       # Grade интерфейс
-│   └── subject/
-│       └── model/types.ts       # Subject интерфейс
-└── shared/
-    ├── api/
-    │   └── httpClient.ts        # базовый fetch/axios с interceptor-ами
-    ├── lib/
-    │   └── token.ts             # работа с токенами в памяти
-    └── ui/
-        ├── Button.vue
-        ├── Input.vue
-        ├── Modal.vue
-        └── Spinner.vue
+│   ├── student/model/types.ts       # Student (camelCase)
+│   ├── teacher/model/types.ts       # Teacher (camelCase)
+│   ├── user/model/types.ts          # User + Role enum
+│   ├── grade/model/types.ts         # Grade + GradeType enum
+│   ├── subject/model/types.ts       # Subject
+│   ├── group/model/types.ts         # Group + DTO
+│   ├── faculty/model/types.ts       # Faculty + DTO
+│   └── specialization/model/types.ts # Specialization + DTO
+├── shared/
+│   ├── api/httpClient.ts            # HTTP клиент с refresh interceptor
+│   ├── lib/storage.ts               # localStorage утилиты
+│   ├── styles/
+│   │   ├── _tokens.scss             # CSS-переменные / design tokens
+│   │   ├── _mixins.scss             # SCSS миксины
+│   │   └── _global.scss             # глобальные стили и reset
+│   └── ui/                          # переиспользуемые UI компоненты
+│       ├── Alert/
+│       ├── Badge/
+│       ├── Button/
+│       ├── Card/
+│       ├── Checkbox/
+│       ├── Form/
+│       ├── Input/
+│       ├── Layout/        # Container, Header, Section, InfoCard
+│       ├── Loading/       # LoadingState, EmptyState, LoadingSpinner
+│       ├── Modal/         # Modal, ModalHeader, ModalActions
+│       ├── Pagination/
+│       ├── Select/
+│       ├── Table/         # Table, TableRow, TableCell
+│       ├── Tabs/
+│       └── index.ts       # barrel export всех компонентов
+└── middleware/
+    ├── auth.ts             # защита маршрутов (проверка userRole cookie + refresh)
+    └── admin.ts            # защита /admin (роль ADMIN)
 ```
 
 ### Правила FSD — строго соблюдать
@@ -95,129 +125,149 @@ src/
 
 ## Типы сущностей
 
+Все типы используют **camelCase** (Prisma конвертирует snake_case БД автоматически).
+
 ```typescript
+// entities/user/model/types.ts
+enum Role { STUDENT = 'STUDENT', TEACHER = 'TEACHER', ADMIN = 'ADMIN' }
+interface User { id: number; email: string; role: Role; student?: Student | null; teacher?: Teacher | null }
+
 // entities/student/model/types.ts
-export interface Student {
-  id: number
-  last_name: string
-  first_name: string
-  middle_name: string
-  group: string
-  record_book_number: string
+interface Student {
+  id: number; userId: number
+  firstName: string; lastName: string; middleName?: string
+  studentId: string       // номер зачётки
+  groupId?: number; group?: Group
+  course: number
+  specializationId?: number; specialization?: Specialization
+  enrollmentYear: number
+  phone?: string; address?: string; birthDate?: string
+  createdAt: string; updatedAt: string
+  user?: User; grades?: Grade[]
 }
 
 // entities/teacher/model/types.ts
-export interface Teacher {
-  id: number
-  lastName: string
-  firstName: string
-  middleName: string
-  department: string
+interface Teacher {
+  id: number; userId: number
+  firstName: string; lastName: string; middleName?: string
+  department: string; position: string; academicDegree?: string
+  phone?: string; officeNumber?: string
+  createdAt: string; updatedAt: string; user?: User
 }
 
 // entities/grade/model/types.ts
-export interface Grade {
-  id: number
-  student_id: number
-  subject_id: number
-  grade: number
-  semester: number
-  year: number
-  subject?: Subject
+enum GradeType { EXAM = 'EXAM', CREDIT = 'CREDIT', COURSEWORK = 'COURSEWORK', TEST = 'TEST', LAB = 'LAB' }
+interface Grade {
+  id: number; studentId: number; subjectId: number
+  gradeValue: number      // 0–100 по факту, 1–10 в UI
+  gradeType: GradeType
+  examDate?: string; notes?: string
+  createdAt: string; updatedAt: string
+  student?: Student; subject?: Subject
 }
 
 // entities/subject/model/types.ts
-export interface Subject {
-  id: number
-  name: string
-  teacher_id: number
-  teacher?: Teacher
+interface Subject {
+  id: number; name: string; code: string; credits: number
+  semester: number; description?: string; teacherId: number
+  createdAt: string; updatedAt: string; teacher?: Teacher
 }
 ```
 
-> ⚠️ Несоответствие: Student использует `snake_case`, Teacher — `PascalCase`.
-> Это отражает текущую бекенд API. При рефакторинге бека — обновить типы здесь.
-
 ---
 
-## API и HTTP клиент
+## HTTP клиент
 
-Базовый URL бека: `http://localhost:8080/api`
+`shared/api/httpClient.ts` — singleton класс `HttpClient`, создаётся через `useHttpClient()`.
 
-### httpClient (shared/api/httpClient.ts)
+**Возможности:**
+- Автоподстановка `Authorization: Bearer <token>`
+- Interceptor на 401 — вызывает `/auth/refresh`, повторяет запрос
+- `credentials: 'include'` — отправляет httpOnly cookie с refreshToken
+- Разворачивает обёртку `{ data, message }` из API-ответов
+- Методы: `get<T>()`, `post<T>()`, `patch<T>()`, `delete<T>()`
 
-```typescript
-// Должен реализовывать:
-// 1. Автоматическую подстановку access токена из памяти (Pinia store)
-// 2. Interceptor на 401 — автоматически вызывать refresh и повторять запрос
-// 3. Базовый URL из переменной окружения NUXT_PUBLIC_API_URL
-```
-
-### Пример API функции
+**Важно:** токен хранится внутри экземпляра HttpClient. Pinia store (`useAuthStore`) также хранит его и синхронизирует через `setAccessToken()` / `clearAuth()`.
 
 ```typescript
-// features/students/api/studentsApi.ts
-import { httpClient } from '@/shared/api/httpClient'
-import type { Student } from '@/entities/student'
-
-export const fetchStudents = (query: string): Promise<Student[]> =>
-  httpClient.get(`/students?search=${query}`)
-
-export const fetchStudentById = (id: number): Promise<Student> =>
-  httpClient.get(`/students/${id}`)
+const httpClient = useHttpClient()   // всегда на верхнем уровне компонента/composable
 ```
 
 ---
 
 ## Auth Flow на фронте
 
-1. При логине — сохранить `accessToken` в **Pinia store** (не в localStorage!)
-2. `refreshToken` приходит в `httpOnly` cookie — браузер управляет автоматически
-3. При 401 ответе — httpClient вызывает `/auth/refresh`, получает новый `accessToken`, повторяет запрос
-4. При ошибке refresh — очистить store, редирект на `/`
+1. Логин → `POST /auth/login` → получаем `{ user, accessToken }` + `refreshToken` в httpOnly cookie
+2. `accessToken` сохраняется в памяти: Pinia store + HttpClient (в синхронизации)
+3. `refreshToken` — браузер управляет автоматически через cookie
+4. При 401 — httpClient вызывает `/auth/refresh`, получает новый токен, повторяет запрос
+5. При ошибке refresh — `clearAuth()` + редирект на `/login`
+6. Роль пользователя пишется в cookie `userRole` для SSR middleware
+
+### Pinia Auth Store (`features/auth/model/useAuth.ts`)
 
 ```typescript
-// features/auth/model/useAuth.ts
-export const useAuthStore = defineStore('auth', () => {
-  const accessToken = ref<string | null>(null)
+// Методы:
+login(credentials)    // логин, синхронизирует токен с httpClient
+logout()              // вызывает /auth/logout, чистит store + httpClient + storage
+fetchProfile()        // GET /auth/me, обновляет user в store
+setAuth(user, token)  // ручная установка (после refresh)
+register(data)        // регистрация нового пользователя
 
-  const login = async (credentials: LoginDto) => { ... }
-  const logout = () => { accessToken.value = null }
-  const refreshTokens = async () => { ... }
-
-  return { accessToken, login, logout, refreshTokens }
-})
+// Состояние:
+user: Ref<User | null>
+accessToken: Ref<string | null>
+isAuthenticated: ComputedRef<boolean>
 ```
 
 ---
 
-## Роутинг
+## Роутинг и middleware
 
 Файловый роутинг Nuxt 3 через `pages/`:
 
-| Файл | URL | Описание |
-|---|---|---|
-| `pages/index.vue` | `/` | Главная, модальное окно выбора роли |
-| `pages/student.vue` | `/student` | Поиск и просмотр студентов |
-| `pages/teacher.vue` | `/teacher` | Просмотр преподавателей |
+| Файл | URL | Middleware | Описание |
+|---|---|---|---|
+| `pages/login.vue` | `/login` | — | Форма входа |
+| `pages/index.vue` | `/` | `auth` | Главная, навигация по роли |
+| `pages/student.vue` | `/student` | `auth` | Профиль студента + оценки |
+| `pages/teacher.vue` | `/teacher` | `auth` | Профиль преподавателя + выставление оценок |
+| `pages/admin.vue` | `/admin` | `admin` | Панель администратора |
+| `pages/students/index.vue` | `/students` | `auth` | Поиск студентов |
+| `pages/students/[id].vue` | `/students/:id` | `auth` | Карточка студента |
+| `pages/subjects/[id]/grades.vue` | `/subjects/:id/grades` | `auth` | Оценки по предмету |
 
-Роль (студент/преподаватель) сохраняется в `localStorage` и читается при старте.
+**Защита страниц:**
+- `middleware/auth.ts` — проверяет cookie `userRole`, при отсутствии токена делает refresh
+- `middleware/admin.ts` — дополнительно проверяет `userRole === 'ADMIN'`
+- Каждая защищённая страница объявляет middleware через `definePageMeta`:
+
+```typescript
+definePageMeta({ middleware: 'auth' })   // для обычных страниц
+definePageMeta({ middleware: 'admin' })  // для /admin
+```
 
 ---
 
 ## Nuxt конфиг
 
 ```typescript
-// nuxt.config.ts
 export default defineNuxtConfig({
-  alias: { '@': './src' },
+  srcDir: 'src/',
+  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
+  typescript: { strict: true, typeCheck: true },
   runtimeConfig: {
-    public: {
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8080/api'
-    }
+    public: { apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8080/api' }
   },
-  modules: ['@pinia/nuxt'],
-  typescript: { strict: true }
+  alias: { '@': './src' },
+  css: ['@/app/styles/main.scss'],
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: { loadPaths: ['./src'], additionalData: "@use 'shared/styles/mixins' as *;" }
+      }
+    }
+  }
 })
 ```
 
@@ -232,30 +282,93 @@ NUXT_PUBLIC_API_URL=http://localhost:8080/api
 
 ---
 
+## Design Tokens (shared/styles/_tokens.scss)
+
+CSS-переменные доступны глобально. Использовать ТОЛЬКО их, не хардкодить цвета/размеры.
+
+```scss
+// Цвета
+--color-primary: #667eea
+--color-bg-page, --color-bg-section, --color-bg-hover
+--color-text-primary, --color-text-secondary, --color-text-tertiary
+--color-border
+--color-success, --color-danger, --color-warning
+
+// Типографика
+--font-size-xs .. --font-size-4xl
+--font-weight-regular .. --font-weight-bold
+
+// Spacing (4px grid)
+--spacing-1 (4px) .. --spacing-10 (40px)
+
+// Прочее
+--radius-sm .. --radius-full
+--shadow-xs .. --shadow-xl
+--transition-fast, --transition-base, --transition-slow
+--z-modal, --z-dropdown, etc.
+```
+
+---
+
+## UI компоненты (shared/ui)
+
+Импортировать через barrel: `import { Button, Input, Modal } from '~/shared/ui'`
+
+| Компонент | Описание |
+|---|---|
+| `Button` | variant: primary/secondary/danger/success/ghost; size: sm/md/lg; loading |
+| `Input` / `NumberInput` | text/email/password/date/number; size; error state |
+| `Select` | dropdown с options `[{ value, label }]` |
+| `Card` | variant: elevated/bordered; padding: sm/md/lg |
+| `Modal` + `ModalHeader` + `ModalActions` | модальные окна |
+| `Form` + `FormField` + `FormRow` | формы с лейблами |
+| `Table` + `TableRow` + `TableCell` | таблицы данных |
+| `Badge` / `GradeTypeBadge` / `GradeValueBadge` | бейджи и оценки |
+| `Alert` | variant: error/success/warning/info; closable |
+| `LoadingState` / `EmptyState` / `LoadingSpinner` | состояния загрузки |
+| `Tabs` | табовый интерфейс |
+| `Pagination` | пагинация |
+| `Container` / `Header` / `Section` / `InfoCard` | лейаут |
+| `SearchInput` | поиск с иконкой |
+
+---
+
 ## Code Style
 
-- `<script setup lang="ts">` — всегда
-- Props через `defineProps<{ prop: Type }>()` — без runtime validators
-- Emits через `defineEmits<{ eventName: [payload: Type] }>()`
+- `<script setup lang="ts">` — всегда, без Options API
+- Props: `defineProps<{ prop: Type }>()` — без runtime validators
+- Emits: `defineEmits<{ eventName: [payload: Type] }>()`
 - Composables начинаются с `use`: `useStudents`, `useAuth`
 - Файлы компонентов — `PascalCase.vue`
 - Файлы composables/utils — `camelCase.ts`
-- Scoped стили в каждом SFC: `<style scoped>`
+- `<style scoped>` в каждом SFC
 - Никаких `any` — использовать `unknown` если тип неизвестен
-- Не использовать `Options API`
+- `catch (err: unknown)` + проверка `err instanceof Error`
+- `useHttpClient()` / composables — только на верхнем уровне компонента
 
 ### Запрещено
 
-- Импорт между слайсами одного FSD слоя
-- Хранение токенов в `localStorage` (только в Pinia или cookie)
+- Импорт из вышележащего FSD слоя
+- Cross-imports между слайсами одного слоя
+- Хранение токенов в `localStorage` (только Pinia/memory + httpOnly cookie)
 - Inline стили через `style="..."`
-- `var` — только `const`/`let`
+- Хардкод цветов — только CSS-переменные из `_tokens.scss`
+- `var` — только `const` / `let`
+- `any` тип
+- Сырые HTML `<table>` в страницах — использовать `Table`, `TableRow`, `TableCell`
+- Ручная проверка авторизации в `onMounted` — использовать middleware
 
 ---
 
 ## Ключевые файлы
 
-- `nuxt.config.ts` — конфигурация
-- `src/app/App.vue` — корень с глобальным CSS reset
-- `src/shared/api/httpClient.ts` — HTTP клиент (центральная точка всех запросов)
-- `src/features/auth/model/useAuth.ts` — авторизация
+| Файл | Назначение |
+|---|---|
+| `nuxt.config.ts` | конфигурация |
+| `src/app.vue` | корневой компонент |
+| `src/shared/api/httpClient.ts` | HTTP клиент, центральная точка всех запросов |
+| `src/features/auth/model/useAuth.ts` | Pinia auth store |
+| `src/shared/styles/_tokens.scss` | design tokens (CSS-переменные) |
+| `src/middleware/auth.ts` | защита маршрутов |
+| `src/middleware/admin.ts` | защита /admin |
+| `src/shared/ui/index.ts` | barrel export UI компонентов |

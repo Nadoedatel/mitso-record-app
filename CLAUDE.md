@@ -83,20 +83,20 @@ docker-compose logs -f       # логи
 
 Фронтенд следует принципам **Feature-Sliced Design (FSD)**:
 
-- **entities/** — бизнес-сущности (`student`, `teacher`, `subject`, `grade`)
-  - Каждая сущность имеет `model/types.ts` с TypeScript интерфейсом
-- **features/** — переиспользуемые фичи и функции получения данных
-  - API-функции: `fetchStudents`, `fetchTeacher`, `fetchGradeForStudent` и т.д.
-  - Все запросы идут на `http://localhost:8080/api/*`
-- **widgets/** — составные UI-блоки (`student`, `teacher`, `search`, `user-profile`)
+- **entities/** — бизнес-сущности (`student`, `teacher`, `user`, `grade`, `subject`, `group`, `faculty`, `specialization`)
+  - Каждая сущность имеет `model/types.ts`, все типы в **camelCase**
+- **features/** — API-слой и composable-логика по доменам
+  - `auth/api/authApi.ts`, `students/api/studentsApi.ts`, `grades/model/useGradeAssignment.ts` и т.д.
+  - Все запросы идут через `shared/api/httpClient.ts`
+- **widgets/** — составные UI-блоки (`admin/*`, `teacher/SubjectsGrid`)
   - Экспортируются через `index.ts` barrel-файлы
-- **pages/** — файловый роутинг Nuxt (`/`, `/student`, `/teacher`)
-  - Главная страница показывает модальное окно выбора роли (Студент/Преподаватель)
-  - Роль сохраняется в `localStorage`
-- **app/** — инициализация приложения
+- **pages/** — файловый роутинг Nuxt
+  - `/login`, `/` (главная по роли), `/student`, `/teacher`, `/admin`, `/students`, `/students/:id`, `/subjects/:id/grades`
+  - Защита через middleware (`auth`, `admin`)
+- **shared/** — UI-компоненты, HTTP-клиент, SCSS-токены, утилиты
 
 **Path Aliasing:**
-- `@/` → `frontend/src/` (настроено в `nuxt.config.ts`)
+- `@/` и `~/` → `frontend/src/` (настроено в `nuxt.config.ts`)
 
 ### Backend (NestJS)
 
@@ -143,12 +143,22 @@ backend/src/
 ### Ключевые эндпоинты
 | Метод | URL | Описание |
 |---|---|---|
-| POST | `/api/auth/login` | Логин, возвращает access + refresh токены |
-| POST | `/api/auth/refresh` | Обновление access токена |
-| GET | `/api/students` | Список студентов (поиск по имени) |
+| POST | `/api/auth/login` | Логин → `{ user, accessToken }` + `refreshToken` в cookie |
+| POST | `/api/auth/refresh` | Обновление access токена (cookie → новый accessToken) |
+| GET | `/api/auth/me` | Текущий пользователь с вложенными `student`/`teacher` |
+| POST | `/api/auth/logout` | Выход, инвалидация refresh токена |
+| GET | `/api/students` | Список студентов (`?search=&page=&limit=`) |
 | GET | `/api/students/:id` | Студент по ID |
+| POST/PATCH/DELETE | `/api/students/:id` | CRUD студентов |
 | GET | `/api/teachers/:id` | Преподаватель по ID |
+| POST/PATCH/DELETE | `/api/teachers/:id` | CRUD преподавателей |
 | GET | `/api/grades/student/:id` | Оценки студента |
+| GET | `/api/grades/subject/:id/groups` | Группы по предмету |
+| GET | `/api/grades/subject/:id/group/:groupId/students` | Студенты группы с оценками |
+| GET/POST/PATCH/DELETE | `/api/subjects` | CRUD предметов |
+| GET/POST/PATCH/DELETE | `/api/groups` | CRUD групп |
+| GET/POST/PATCH/DELETE | `/api/faculties` | CRUD факультетов |
+| GET/POST/PATCH/DELETE | `/api/specializations` | CRUD специализаций |
 
 ---
 
@@ -157,9 +167,8 @@ backend/src/
 - Схема: `backend/prisma/schema.prisma`
 - Все модели используют **snake_case** на уровне БД
 - В TypeScript типах — **camelCase** (Prisma конвертирует автоматически)
+- API-ответы возвращают **camelCase** — фронтенд полностью на camelCase
 - Migrations хранятся в `backend/prisma/migrations/`
-
-> ⚠️ **Важно:** Текущий фронтенд имеет несоответствие типов — студенты используют `snake_case`, преподаватели `PascalCase`. При разработке бека придерживаться единого `snake_case` в БД и `camelCase` в API-ответах.
 
 ---
 
@@ -175,11 +184,15 @@ backend/src/
 ## Code Style
 
 ### Frontend
-- Composition API с `<script setup>` синтаксисом
-- TypeScript для всех `.ts` и `.vue` файлов
+- Composition API с `<script setup lang="ts">` — всегда
+- TypeScript строгий режим, никаких `any`; `catch (err: unknown)` + `instanceof Error`
 - Props/emits описываются TypeScript типами, не runtime validators
 - Компоненты модульные и самодостаточные
-- Scoped стили в Vue SFC
+- `<style scoped>` в каждом SFC
+- Только CSS-переменные из `_tokens.scss` — не хардкодить цвета/размеры
+- `useHttpClient()` и composables — только на верхнем уровне компонента
+- Авторизация страниц через `definePageMeta({ middleware: 'auth' })`, не вручную в `onMounted`
+- Таблицы через shared `Table`/`TableRow`/`TableCell`, не сырой `<table>`
 
 ### Backend
 - Каждый контроллер, сервис, модуль — в отдельном файле
@@ -193,9 +206,15 @@ backend/src/
 ## Key Files
 
 ### Frontend
-- `frontend/src/app/App.vue` — корневой компонент
-- `frontend/src/pages/index.vue` — главная страница
+- `frontend/src/app.vue` — корневой компонент
+- `frontend/src/pages/` — все страницы приложения
 - `frontend/nuxt.config.ts` — конфигурация Nuxt
+- `frontend/src/shared/api/httpClient.ts` — HTTP клиент (единая точка запросов)
+- `frontend/src/features/auth/model/useAuth.ts` — Pinia auth store
+- `frontend/src/shared/styles/_tokens.scss` — design tokens (CSS-переменные)
+- `frontend/src/shared/ui/index.ts` — barrel export UI компонентов
+- `frontend/src/middleware/auth.ts` — защита маршрутов
+- `frontend/src/middleware/admin.ts` — защита /admin
 
 ### Backend
 - `backend/src/main.ts` — точка входа, настройка CORS, Swagger, global pipes
