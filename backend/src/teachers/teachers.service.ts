@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTeacherDto, UpdateTeacherDto, QueryTeacherDto } from './dto';
 import { PaginatedResponse } from '../common/dto';
@@ -11,20 +12,31 @@ export class TeachersService {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * Create a new teacher
+   * Create a new teacher with a linked user account in a single transaction
    */
   async create(dto: CreateTeacherDto) {
-    return this.prisma.teacher.create({
-      data: dto,
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
+    const { email, password, ...profileData } = dto;
+
+    const existingUser = await this.prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: { email, password: hashedPassword, role: 'TEACHER' },
+      });
+
+      return tx.teacher.create({
+        data: { ...profileData, userId: user.id },
+        include: {
+          user: {
+            select: { id: true, email: true, role: true },
           },
         },
-      },
+      });
     });
   }
 
