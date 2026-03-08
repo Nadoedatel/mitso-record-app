@@ -32,6 +32,17 @@ export class GradesService {
   }
 
   /**
+   * Resolve teacher ID from user ID
+   */
+  private async getTeacherId(userId: number): Promise<number | null> {
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    return teacher?.id ?? null;
+  }
+
+  /**
    * Create a new grade
    * Teachers can only create grades for their own subjects
    */
@@ -40,22 +51,19 @@ export class GradesService {
       await this.assertTeacherOwnsSubject(user.id, dto.subjectId);
     }
 
+    const teacherId =
+      user.role === Role.TEACHER ? await this.getTeacherId(user.id) : null;
+
     return this.prisma.grade.create({
       data: {
         ...dto,
+        teacherId,
         examDate: dto.examDate ? new Date(dto.examDate) : null,
       },
       include: {
         student: true,
-        subject: {
-          include: {
-            teacherSubjects: {
-              include: {
-                teacher: true,
-              },
-            },
-          },
-        },
+        teacher: true,
+        subject: true,
       },
     });
   }
@@ -94,15 +102,8 @@ export class GradesService {
         where,
         include: {
           student: true,
-          subject: {
-            include: {
-              teacherSubjects: {
-                include: {
-                  teacher: true,
-                },
-              },
-            },
-          },
+          teacher: true,
+          subject: true,
         },
         orderBy: {
           examDate: 'desc',
@@ -140,15 +141,8 @@ export class GradesService {
     return this.prisma.grade.findMany({
       where: { studentId },
       include: {
-        subject: {
-          include: {
-            teacherSubjects: {
-              include: {
-                teacher: true,
-              },
-            },
-          },
-        },
+        teacher: true,
+        subject: true,
       },
       orderBy: [
         { subject: { semester: 'asc' } },
@@ -165,15 +159,8 @@ export class GradesService {
       where: { id },
       include: {
         student: true,
-        subject: {
-          include: {
-            teacherSubjects: {
-              include: {
-                teacher: true,
-              },
-            },
-          },
-        },
+        teacher: true,
+        subject: true,
       },
     });
 
@@ -199,15 +186,8 @@ export class GradesService {
       },
       include: {
         student: true,
-        subject: {
-          include: {
-            teacherSubjects: {
-              include: {
-                teacher: true,
-              },
-            },
-          },
-        },
+        teacher: true,
+        subject: true,
       },
     });
   }
@@ -335,6 +315,10 @@ export class GradesService {
         await this.assertTeacherOwnsSubject(user.id, subjectId);
       }
     }
+
+    const teacherId =
+      user.role === Role.TEACHER ? await this.getTeacherId(user.id) : null;
+
     const results = await Promise.allSettled(
       grades.map((gradeDto) =>
         this.prisma.grade.upsert({
@@ -347,6 +331,7 @@ export class GradesService {
           },
           create: {
             ...gradeDto,
+            teacherId,
             examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
           },
           update: {

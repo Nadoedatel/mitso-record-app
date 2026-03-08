@@ -50,8 +50,8 @@
                   <td>{{ grade.subject?.name || 'Не указан' }}</td>
                   <td>
                     {{
-                      grade.subject?.teacher
-                        ? `${grade.subject.teacher.lastName} ${grade.subject.teacher.firstName.charAt(0)}.`
+                      grade.teacher
+                        ? `${grade.teacher.lastName} ${grade.teacher.firstName.charAt(0)}.`
                         : 'Не указан'
                     }}
                   </td>

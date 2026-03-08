@@ -30,6 +30,7 @@
             <td>{{ group.studentCount ?? '-' }}</td>
             <td>
               <div class="actions">
+                <Button size="sm" variant="secondary" @click="openSubjectsModal(group)">Дисциплины</Button>
                 <Button size="sm" variant="primary" @click="openModal(group)">Редактировать</Button>
                 <Button size="sm" variant="danger" @click="deleteItem(group.id)">Удалить</Button>
               </div>
@@ -40,6 +41,7 @@
     </div>
   </Section>
 
+  <!-- Модал редактирования группы -->
   <Modal v-model="showModal" size="md" @close="closeModal">
     <ModalHeader
       :title="editingItem ? 'Редактировать группу' : 'Добавить группу'"
@@ -69,6 +71,41 @@
       </ModalActions>
     </Form>
   </Modal>
+
+  <!-- Модал управления дисциплинами группы -->
+  <Modal v-model="showSubjectsModal" size="lg" @close="closeSubjectsModal">
+    <ModalHeader
+      :title="`Дисциплины группы: ${managingGroup?.name}`"
+      @close="closeSubjectsModal"
+    />
+    <LoadingState v-if="subjectsLoading" message="Загрузка дисциплин..." />
+    <div v-else>
+      <p class="subjects-hint">Выберите дисциплины, которые изучает эта группа:</p>
+      <EmptyState v-if="allSubjects.length === 0" message="Дисциплины не найдены" />
+      <div v-else class="subjects-list">
+        <label
+          v-for="subject in allSubjects"
+          :key="subject.id"
+          class="subject-item"
+        >
+          <Checkbox
+            :modelValue="selectedSubjectIds.has(subject.id)"
+            @update:modelValue="toggleSubject(subject.id)"
+          />
+          <div class="subject-info">
+            <span class="subject-name">{{ subject.name }}</span>
+            <span class="subject-meta">{{ subject.code }} · Семестр {{ subject.semester }} · {{ subject.credits }} кр.</span>
+          </div>
+        </label>
+      </div>
+    </div>
+    <ModalActions>
+      <Button variant="secondary" @click="closeSubjectsModal">Отмена</Button>
+      <Button variant="primary" :disabled="subjectsLoading" @click="saveSubjects">
+        Сохранить
+      </Button>
+    </ModalActions>
+  </Modal>
 </template>
 
 <script setup lang="ts">
@@ -89,6 +126,7 @@ import {
   FormRow,
   Input,
   NumberInput,
+  Checkbox,
 } from '~/shared/ui'
 
 const {
@@ -99,12 +137,21 @@ const {
   showModal,
   editingItem,
   form,
+  showSubjectsModal,
+  subjectsLoading,
+  managingGroup,
+  allSubjects,
+  selectedSubjectIds,
   searchItems,
   loadLookups,
   openModal,
   closeModal,
   save,
   deleteItem,
+  openSubjectsModal,
+  closeSubjectsModal,
+  toggleSubject,
+  saveSubjects,
 } = useGroupsAdmin()
 
 onMounted(async () => {
@@ -161,5 +208,52 @@ onMounted(async () => {
 .actions {
   display: flex;
   gap: var(--spacing-2);
+}
+
+.subjects-hint {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-4);
+}
+
+.subjects-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: var(--spacing-1);
+}
+
+.subject-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.subject-item:hover {
+  background: var(--color-bg-hover);
+}
+
+.subject-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.subject-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.subject-meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
 }
 </style>

@@ -72,6 +72,7 @@ model Teacher {
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   teacherSubjects TeacherSubject[]
+  grades          Grade[]
 
   @@map("teachers")
 }
@@ -97,6 +98,7 @@ model Grade {
   id         Int       @id @default(autoincrement())
   studentId  Int       @map("student_id")
   subjectId  Int       @map("subject_id")
+  teacherId  Int?      @map("teacher_id")
   gradeValue Int       @map("grade_value") // 1-10 или 0-100
   gradeType  GradeType @map("grade_type")
   examDate   DateTime? @map("exam_date")
@@ -104,8 +106,9 @@ model Grade {
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
 
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  student Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
 
   @@unique([studentId, subjectId, gradeType])
   @@map("grades")

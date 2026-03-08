@@ -88,6 +88,7 @@ export declare class StudentsService {
             id: number;
             studentId: number;
             notes: string | null;
+            teacherId: number | null;
             subjectId: number;
             examDate: Date | null;
             gradeValue: number;

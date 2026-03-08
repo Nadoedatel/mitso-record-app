@@ -86,7 +86,7 @@ export function useStudentsAdmin() {
         enrollmentYear: student.enrollmentYear,
         phone: student.phone || '',
         address: student.address || '',
-        birthDate: student.birthDate || '',
+        birthDate: student.birthDate ? student.birthDate.substring(0, 10) : '',
       }
     } else {
       editingItem.value = null
@@ -128,7 +128,7 @@ export function useStudentsAdmin() {
           enrollmentYear: form.value.enrollmentYear,
           phone: form.value.phone,
           address: form.value.address,
-          birthDate: form.value.birthDate,
+          birthDate: form.value.birthDate || undefined,
         } as any)
         alert('Студент обновлён')
       } else {

@@ -32,26 +32,28 @@ let GradesService = class GradesService {
             throw new common_1.ForbiddenException('You are not assigned to this subject');
         }
     }
+    async getTeacherId(userId) {
+        const teacher = await this.prisma.teacher.findUnique({
+            where: { userId },
+            select: { id: true },
+        });
+        return teacher?.id ?? null;
+    }
     async create(dto, user) {
         if (user.role === client_1.Role.TEACHER) {
             await this.assertTeacherOwnsSubject(user.id, dto.subjectId);
         }
+        const teacherId = user.role === client_1.Role.TEACHER ? await this.getTeacherId(user.id) : null;
         return this.prisma.grade.create({
             data: {
                 ...dto,
+                teacherId,
                 examDate: dto.examDate ? new Date(dto.examDate) : null,
             },
             include: {
                 student: true,
-                subject: {
-                    include: {
-                        teacherSubjects: {
-                            include: {
-                                teacher: true,
-                            },
-                        },
-                    },
-                },
+                teacher: true,
+                subject: true,
             },
         });
     }
@@ -81,15 +83,8 @@ let GradesService = class GradesService {
                 where,
                 include: {
                     student: true,
-                    subject: {
-                        include: {
-                            teacherSubjects: {
-                                include: {
-                                    teacher: true,
-                                },
-                            },
-                        },
-                    },
+                    teacher: true,
+                    subject: true,
                 },
                 orderBy: {
                     examDate: 'desc',
@@ -120,15 +115,8 @@ let GradesService = class GradesService {
         return this.prisma.grade.findMany({
             where: { studentId },
             include: {
-                subject: {
-                    include: {
-                        teacherSubjects: {
-                            include: {
-                                teacher: true,
-                            },
-                        },
-                    },
-                },
+                teacher: true,
+                subject: true,
             },
             orderBy: [
                 { subject: { semester: 'asc' } },
@@ -141,15 +129,8 @@ let GradesService = class GradesService {
             where: { id },
             include: {
                 student: true,
-                subject: {
-                    include: {
-                        teacherSubjects: {
-                            include: {
-                                teacher: true,
-                            },
-                        },
-                    },
-                },
+                teacher: true,
+                subject: true,
             },
         });
         if (!grade) {
@@ -167,15 +148,8 @@ let GradesService = class GradesService {
             },
             include: {
                 student: true,
-                subject: {
-                    include: {
-                        teacherSubjects: {
-                            include: {
-                                teacher: true,
-                            },
-                        },
-                    },
-                },
+                teacher: true,
+                subject: true,
             },
         });
     }
@@ -273,6 +247,7 @@ let GradesService = class GradesService {
                 await this.assertTeacherOwnsSubject(user.id, subjectId);
             }
         }
+        const teacherId = user.role === client_1.Role.TEACHER ? await this.getTeacherId(user.id) : null;
         const results = await Promise.allSettled(grades.map((gradeDto) => this.prisma.grade.upsert({
             where: {
                 studentId_subjectId_gradeType: {
@@ -283,6 +258,7 @@ let GradesService = class GradesService {
             },
             create: {
                 ...gradeDto,
+                teacherId,
                 examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
             },
             update: {

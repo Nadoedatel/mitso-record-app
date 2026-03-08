@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GroupsService } from './groups.service';
-import { CreateGroupDto, UpdateGroupDto, QueryGroupDto } from './dto';
+import { CreateGroupDto, UpdateGroupDto, QueryGroupDto, SetGroupSubjectsDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
 import { Roles } from '../common/decorators';
 import { Role } from '@prisma/client';
@@ -96,5 +96,35 @@ export class GroupsController {
   @ApiResponse({ status: 404, description: 'Group not found' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.groupsService.remove(id);
+  }
+
+  /**
+   * Get subjects assigned to a group
+   * GET /api/groups/:id/subjects
+   */
+  @Get(':id/subjects')
+  @ApiOperation({ summary: 'Get subjects assigned to a group' })
+  @ApiResponse({ status: 200, description: 'Group subjects retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Group not found' })
+  getSubjects(@Param('id', ParseIntPipe) id: number) {
+    return this.groupsService.getSubjects(id);
+  }
+
+  /**
+   * Set subjects for a group (replaces all existing)
+   * POST /api/groups/:id/subjects
+   */
+  @Post(':id/subjects')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Set subjects for a group - replaces all existing (ADMIN only)' })
+  @ApiResponse({ status: 200, description: 'Subjects set successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Group or subject not found' })
+  setSubjects(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SetGroupSubjectsDto,
+  ) {
+    return this.groupsService.setSubjects(id, dto.subjectIds);
   }
 }
