@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="733caec2-66d1-49bd-9bcd-860a6f3f6e97" name="Changes" comment="" />
+    <list default="true" id="733caec2-66d1-49bd-9bcd-860a6f3f6e97" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -49,12 +51,15 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "dart.analysis.tool.window.visible": "false",
     "git-widget-placeholder": "v.2.10.0",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "ts.external.directory.path": "/Users/nadoe/WebstormProjects/mitso-record-app/backend/node_modules/typescript/lib",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "show.migrate.to.gradle.popup": "false",
+    "ts.external.directory.path": "/Users/nadoe/WebstormProjects/mitso-record-app/frontend/node_modules/typescript/lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -106,7 +111,9 @@
       <workItem from="1772873652863" duration="5222000" />
       <workItem from="1772997705732" duration="5101000" />
       <workItem from="1773038335412" duration="6356000" />
-      <workItem from="1773048158397" duration="2852000" />
+      <workItem from="1773048158397" duration="3531000" />
+      <workItem from="1773057980248" duration="676000" />
+      <workItem from="1773058682973" duration="1909000" />
     </task>
     <servers />
   </component>
