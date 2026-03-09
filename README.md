@@ -2,6 +2,11 @@
 
 Полноценное приложение для учёта студенческих зачёток, оценок и информации о предметах. Текущая версия: **v2.2.5**
 
+Монорепозиторий включает три клиента:
+- **backend** — NestJS REST API (порт 8080)
+- **frontend** — Nuxt 3 веб-приложение (порт 3000)
+- **mobile** — Flutter мобильный клиент (Android / iOS)
+
 ## Стек технологий
 
 ### Backend
@@ -23,6 +28,16 @@
 - **Shared UI Library** - переиспользуемые компоненты (Button, Input, Modal, Table, Badge и др.)
 - Node.js ^20.19.0 || >=22.12.0
 
+### Mobile
+- **Flutter 3.x** — кроссплатформенный UI фреймворк
+- **Dart >=3.3.0** — язык
+- **Riverpod 2** (`flutter_riverpod`) — state management
+- **GoRouter 14** — декларативный роутинг с role-based guards
+- **Dio 5** + `dio_cookie_manager` — HTTP-клиент с interceptor-ами
+- **flutter_secure_storage** — хранение access-токена
+- **PersistCookieJar** — хранение refresh-токена (httpOnly cookie)
+- Платформы: Android, iOS
+
 ## Быстрый старт
 
 ### 1. Установка зависимостей
@@ -35,6 +50,10 @@ npm install
 # Frontend
 cd ../frontend
 npm install
+
+# Mobile
+cd ../mobile
+flutter pub get
 ```
 
 ### 2. Настройка базы данных
@@ -83,6 +102,14 @@ npm run dev
 - **Frontend:** http://localhost:3000
 - **Backend API:** http://localhost:8080/api
 - **API Docs (Swagger):** http://localhost:8080/api/docs
+
+Запуск мобильного клиента (требует запущенного backend):
+
+```bash
+cd mobile
+flutter run                  # Android-эмулятор (backend: 10.0.2.2:8080)
+flutter run -d iPhone        # iOS-симулятор (backend: localhost:8080)
+```
 
 ## Структура проекта
 
@@ -138,6 +165,17 @@ mitso-record-app/
 │   │   │   └── ui/               # Shared UI библиотека
 │   │   └── middleware/   # Auth & Admin middleware
 │   └── package.json
+│
+├── mobile/               # Flutter мобильный клиент
+│   ├── lib/
+│   │   ├── main.dart
+│   │   ├── app.dart
+│   │   ├── core/         # api_client, router, theme
+│   │   ├── features/     # auth, student, teacher
+│   │   └── shared/       # models, widgets
+│   ├── android/
+│   ├── ios/
+│   └── pubspec.yaml
 │
 ├── docker-compose.yml    # Docker конфигурация
 └── CLAUDE.md             # Инструкции для Claude Code
@@ -331,6 +369,27 @@ npm run preview
 
 # Type checking
 npm run typecheck
+```
+
+### Mobile
+```bash
+cd mobile
+
+# Установить зависимости
+flutter pub get
+
+# Запустить (Android-эмулятор)
+flutter run
+
+# Запустить (iOS-симулятор)
+flutter run -d iPhone
+
+# Сборка
+flutter build apk --release   # Android APK
+flutter build ios --release   # iOS (только macOS)
+
+# Линтер
+flutter analyze
 ```
 
 ## Тестирование
