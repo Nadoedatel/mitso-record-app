@@ -31,6 +31,7 @@
             <td>
               <div class="actions">
                 <Button size="sm" variant="primary" @click="openModal(teacher)">Редактировать</Button>
+                <Button size="sm" variant="secondary" @click="openSubjectsModal(teacher)">Предметы</Button>
                 <Button size="sm" variant="danger" @click="deleteItem(teacher.id)">Удалить</Button>
               </div>
             </td>
@@ -39,6 +40,32 @@
       </table>
     </div>
   </Section>
+
+  <Modal v-model="showSubjectsModal" size="md" @close="closeSubjectsModal">
+    <ModalHeader
+      :title="`Предметы: ${managingTeacher?.lastName} ${managingTeacher?.firstName}`"
+      @close="closeSubjectsModal"
+    />
+    <LoadingState v-if="subjectsLoading" message="Загрузка предметов..." />
+    <div v-else class="subjects-list">
+      <EmptyState v-if="allSubjects.length === 0" message="Предметы не найдены" />
+      <div v-else>
+        <Checkbox
+          v-for="subject in allSubjects"
+          :key="subject.id"
+          :modelValue="selectedSubjectIds.has(subject.id)"
+          :label="`${subject.name} (${subject.code}, сем. ${subject.semester})`"
+          :id="`subject-${subject.id}`"
+          class="subject-checkbox"
+          @update:modelValue="toggleSubject(subject.id)"
+        />
+      </div>
+    </div>
+    <ModalActions>
+      <Button variant="secondary" @click="closeSubjectsModal">Отмена</Button>
+      <Button variant="primary" :disabled="subjectsLoading" @click="saveSubjects">Сохранить</Button>
+    </ModalActions>
+  </Modal>
 
   <Modal v-model="showModal" size="lg" @close="closeModal">
     <ModalHeader
@@ -112,6 +139,7 @@ import {
   FormField,
   FormRow,
   Input,
+  Checkbox,
 } from '~/shared/ui'
 
 const {
@@ -126,6 +154,15 @@ const {
   closeModal,
   save,
   deleteItem,
+  showSubjectsModal,
+  subjectsLoading,
+  managingTeacher,
+  allSubjects,
+  selectedSubjectIds,
+  openSubjectsModal,
+  closeSubjectsModal,
+  toggleSubject,
+  saveSubjects,
 } = useTeachersAdmin()
 
 onMounted(() => searchItems())
@@ -180,5 +217,17 @@ onMounted(() => searchItems())
 .actions {
   display: flex;
   gap: var(--spacing-2);
+}
+
+.subjects-list {
+  padding: var(--spacing-4) 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.subject-checkbox {
+  display: flex;
+  padding: var(--spacing-2) 0;
+  border-bottom: 1px solid var(--color-border);
 }
 </style>

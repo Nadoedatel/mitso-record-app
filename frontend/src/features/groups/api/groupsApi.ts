@@ -1,5 +1,6 @@
 import { useHttpClient } from '~/shared/api/httpClient';
 import type { Group, CreateGroupDto, UpdateGroupDto } from '~/entities/group';
+import type { Subject } from '~/entities/subject';
 
 export async function fetchGroups(params?: { search?: string }): Promise<Group[]> {
   const httpClient = useHttpClient();
@@ -33,4 +34,14 @@ export async function updateGroup(id: number, groupData: UpdateGroupDto): Promis
 export async function deleteGroup(id: number): Promise<void> {
   const httpClient = useHttpClient();
   await httpClient.delete(`/groups/${id}`);
+}
+
+export async function fetchGroupSubjects(groupId: number): Promise<Subject[]> {
+  const httpClient = useHttpClient();
+  return httpClient.get<Subject[]>(`/groups/${groupId}/subjects`);
+}
+
+export async function setGroupSubjects(groupId: number, subjectIds: number[]): Promise<Subject[]> {
+  const httpClient = useHttpClient();
+  return httpClient.post<Subject[]>(`/groups/${groupId}/subjects`, { subjectIds });
 }

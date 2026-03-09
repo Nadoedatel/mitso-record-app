@@ -11,4 +11,5 @@ export interface Subject {
   createdAt: string
   updatedAt: string
   teacher?: Teacher
+  teacherSubjects?: { teacher: Teacher }[]
 }

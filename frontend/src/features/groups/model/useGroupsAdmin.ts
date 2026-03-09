@@ -1,8 +1,17 @@
 import { ref } from 'vue'
-import { fetchGroups, createGroup, updateGroup, deleteGroup } from '~/features/groups/api/groupsApi'
+import {
+  fetchGroups,
+  createGroup,
+  updateGroup,
+  deleteGroup,
+  fetchGroupSubjects,
+  setGroupSubjects,
+} from '~/features/groups/api/groupsApi'
+import { subjectsApi } from '~/features/subjects/api/subjectsApi'
 import { fetchFaculties } from '~/features/faculties/api/facultiesApi'
 import type { Group } from '~/entities/group'
 import type { Faculty } from '~/entities/faculty'
+import type { Subject } from '~/entities/subject'
 
 export function useGroupsAdmin() {
   const groups = ref<Group[]>([])
@@ -11,6 +20,13 @@ export function useGroupsAdmin() {
   const faculties = ref<Faculty[]>([])
   const showModal = ref(false)
   const editingItem = ref<Group | null>(null)
+
+  // Subjects modal state
+  const showSubjectsModal = ref(false)
+  const subjectsLoading = ref(false)
+  const managingGroup = ref<Group | null>(null)
+  const allSubjects = ref<Subject[]>([])
+  const selectedSubjectIds = ref<Set<number>>(new Set())
 
   const form = ref<{
     name: string
@@ -88,6 +104,52 @@ export function useGroupsAdmin() {
     }
   }
 
+  async function openSubjectsModal(group: Group) {
+    managingGroup.value = group
+    showSubjectsModal.value = true
+    subjectsLoading.value = true
+    try {
+      const [groupSubjects, subjectsResult] = await Promise.all([
+        fetchGroupSubjects(group.id),
+        subjectsApi.fetchSubjects({ limit: 100 }),
+      ])
+      allSubjects.value = subjectsResult.data
+      selectedSubjectIds.value = new Set(groupSubjects.map((s) => s.id))
+    } catch (err: unknown) {
+      alert('Ошибка загрузки дисциплин: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+    } finally {
+      subjectsLoading.value = false
+    }
+  }
+
+  function closeSubjectsModal() {
+    showSubjectsModal.value = false
+    managingGroup.value = null
+    allSubjects.value = []
+    selectedSubjectIds.value = new Set()
+  }
+
+  function toggleSubject(subjectId: number) {
+    const next = new Set(selectedSubjectIds.value)
+    if (next.has(subjectId)) {
+      next.delete(subjectId)
+    } else {
+      next.add(subjectId)
+    }
+    selectedSubjectIds.value = next
+  }
+
+  async function saveSubjects() {
+    if (!managingGroup.value) return
+    try {
+      await setGroupSubjects(managingGroup.value.id, [...selectedSubjectIds.value])
+      alert('Дисциплины группы обновлены')
+      closeSubjectsModal()
+    } catch (err: unknown) {
+      alert('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+    }
+  }
+
   return {
     groups,
     loading,
@@ -96,11 +158,20 @@ export function useGroupsAdmin() {
     showModal,
     editingItem,
     form,
+    showSubjectsModal,
+    subjectsLoading,
+    managingGroup,
+    allSubjects,
+    selectedSubjectIds,
     searchItems,
     loadLookups,
     openModal,
     closeModal,
     save,
     deleteItem,
+    openSubjectsModal,
+    closeSubjectsModal,
+    toggleSubject,
+    saveSubjects,
   }
 }

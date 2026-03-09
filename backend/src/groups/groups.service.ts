@@ -160,6 +160,59 @@ export class GroupsService {
   }
 
   /**
+   * Get all subjects assigned to a group
+   */
+  async getSubjects(groupId: number) {
+    await this.findOne(groupId);
+
+    const subjectGroups = await this.prisma.subjectGroup.findMany({
+      where: { groupId },
+      include: {
+        subject: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            credits: true,
+            semester: true,
+          },
+        },
+      },
+    });
+
+    return subjectGroups.map((sg) => sg.subject);
+  }
+
+  /**
+   * Set subjects for a group (replaces all existing)
+   */
+  async setSubjects(groupId: number, subjectIds: number[]) {
+    await this.findOne(groupId);
+
+    if (subjectIds.length > 0) {
+      const subjects = await this.prisma.subject.findMany({
+        where: { id: { in: subjectIds } },
+      });
+
+      if (subjects.length !== subjectIds.length) {
+        throw new Error('One or more subjects not found');
+      }
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.subjectGroup.deleteMany({ where: { groupId } });
+
+      if (subjectIds.length > 0) {
+        await tx.subjectGroup.createMany({
+          data: subjectIds.map((subjectId) => ({ subjectId, groupId })),
+        });
+      }
+    });
+
+    return this.getSubjects(groupId);
+  }
+
+  /**
    * Delete group
    */
   async remove(id: number) {

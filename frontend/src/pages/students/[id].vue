@@ -42,9 +42,10 @@
                     <tr v-for="grade in semester.grades" :key="grade.id">
                       <td>{{ grade.subject?.name || 'Н/Д' }}</td>
                       <td>
-                        {{ grade.subject?.teacher
-                          ? `${grade.subject.teacher.lastName} ${grade.subject.teacher.firstName.charAt(0)}.`
-                          : 'Н/Д'
+                        {{
+                          grade.teacher
+                            ? `${grade.teacher.lastName} ${grade.teacher.firstName.charAt(0)}.`
+                            : 'Н/Д'
                         }}
                       </td>
                       <td>

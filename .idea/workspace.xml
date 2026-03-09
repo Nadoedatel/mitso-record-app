@@ -4,18 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="733caec2-66d1-49bd-9bcd-860a6f3f6e97" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CLAUDE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.controller.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/src/teachers/teachers.service.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dist/tsconfig.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dist/tsconfig.tsbuildinfo" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.nuxt/manifest/latest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/manifest/latest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.nuxt/manifest/meta/dev.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/manifest/meta/dev.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.nuxt/nitro.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/nitro.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.nuxt/tailwind/postcss.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.nuxt/tailwind/postcss.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/CLAUDE.md" afterDir="false" />
-    </list>
+    <list default="true" id="733caec2-66d1-49bd-9bcd-860a6f3f6e97" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -112,7 +101,7 @@
       <workItem from="1772434963240" duration="4000" />
       <workItem from="1772618710111" duration="85000" />
       <workItem from="1772872980965" duration="613000" />
-      <workItem from="1772873652863" duration="4620000" />
+      <workItem from="1772873652863" duration="5222000" />
     </task>
     <servers />
   </component>

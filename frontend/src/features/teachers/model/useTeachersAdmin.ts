@@ -1,6 +1,8 @@
 import { ref } from 'vue'
 import { teachersApi } from '~/features/teachers/api/teachersApi'
+import { subjectsApi } from '~/features/subjects/api/subjectsApi'
 import type { Teacher } from '~/entities/teacher'
+import type { Subject } from '~/entities/subject'
 
 export function useTeachersAdmin() {
   const teachers = ref<Teacher[]>([])
@@ -130,6 +132,59 @@ export function useTeachersAdmin() {
     }
   }
 
+  // Subject management
+  const showSubjectsModal = ref(false)
+  const subjectsLoading = ref(false)
+  const managingTeacher = ref<Teacher | null>(null)
+  const allSubjects = ref<Subject[]>([])
+  const selectedSubjectIds = ref<Set<number>>(new Set())
+
+  async function openSubjectsModal(teacher: Teacher) {
+    managingTeacher.value = teacher
+    showSubjectsModal.value = true
+    subjectsLoading.value = true
+    try {
+      const [subjectsResult, assigned] = await Promise.all([
+        subjectsApi.fetchSubjects({ limit: 100 }),
+        teachersApi.getTeacherSubjects(teacher.id),
+      ])
+      allSubjects.value = subjectsResult.data
+      selectedSubjectIds.value = new Set(assigned.map((s: Subject) => s.id))
+    } catch (err: unknown) {
+      alert('Ошибка загрузки предметов: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+    } finally {
+      subjectsLoading.value = false
+    }
+  }
+
+  function closeSubjectsModal() {
+    showSubjectsModal.value = false
+    managingTeacher.value = null
+    allSubjects.value = []
+    selectedSubjectIds.value = new Set()
+  }
+
+  function toggleSubject(subjectId: number) {
+    const next = new Set(selectedSubjectIds.value)
+    if (next.has(subjectId)) {
+      next.delete(subjectId)
+    } else {
+      next.add(subjectId)
+    }
+    selectedSubjectIds.value = next
+  }
+
+  async function saveSubjects() {
+    if (!managingTeacher.value) return
+    try {
+      await teachersApi.assignSubjects(managingTeacher.value.id, [...selectedSubjectIds.value])
+      alert('Предметы сохранены')
+      closeSubjectsModal()
+    } catch (err: unknown) {
+      alert('Ошибка сохранения: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+    }
+  }
+
   return {
     teachers,
     loading,
@@ -142,5 +197,14 @@ export function useTeachersAdmin() {
     closeModal,
     save,
     deleteItem,
+    showSubjectsModal,
+    subjectsLoading,
+    managingTeacher,
+    allSubjects,
+    selectedSubjectIds,
+    openSubjectsModal,
+    closeSubjectsModal,
+    toggleSubject,
+    saveSubjects,
   }
 }
