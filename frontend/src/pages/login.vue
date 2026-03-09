@@ -114,7 +114,7 @@ onMounted(() => {
 }
 
 .login-container {
-  width: 100%;
+  width: 30%;
 }
 
 .login-card {
