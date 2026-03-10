@@ -45,6 +45,7 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
+<<<<<<< Updated upstream
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;JavaScript Debug.localhost:3000.executor&quot;: &quot;Debug&quot;,
@@ -61,6 +62,24 @@
     &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;,
     &quot;ts.external.directory.path&quot;: &quot;/Users/nadoe/WebstormProjects/mitso-record-app/frontend/node_modules/typescript/lib&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+=======
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "JavaScript Debug.localhost:3000.executor": "Debug",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "v.2.10.0",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "show.migrate.to.gradle.popup": "false",
+    "ts.external.directory.path": "/Users/nadoe/WebstormProjects/mitso-record-app/frontend/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
+>>>>>>> Stashed changes
   }
 }</component>
   <component name="RecentsManager">
@@ -113,8 +132,12 @@
       <workItem from="1773038335412" duration="6356000" />
       <workItem from="1773048158397" duration="3531000" />
       <workItem from="1773057980248" duration="676000" />
+<<<<<<< Updated upstream
       <workItem from="1773058682973" duration="2168000" />
       <workItem from="1773078597102" duration="2000" />
+=======
+      <workItem from="1773058682973" duration="1909000" />
+>>>>>>> Stashed changes
     </task>
     <servers />
   </component>
