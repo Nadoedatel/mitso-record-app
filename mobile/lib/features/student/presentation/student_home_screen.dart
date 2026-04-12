@@ -288,7 +288,15 @@ class _SearchTabState extends ConsumerState<_SearchTab> {
             loading: () => const LoadingWidget(),
             error: (e, _) => AppErrorWidget(error: e),
             data: (students) {
-              if (students.isEmpty && _ctrl.text.length >= 2) {
+              if (_ctrl.text.length < 2) {
+                return const Center(
+                  child: Text(
+                    'Введите 2 символа для поиска',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                );
+              }
+              if (students.isEmpty) {
                 return const Center(child: Text('Ничего не найдено'));
               }
               return ListView.builder(

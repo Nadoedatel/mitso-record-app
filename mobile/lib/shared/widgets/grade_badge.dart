@@ -18,9 +18,9 @@ class GradeBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: _color().withOpacity(0.12),
+        color: _color().withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: _color().withOpacity(0.4)),
+        border: Border.all(color: _color().withValues(alpha: 0.4)),
       ),
       child: Text(
         value.toString(),
