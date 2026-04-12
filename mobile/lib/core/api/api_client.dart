@@ -1,12 +1,16 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'api_exception.dart';
 
-const String _baseUrl = 'http://localhost:8080/api'; // 10.0.2.2 = localhost on Android emulator
+// iOS Simulator / Android Emulator: 'http://localhost:8080/api'
+// Android Emulator:                 'http://10.0.2.2:8080/api'
+// Physical Device (replace IP):     'http://192.168.x.x:8080/api'
+const String _baseUrl = 'http://localhost:8080/api';
 
 class ApiClient {
   ApiClient._();
@@ -29,6 +33,7 @@ class ApiClient {
     // Separate Dio for refresh (no auth interceptor — avoids infinite loop)
     final refreshDio = Dio(BaseOptions(baseUrl: _baseUrl));
     refreshDio.interceptors.add(CookieManager(_cookieJar));
+    refreshDio.interceptors.add(_ResponseUnwrapInterceptor());
 
     _dio = Dio(BaseOptions(
       baseUrl: _baseUrl,
@@ -38,6 +43,13 @@ class ApiClient {
     _dio.interceptors.add(CookieManager(_cookieJar));
     _dio.interceptors.add(_ResponseUnwrapInterceptor());
     _dio.interceptors.add(_AuthInterceptor(_storage, _cookieJar, refreshDio));
+    if (kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        logPrint: (obj) => debugPrint('[Dio] $obj'),
+      ));
+    }
 
     _initialized = true;
   }

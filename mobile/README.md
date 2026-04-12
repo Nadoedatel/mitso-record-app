@@ -85,15 +85,61 @@ cd mobile
 
 # Установить зависимости
 flutter pub get
-
-# Запустить на Android-эмуляторе (backend доступен как 10.0.2.2:8080)
-flutter run
-
-# Запустить на iOS-симуляторе (backend доступен как localhost:8080)
-flutter run -d iPhone
 ```
 
-> **Важно:** базовый URL в `core/api/api_client.dart` настроен на `http://10.0.2.2:8080/api` — это `localhost` для Android-эмулятора. Для iOS-симулятора смените на `http://localhost:8080/api`.
+#### iOS-симулятор (macOS)
+
+1. Открой симулятор:
+   ```bash
+   open -a Simulator
+   ```
+   Либо запусти напрямую — Flutter сам поднимет его:
+   ```bash
+   flutter run -d "iPhone 17 Pro"
+   ```
+
+2. Посмотреть список доступных симуляторов:
+   ```bash
+   xcrun simctl list devices available
+   ```
+
+3. Запустить (симулятор уже открыт):
+   ```bash
+   flutter run
+   ```
+
+#### iOS — физический iPhone (macOS + кабель)
+
+1. Подключи iPhone кабелем, нажми **"Доверять"** на устройстве.
+
+2. Включи **Режим разработчика** (iOS 16+):
+   **Настройки → Конфиденциальность и безопасность → Режим разработчика → Включить**
+
+3. Открой проект в Xcode и настрой подписание:
+   ```bash
+   open ios/Runner.xcworkspace
+   ```
+   В Xcode: **Runner → Signing & Capabilities → Team** — выбери свой Apple ID.
+
+4. Проверь, что устройство видно, и запусти:
+   ```bash
+   flutter devices   # iPhone должен быть в списке
+   flutter run
+   ```
+
+   > После первого запуска на iPhone появится запрос доверия к разработчику:
+   > **Настройки → Основные → VPN и управление устройством** → доверяй своему Apple ID.
+
+#### Android-эмулятор
+
+```bash
+# Создать и запустить AVD через Android Studio, затем:
+flutter run
+```
+
+> **Важно:** базовый URL в `core/api/api_client.dart`:
+> - Android-эмулятор → `http://10.0.2.2:8080/api` (`localhost` хоста внутри эмулятора)
+> - iOS-симулятор / физический iPhone → `http://localhost:8080/api`
 
 ### Сборка
 

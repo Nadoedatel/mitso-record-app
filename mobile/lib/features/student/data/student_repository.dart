@@ -25,7 +25,9 @@ class StudentRepository {
       },
     );
     final data = response.data;
-    final list = (data is Map ? data['items'] ?? data['students'] ?? data : data) as List<dynamic>;
+    final list = (data is Map<String, dynamic>
+        ? (data['data'] ?? data['items'] ?? data['students']) as List<dynamic>
+        : data as List<dynamic>);
     return list
         .map((e) => Student.fromJson(e as Map<String, dynamic>))
         .toList();

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_client.dart';
@@ -11,6 +12,7 @@ class BatchGradeItem {
   final int gradeValue;
   final GradeType gradeType;
   final DateTime? examDate;
+  final String? notes;
 
   const BatchGradeItem({
     required this.studentId,
@@ -18,6 +20,7 @@ class BatchGradeItem {
     required this.gradeValue,
     required this.gradeType,
     this.examDate,
+    this.notes,
   });
 
   Map<String, dynamic> toJson() => {
@@ -26,6 +29,7 @@ class BatchGradeItem {
         'gradeValue': gradeValue,
         'gradeType': gradeTypeToJson(gradeType),
         if (examDate != null) 'examDate': examDate!.toIso8601String(),
+        if (notes != null && notes!.isNotEmpty) 'notes': notes,
       };
 }
 
@@ -54,19 +58,27 @@ class TeacherRepository {
     int subjectId,
     int groupId,
   ) async {
-    final response = await ApiClient.instance.dio.get(
-      '/grades/subject/$subjectId/group/$groupId/students',
-    );
-    final list = response.data as List<dynamic>;
-    return list
-        .map((e) => StudentWithGrade.fromJson(e as Map<String, dynamic>))
-        .toList();
+    debugPrint('[TeacherRepo] GET /grades/subject/$subjectId/group/$groupId/students');
+    try {
+      final response = await ApiClient.instance.dio.get(
+        '/grades/subject/$subjectId/group/$groupId/students',
+      );
+      debugPrint('[TeacherRepo] status=${response.statusCode} data=${response.data}');
+      final list = response.data as List<dynamic>;
+      debugPrint('[TeacherRepo] students count=${list.length}');
+      return list
+          .map((e) => StudentWithGrade.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e, st) {
+      debugPrint('[TeacherRepo] ERROR: $e\n$st');
+      rethrow;
+    }
   }
 
   Future<void> saveGrades(List<BatchGradeItem> items) async {
-    await ApiClient.instance.dio.post('/grades/batch', data: {
-      'grades': items.map((e) => e.toJson()).toList(),
-    });
+    await Future.wait(
+      items.map((item) => ApiClient.instance.dio.post('/grades', data: item.toJson())),
+    );
   }
 }
 

@@ -89,6 +89,40 @@ class Grade {
   }
 }
 
+class GradeFormEntry {
+  final GradeType? gradeType;
+  final int? gradeValue;
+  final DateTime? examDate;
+  final String notes;
+
+  const GradeFormEntry({
+    this.gradeType,
+    this.gradeValue,
+    this.examDate,
+    this.notes = '',
+  });
+
+  GradeFormEntry copyWith({
+    GradeType? Function()? gradeType,
+    int? Function()? gradeValue,
+    DateTime? Function()? examDate,
+    String? notes,
+  }) {
+    return GradeFormEntry(
+      gradeType: gradeType != null ? gradeType() : this.gradeType,
+      gradeValue: gradeValue != null ? gradeValue() : this.gradeValue,
+      examDate: examDate != null ? examDate() : this.examDate,
+      notes: notes ?? this.notes,
+    );
+  }
+
+  bool get isValid =>
+      gradeType != null &&
+      gradeValue != null &&
+      gradeValue! >= 1 &&
+      gradeValue! <= 10;
+}
+
 class StudentWithGrade {
   final int id;
   final String firstName;
@@ -109,15 +143,22 @@ class StudentWithGrade {
   String get fullName => '$lastName $firstName${middleName != null ? ' $middleName' : ''}';
 
   factory StudentWithGrade.fromJson(Map<String, dynamic> json) {
+    // Backend returns 'grades' (array), pick the first entry if present
+    Grade? grade;
+    final gradesRaw = json['grades'];
+    if (gradesRaw is List && gradesRaw.isNotEmpty) {
+      grade = Grade.fromJson(gradesRaw.first as Map<String, dynamic>);
+    } else if (json['grade'] is Map<String, dynamic>) {
+      grade = Grade.fromJson(json['grade'] as Map<String, dynamic>);
+    }
+
     return StudentWithGrade(
       id: json['id'] as int,
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String,
       middleName: json['middleName'] as String?,
       studentId: json['studentId'] as String,
-      grade: json['grade'] != null
-          ? Grade.fromJson(json['grade'] as Map<String, dynamic>)
-          : null,
+      grade: grade,
     );
   }
 }

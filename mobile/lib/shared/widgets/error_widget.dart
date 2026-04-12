@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class AppErrorWidget extends StatelessWidget {
@@ -15,6 +16,7 @@ class AppErrorWidget extends StatelessWidget {
     if (msg.contains('SocketException') || msg.contains('connection')) {
       return 'Нет соединения с сервером';
     }
+    if (kDebugMode) return msg;
     return 'Произошла ошибка. Попробуйте ещё раз.';
   }
 

@@ -20,9 +20,16 @@ class Subject {
       id: json['id'] as int,
       name: json['name'] as String,
       code: json['code'] as String,
-      credits: json['credits'] as int,
-      semester: json['semester'] as int,
+      // credits/semester may be absent when Subject is embedded inside a Grade response
+      credits: (json['credits'] as int?) ?? 0,
+      semester: (json['semester'] as int?) ?? 0,
       description: json['description'] as String?,
     );
   }
+
+  @override
+  bool operator ==(Object other) => other is Subject && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
