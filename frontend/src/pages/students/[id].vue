@@ -87,6 +87,8 @@ import {
   GradeValueBadge,
 } from '~/shared/ui'
 
+definePageMeta({ middleware: 'auth' })
+
 const route = useRoute()
 const studentId = computed(() => parseInt(route.params.id as string))
 
@@ -133,8 +135,8 @@ onMounted(async () => {
 
     student.value = studentData
     grades.value = gradesData
-  } catch (err: any) {
-    error.value = err.message || 'Ошибка загрузки данных'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Ошибка загрузки данных'
   } finally {
     loading.value = false
   }

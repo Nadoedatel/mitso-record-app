@@ -16,16 +16,14 @@ export interface StudentsQuery {
 }
 
 export interface CreateStudentDto {
+  userId: number
   firstName: string
   lastName: string
   middleName?: string
-  email: string
-  password: string
-  group: string
-  course: number
-  faculty: string
-  specialization: string
   studentId: string
+  groupId?: number
+  course: number
+  specializationId?: number
   enrollmentYear: number
   phone?: string
   address?: string
@@ -36,11 +34,9 @@ export interface UpdateStudentDto {
   firstName?: string
   lastName?: string
   middleName?: string
-  email?: string
-  group?: string
+  groupId?: number
   course?: number
-  faculty?: string
-  specialization?: string
+  specializationId?: number
   studentId?: string
   enrollmentYear?: number
   phone?: string

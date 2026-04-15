@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useHttpClient } from '~/shared/api/httpClient'
+import { useAuthStore } from '~/features/auth/model/useAuth'
 import { Container, Header, Button, Tabs } from '~/shared/ui'
 import {
   StudentsSection,
@@ -40,6 +40,7 @@ definePageMeta({
 })
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const tabs = [
   { key: 'students', label: 'Студенты' },
@@ -52,9 +53,8 @@ const tabs = [
 
 const activeTab = ref('students')
 
-function logout() {
-  const httpClient = useHttpClient()
-  httpClient.clearAuth()
+async function logout() {
+  await authStore.logout()
   router.push('/login')
 }
 </script>

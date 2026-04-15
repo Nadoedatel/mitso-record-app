@@ -211,19 +211,22 @@ class _GradeEntryTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.edit_note, size: 64, color: Colors.grey),
-          const SizedBox(height: 12),
-          const Text('Перейдите на экран выставления оценок'),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: () => context.push('/teacher/grades'),
-            icon: const Icon(Icons.arrow_forward),
-            label: const Text('Выставить оценки'),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.edit_note, size: 64, color: Colors.grey),
+            const SizedBox(height: 12),
+            const Text('Перейдите на экран выставления оценок'),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () => context.push('/teacher/grades'),
+              icon: const Icon(Icons.arrow_forward),
+              label: const Text('Выставить оценки'),
+            ),
+          ],
+        ),
       ),
     );
   }

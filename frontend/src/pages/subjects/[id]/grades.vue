@@ -189,6 +189,8 @@ import {
   GradeValueBadge,
 } from '~/shared/ui'
 
+definePageMeta({ middleware: 'auth' })
+
 const route = useRoute()
 const subjectId = computed(() => parseInt(route.params.id as string))
 
@@ -243,8 +245,8 @@ const selectGroup = async (group: Group) => {
 
   try {
     students.value = await gradesApi.fetchStudentsByGroupAndSubject(group.id, subjectId.value)
-  } catch (err: any) {
-    error.value = err.message || 'Ошибка загрузки студентов'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Ошибка загрузки студентов'
   } finally {
     loadingStudents.value = false
   }
@@ -285,8 +287,8 @@ const saveGradeForStudent = async (student: Student) => {
 
     saveSuccess.value = `Оценка для ${student.lastName} ${student.firstName} сохранена`
     setTimeout(() => { saveSuccess.value = '' }, 3000)
-  } catch (err: any) {
-    saveError.value = err.message || 'Ошибка сохранения оценки'
+  } catch (err: unknown) {
+    saveError.value = err instanceof Error ? err.message : 'Ошибка сохранения оценки'
   } finally {
     saving.value = false
   }
@@ -328,8 +330,8 @@ const saveAllGrades = async () => {
 
     saveSuccess.value = `Успешно сохранено ${gradesToSave.length} оценок`
     setTimeout(() => { saveSuccess.value = '' }, 3000)
-  } catch (err: any) {
-    saveError.value = err.message || 'Ошибка сохранения оценок'
+  } catch (err: unknown) {
+    saveError.value = err instanceof Error ? err.message : 'Ошибка сохранения оценок'
   } finally {
     saving.value = false
   }
@@ -344,8 +346,8 @@ onMounted(async () => {
 
     subject.value = subjectData
     groups.value = groupsData
-  } catch (err: any) {
-    error.value = err.message || 'Ошибка загрузки данных'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Ошибка загрузки данных'
   } finally {
     loading.value = false
   }

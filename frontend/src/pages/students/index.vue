@@ -3,7 +3,7 @@
     <Container maxWidth="xl">
       <Header title="Поиск студентов">
         <template #actions>
-          <Button variant="secondary" @click="$router.push('/')">На главную</Button>
+          <Button variant="secondary" @click="$router.push(homeRoute)">На главную</Button>
         </template>
       </Header>
 
@@ -49,8 +49,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { studentsApi } from '~/features/students/api/studentsApi'
+import { useAuthStore } from '~/features/auth/model/useAuth'
 import type { Student } from '~/entities/student'
 import {
   Container,
@@ -63,6 +64,15 @@ import {
   EmptyState,
   Alert,
 } from '~/shared/ui'
+
+definePageMeta({ middleware: 'auth' })
+
+const authStore = useAuthStore()
+const homeRoute = computed(() => {
+  if (authStore.user?.role === 'ADMIN') return '/admin'
+  if (authStore.user?.role === 'TEACHER') return '/teacher'
+  return '/student'
+})
 
 const searchQuery = ref('')
 const students = ref<Student[]>([])
@@ -92,8 +102,8 @@ const fetchStudents = async () => {
     students.value = response.data
     pagination.value.total = response.total
     pagination.value.totalPages = response.totalPages
-  } catch (err: any) {
-    error.value = err.message || 'Ошибка загрузки студентов'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Ошибка загрузки студентов'
   } finally {
     loading.value = false
   }
