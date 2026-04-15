@@ -76,8 +76,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '~/features/auth/model/useAuth'
-import { useHttpClient } from '~/shared/api/httpClient'
 import { gradesApi } from '~/features/grades/api/gradesApi'
+
+definePageMeta({ middleware: 'auth' })
 import type { Grade } from '~/entities/grade'
 import {
   Container,
@@ -138,8 +139,8 @@ async function fetchGrades() {
 
   try {
     grades.value = await gradesApi.fetchGradesForStudent(authStore.user.student.id)
-  } catch (err: any) {
-    error.value = err.message || 'Ошибка загрузки оценок'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Ошибка загрузки оценок'
   } finally {
     loading.value = false
   }
@@ -152,34 +153,16 @@ function formatDate(date: Date | string | null | undefined): string {
 
 async function logout() {
   await authStore.logout()
-  router.push('/')
+  router.push('/login')
 }
 
 onMounted(async () => {
-  // Check if token exists (from localStorage via httpClient)
-  const httpClient = useHttpClient()
-  const token = httpClient.getAccessToken()
-
-  if (!token) {
-    router.push('/login')
-    return
-  }
-
   loading.value = true
-
   try {
-    // Fetch full profile with student data
-    await authStore.fetchProfile()
-
-    // Set token in auth store if user was fetched successfully
-    if (authStore.user && token) {
-      authStore.setAuth(authStore.user, token)
-    }
-
-    // Fetch grades
+    if (!authStore.user?.student) await authStore.fetchProfile()
     await fetchGrades()
-  } catch (err: any) {
-    error.value = err.message || 'Ошибка загрузки данных'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Ошибка загрузки данных'
   } finally {
     loading.value = false
   }

@@ -18,10 +18,9 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = response.user
       accessToken.value = response.accessToken
 
-      // Set token and user data in HTTP client
+      // Set token in HTTP client
       const httpClient = useHttpClient()
       httpClient.setAccessToken(response.accessToken)
-      httpClient.setUserData(response.user)
 
       return response
     } catch (error) {
@@ -39,10 +38,9 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = response.user
       accessToken.value = response.accessToken
 
-      // Set token and user data in HTTP client
+      // Set token in HTTP client
       const httpClient = useHttpClient()
       httpClient.setAccessToken(response.accessToken)
-      httpClient.setUserData(response.user)
 
       return response
     } catch (error) {
@@ -96,7 +94,6 @@ export const useAuthStore = defineStore('auth', () => {
 
     const httpClient = useHttpClient()
     httpClient.setAccessToken(token)
-    httpClient.setUserData(userData)
   }
 
   return {

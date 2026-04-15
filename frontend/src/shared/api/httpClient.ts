@@ -1,7 +1,6 @@
 class HttpClient {
   private baseURL: string
   private accessToken: string | null = null
-  private userData: any = null
 
   constructor(baseURL: string) {
     this.baseURL = baseURL
@@ -15,17 +14,8 @@ class HttpClient {
     return this.accessToken
   }
 
-  setUserData(data: any) {
-    this.userData = data
-  }
-
-  getUserData() {
-    return this.userData
-  }
-
   clearAuth() {
     this.accessToken = null
-    this.userData = null
   }
 
   private async request<T>(
@@ -119,14 +109,14 @@ class HttpClient {
     return this.request<T>(endpoint, { method: 'GET' })
   }
 
-  async post<T>(endpoint: string, body?: any): Promise<T> {
+  async post<T>(endpoint: string, body?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
     })
   }
 
-  async patch<T>(endpoint: string, body?: any): Promise<T> {
+  async patch<T>(endpoint: string, body?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PATCH',
       body: body ? JSON.stringify(body) : undefined,

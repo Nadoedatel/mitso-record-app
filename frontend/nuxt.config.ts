@@ -22,6 +22,11 @@ export default defineNuxtConfig({
     },
   },
 
+  // Route rules
+  routeRules: {
+    '/': { redirect: '/login' },
+  },
+
   // Path aliases
   alias: {
     '@': './src',

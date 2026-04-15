@@ -8,6 +8,8 @@ import type { Group } from '~/entities/group'
 import type { Specialization } from '~/entities/specialization'
 
 export function useStudentsAdmin() {
+  const httpClient = useHttpClient()
+
   const students = ref<Student[]>([])
   const loading = ref(false)
   const search = ref('')
@@ -129,10 +131,9 @@ export function useStudentsAdmin() {
           phone: form.value.phone,
           address: form.value.address,
           birthDate: form.value.birthDate || undefined,
-        } as any)
+        })
         alert('Студент обновлён')
       } else {
-        const httpClient = useHttpClient()
         const registerResponse = await httpClient.post<{ user: { id: number }; accessToken: string }>(
           '/auth/register',
           { email: form.value.email, password: form.value.password, role: 'STUDENT' }
@@ -150,7 +151,7 @@ export function useStudentsAdmin() {
           phone: form.value.phone,
           address: form.value.address,
           birthDate: form.value.birthDate ? new Date(form.value.birthDate).toISOString() : undefined,
-        } as any)
+        })
         alert('Студент создан')
       }
       closeModal()
