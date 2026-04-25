@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { useToast } from '~/shared/lib/useToast'
 import { studentsApi } from '~/features/students/api/studentsApi'
 import { fetchGroups } from '~/features/groups/api/groupsApi'
 import { fetchSpecializations } from '~/features/specializations/api/specializationsApi'
@@ -8,6 +9,7 @@ import type { Group } from '~/entities/group'
 import type { Specialization } from '~/entities/specialization'
 
 export function useStudentsAdmin() {
+  const toast = useToast()
   const httpClient = useHttpClient()
 
   const students = ref<Student[]>([])
@@ -57,7 +59,7 @@ export function useStudentsAdmin() {
         ? result.data.filter((s: Student) => s.group?.name === groupFilter.value)
         : result.data
     } catch (err: unknown) {
-      alert('Ошибка загрузки студентов: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка загрузки студентов: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     } finally {
       loading.value = false
     }
@@ -132,7 +134,7 @@ export function useStudentsAdmin() {
           address: form.value.address,
           birthDate: form.value.birthDate || undefined,
         })
-        alert('Студент обновлён')
+        toast.success('Студент обновлён')
       } else {
         const registerResponse = await httpClient.post<{ user: { id: number }; accessToken: string }>(
           '/auth/register',
@@ -152,12 +154,12 @@ export function useStudentsAdmin() {
           address: form.value.address,
           birthDate: form.value.birthDate ? new Date(form.value.birthDate).toISOString() : undefined,
         })
-        alert('Студент создан')
+        toast.success('Студент создан')
       }
       closeModal()
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 
@@ -165,10 +167,10 @@ export function useStudentsAdmin() {
     if (!confirm('Вы уверены, что хотите удалить студента?')) return
     try {
       await studentsApi.deleteStudent(id)
-      alert('Студент удалён')
+      toast.success('Студент удалён')
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 

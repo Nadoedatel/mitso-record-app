@@ -3,7 +3,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common/filters';
+import { AllExceptionsFilter } from './common/filters';
 
 /**
  * Bootstrap function - initializes and starts the application
@@ -43,8 +43,8 @@ async function bootstrap() {
     }),
   );
 
-  // Global exception filter
-  app.useGlobalFilters(new HttpExceptionFilter());
+  // Global exception filter (handles HTTP exceptions + Prisma errors)
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // Swagger API documentation (dev only)
   if (process.env.NODE_ENV !== 'production') {

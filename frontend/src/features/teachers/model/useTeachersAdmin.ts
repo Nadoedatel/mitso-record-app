@@ -1,10 +1,12 @@
 import { ref } from 'vue'
+import { useToast } from '~/shared/lib/useToast'
 import { teachersApi } from '~/features/teachers/api/teachersApi'
 import { subjectsApi } from '~/features/subjects/api/subjectsApi'
 import type { Teacher } from '~/entities/teacher'
 import type { Subject } from '~/entities/subject'
 
 export function useTeachersAdmin() {
+  const toast = useToast()
   const teachers = ref<Teacher[]>([])
   const loading = ref(false)
   const search = ref('')
@@ -41,7 +43,7 @@ export function useTeachersAdmin() {
       const result = await teachersApi.fetchTeachers({ search: search.value, limit: 100 })
       teachers.value = result.data
     } catch (err: unknown) {
-      alert('Ошибка загрузки преподавателей: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка загрузки преподавателей: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     } finally {
       loading.value = false
     }
@@ -98,7 +100,7 @@ export function useTeachersAdmin() {
           phone: form.value.phone,
           officeNumber: form.value.officeNumber,
         })
-        alert('Преподаватель обновлён')
+        toast.success('Преподаватель обновлён')
       } else {
         await teachersApi.createTeacher({
           firstName: form.value.firstName,
@@ -112,12 +114,12 @@ export function useTeachersAdmin() {
           phone: form.value.phone,
           officeNumber: form.value.officeNumber,
         })
-        alert('Преподаватель создан')
+        toast.success('Преподаватель создан')
       }
       closeModal()
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 
@@ -125,10 +127,10 @@ export function useTeachersAdmin() {
     if (!confirm('Вы уверены, что хотите удалить преподавателя?')) return
     try {
       await teachersApi.deleteTeacher(id)
-      alert('Преподаватель удалён')
+      toast.success('Преподаватель удалён')
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 
@@ -151,7 +153,7 @@ export function useTeachersAdmin() {
       allSubjects.value = subjectsResult.data
       selectedSubjectIds.value = new Set(assigned.map((s: Subject) => s.id))
     } catch (err: unknown) {
-      alert('Ошибка загрузки предметов: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка загрузки предметов: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     } finally {
       subjectsLoading.value = false
     }
@@ -178,10 +180,10 @@ export function useTeachersAdmin() {
     if (!managingTeacher.value) return
     try {
       await teachersApi.assignSubjects(managingTeacher.value.id, [...selectedSubjectIds.value])
-      alert('Предметы сохранены')
+      toast.success('Предметы сохранены')
       closeSubjectsModal()
     } catch (err: unknown) {
-      alert('Ошибка сохранения: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка сохранения: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 
