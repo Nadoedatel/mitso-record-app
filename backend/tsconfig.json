@@ -16,7 +16,7 @@
     "strictNullChecks": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
-    "forceConsistentCasingInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["src/*"]
