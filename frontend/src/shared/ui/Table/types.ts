@@ -27,7 +27,7 @@ export interface TableColumn<T = any> {
   /**
    * Функция для форматирования значения
    */
-  formatter?: (value: any, row: T) => string | number
+  formatter?: (value: T[keyof T], row: T) => string
 }
 
 export interface TableProps<T = any> {

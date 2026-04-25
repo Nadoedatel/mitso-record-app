@@ -181,7 +181,7 @@ defineExpose({
 <style scoped>
 /* Number Input Wrapper */
 .number-input-wrapper {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   position: relative;
 }

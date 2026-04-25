@@ -5,6 +5,7 @@
         <SearchInput
           v-model="search"
           placeholder="Поиск по имени..."
+          full-width
           @update:modelValue="searchItems"
         />
         <Select
@@ -14,6 +15,7 @@
             { value: '', label: 'Все группы' },
             ...groups.map(g => ({ value: g.name, label: g.name }))
           ]"
+          full-width
           @update:modelValue="searchItems"
         />
       </div>
@@ -51,11 +53,7 @@
     </div>
   </Section>
 
-  <Modal v-model="showModal" size="lg" @close="closeModal">
-    <ModalHeader
-      :title="editingItem ? 'Редактировать студента' : 'Добавить студента'"
-      @close="closeModal"
-    />
+  <Modal v-model="showModal" size="lg" :title="editingItem ? 'Редактировать студента' : 'Добавить студента'" @close="closeModal">
     <Form @submit.prevent="save">
       <FormRow>
         <FormField label="Фамилия" required>
@@ -139,7 +137,6 @@ import {
   LoadingState,
   EmptyState,
   Modal,
-  ModalHeader,
   ModalActions,
   Form,
   FormField,

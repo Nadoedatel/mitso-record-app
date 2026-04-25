@@ -87,18 +87,25 @@ const handleLogin = async () => {
     } else {
       router.push('/student')
     }
-  } catch (err: any) {
-    error.value = err.message || 'Неверный email или пароль'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Неверный email или пароль'
   } finally {
     loading.value = false
   }
 }
 
 // Check if already logged in
-onMounted(() => {
+onMounted(async () => {
   const token = httpClient.getAccessToken()
   if (token) {
-    router.push('/')
+    try {
+      const user = await authStore.fetchProfile()
+      if (user.role === 'ADMIN') router.push('/admin')
+      else if (user.role === 'TEACHER') router.push('/teacher')
+      else router.push('/student')
+    } catch {
+      // token invalid, stay on login page
+    }
   }
 })
 </script>
@@ -114,7 +121,7 @@ onMounted(() => {
 }
 
 .login-container {
-  width: 100%;
+  width: 30%;
 }
 
 .login-card {

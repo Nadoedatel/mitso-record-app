@@ -139,14 +139,14 @@ defineExpose({
 <style scoped>
 /* Input Wrapper */
 .input-wrapper {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   position: relative;
 }
 
 .input-container {
   position: relative;
-  display: inline-flex;
+  display: flex;
   align-items: center;
 }
 

@@ -173,8 +173,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/features/auth/model/useAuth'
-import { useHttpClient } from '~/shared/api/httpClient'
 import { subjectsApi } from '~/features/subjects/api/subjectsApi'
+
+definePageMeta({ middleware: 'auth' })
 import { useGradeAssignment } from '~/features/grades/model/useGradeAssignment'
 import type { Subject } from '~/entities/subject'
 import { SubjectsGrid } from '~/widgets/teacher'
@@ -242,7 +243,7 @@ function viewSubjectDetails(subject: Subject) {
 
 async function logout() {
   await authStore.logout()
-  router.push('/')
+  router.push('/login')
 }
 
 async function fetchSubjects() {
@@ -263,18 +264,9 @@ async function fetchSubjects() {
 }
 
 onMounted(async () => {
-  const httpClient = useHttpClient()
-  const token = httpClient.getAccessToken()
-
-  if (!token) {
-    router.push('/login')
-    return
-  }
-
   loading.value = true
   try {
-    await authStore.fetchProfile()
-    if (authStore.user && token) authStore.setAuth(authStore.user, token)
+    if (!authStore.user?.teacher) await authStore.fetchProfile()
     await fetchSubjects()
   } catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Ошибка загрузки данных'

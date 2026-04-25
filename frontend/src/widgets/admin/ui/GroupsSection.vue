@@ -42,11 +42,7 @@
   </Section>
 
   <!-- Модал редактирования группы -->
-  <Modal v-model="showModal" size="md" @close="closeModal">
-    <ModalHeader
-      :title="editingItem ? 'Редактировать группу' : 'Добавить группу'"
-      @close="closeModal"
-    />
+  <Modal v-model="showModal" size="md" :title="editingItem ? 'Редактировать группу' : 'Добавить группу'" @close="closeModal">
     <Form @submit.prevent="save">
       <FormRow>
         <FormField label="Название" required>
@@ -73,11 +69,7 @@
   </Modal>
 
   <!-- Модал управления дисциплинами группы -->
-  <Modal v-model="showSubjectsModal" size="lg" @close="closeSubjectsModal">
-    <ModalHeader
-      :title="`Дисциплины группы: ${managingGroup?.name}`"
-      @close="closeSubjectsModal"
-    />
+  <Modal v-model="showSubjectsModal" size="lg" :title="`Дисциплины группы: ${managingGroup?.name}`" @close="closeSubjectsModal">
     <LoadingState v-if="subjectsLoading" message="Загрузка дисциплин..." />
     <div v-else>
       <p class="subjects-hint">Выберите дисциплины, которые изучает эта группа:</p>
@@ -119,7 +111,6 @@ import {
   LoadingState,
   EmptyState,
   Modal,
-  ModalHeader,
   ModalActions,
   Form,
   FormField,

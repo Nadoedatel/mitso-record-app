@@ -9,34 +9,23 @@ export declare class GradesController {
             createdAt: Date;
             updatedAt: Date;
             id: number;
-            studentId: string;
-            userId: number;
+            course: number;
             firstName: string;
             lastName: string;
             middleName: string | null;
-            groupId: number | null;
-            course: number;
-            specializationId: number | null;
+            studentId: string;
             enrollmentYear: number;
             phone: string | null;
             address: string | null;
             birthDate: Date | null;
-        };
-        subject: {
-            createdAt: Date;
-            updatedAt: Date;
-            id: number;
-            name: string;
-            code: string;
-            credits: number;
-            semester: number;
-            description: string | null;
+            groupId: number | null;
+            specializationId: number | null;
+            userId: number;
         };
         teacher: {
             createdAt: Date;
             updatedAt: Date;
             id: number;
-            userId: number;
             firstName: string;
             lastName: string;
             middleName: string | null;
@@ -45,18 +34,29 @@ export declare class GradesController {
             position: string;
             academicDegree: string | null;
             officeNumber: string | null;
+            userId: number;
         } | null;
+        subject: {
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            id: number;
+            code: string;
+            credits: number;
+            semester: number;
+            description: string | null;
+        };
     } & {
-        gradeValue: number;
-        gradeType: import(".prisma/client").$Enums.GradeType;
-        examDate: Date | null;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         id: number;
         studentId: number;
-        subjectId: number;
+        notes: string | null;
         teacherId: number | null;
+        subjectId: number;
+        examDate: Date | null;
+        gradeValue: number;
+        gradeType: import(".prisma/client").$Enums.GradeType;
     }>;
     batchCreate(dto: BatchCreateGradeDto, user: AuthUser): Promise<{
         total: number;
@@ -68,45 +68,34 @@ export declare class GradesController {
         data: (({
             student: {
                 id: number;
-                studentId: string;
                 firstName: string;
                 lastName: string;
+                studentId: string;
             };
             subject: {
-                id: number;
                 name: string;
+                id: number;
                 code: string;
             };
         } & {
-            gradeValue: number;
-            gradeType: import(".prisma/client").$Enums.GradeType;
-            examDate: Date | null;
-            notes: string | null;
             createdAt: Date;
             updatedAt: Date;
             id: number;
             studentId: number;
-            subjectId: number;
+            notes: string | null;
             teacherId: number | null;
+            subjectId: number;
+            examDate: Date | null;
+            gradeValue: number;
+            gradeType: import(".prisma/client").$Enums.GradeType;
         }) | null)[];
     }>;
     findAll(query: QueryGradeDto, user: AuthUser): Promise<import("../common/dto").PaginatedResponse<any>>;
     findByStudent(studentId: number, user: AuthUser): Promise<({
-        subject: {
-            createdAt: Date;
-            updatedAt: Date;
-            id: number;
-            name: string;
-            code: string;
-            credits: number;
-            semester: number;
-            description: string | null;
-        };
         teacher: {
             createdAt: Date;
             updatedAt: Date;
             id: number;
-            userId: number;
             firstName: string;
             lastName: string;
             middleName: string | null;
@@ -115,18 +104,29 @@ export declare class GradesController {
             position: string;
             academicDegree: string | null;
             officeNumber: string | null;
+            userId: number;
         } | null;
+        subject: {
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            id: number;
+            code: string;
+            credits: number;
+            semester: number;
+            description: string | null;
+        };
     } & {
-        gradeValue: number;
-        gradeType: import(".prisma/client").$Enums.GradeType;
-        examDate: Date | null;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         id: number;
         studentId: number;
-        subjectId: number;
+        notes: string | null;
         teacherId: number | null;
+        subjectId: number;
+        examDate: Date | null;
+        gradeValue: number;
+        gradeType: import(".prisma/client").$Enums.GradeType;
     })[]>;
     findGroupsBySubject(subjectId: number): Promise<{
         id: number;
@@ -134,89 +134,78 @@ export declare class GradesController {
         course: number;
         facultyId: number | null;
         faculty: {
-            id: number;
             name: string;
+            id: number;
         } | null;
         studentCount: number;
     }[]>;
     findStudentsByGroupAndSubject(subjectId: number, groupId: number): Promise<({
-        user: {
-            id: number;
-            email: string;
-        };
         group: {
-            id: number;
             name: string;
+            id: number;
             course: number;
         } | null;
         grades: ({
             subject: {
-                id: number;
                 name: string;
+                id: number;
                 code: string;
             };
         } & {
-            gradeValue: number;
-            gradeType: import(".prisma/client").$Enums.GradeType;
-            examDate: Date | null;
-            notes: string | null;
             createdAt: Date;
             updatedAt: Date;
             id: number;
             studentId: number;
-            subjectId: number;
+            notes: string | null;
             teacherId: number | null;
+            subjectId: number;
+            examDate: Date | null;
+            gradeValue: number;
+            gradeType: import(".prisma/client").$Enums.GradeType;
         })[];
+        user: {
+            id: number;
+            email: string;
+        };
     } & {
         createdAt: Date;
         updatedAt: Date;
         id: number;
-        studentId: string;
-        userId: number;
+        course: number;
         firstName: string;
         lastName: string;
         middleName: string | null;
-        groupId: number | null;
-        course: number;
-        specializationId: number | null;
+        studentId: string;
         enrollmentYear: number;
         phone: string | null;
         address: string | null;
         birthDate: Date | null;
+        groupId: number | null;
+        specializationId: number | null;
+        userId: number;
     })[]>;
     findOne(id: number): Promise<{
         student: {
             createdAt: Date;
             updatedAt: Date;
             id: number;
-            studentId: string;
-            userId: number;
+            course: number;
             firstName: string;
             lastName: string;
             middleName: string | null;
-            groupId: number | null;
-            course: number;
-            specializationId: number | null;
+            studentId: string;
             enrollmentYear: number;
             phone: string | null;
             address: string | null;
             birthDate: Date | null;
-        };
-        subject: {
-            createdAt: Date;
-            updatedAt: Date;
-            id: number;
-            name: string;
-            code: string;
-            credits: number;
-            semester: number;
-            description: string | null;
+            groupId: number | null;
+            specializationId: number | null;
+            userId: number;
         };
         teacher: {
             createdAt: Date;
             updatedAt: Date;
             id: number;
-            userId: number;
             firstName: string;
             lastName: string;
             middleName: string | null;
@@ -225,52 +214,52 @@ export declare class GradesController {
             position: string;
             academicDegree: string | null;
             officeNumber: string | null;
+            userId: number;
         } | null;
+        subject: {
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            id: number;
+            code: string;
+            credits: number;
+            semester: number;
+            description: string | null;
+        };
     } & {
-        gradeValue: number;
-        gradeType: import(".prisma/client").$Enums.GradeType;
-        examDate: Date | null;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         id: number;
         studentId: number;
-        subjectId: number;
+        notes: string | null;
         teacherId: number | null;
+        subjectId: number;
+        examDate: Date | null;
+        gradeValue: number;
+        gradeType: import(".prisma/client").$Enums.GradeType;
     }>;
     update(id: number, dto: UpdateGradeDto): Promise<{
         student: {
             createdAt: Date;
             updatedAt: Date;
             id: number;
-            studentId: string;
-            userId: number;
+            course: number;
             firstName: string;
             lastName: string;
             middleName: string | null;
-            groupId: number | null;
-            course: number;
-            specializationId: number | null;
+            studentId: string;
             enrollmentYear: number;
             phone: string | null;
             address: string | null;
             birthDate: Date | null;
-        };
-        subject: {
-            createdAt: Date;
-            updatedAt: Date;
-            id: number;
-            name: string;
-            code: string;
-            credits: number;
-            semester: number;
-            description: string | null;
+            groupId: number | null;
+            specializationId: number | null;
+            userId: number;
         };
         teacher: {
             createdAt: Date;
             updatedAt: Date;
             id: number;
-            userId: number;
             firstName: string;
             lastName: string;
             middleName: string | null;
@@ -279,18 +268,29 @@ export declare class GradesController {
             position: string;
             academicDegree: string | null;
             officeNumber: string | null;
+            userId: number;
         } | null;
+        subject: {
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            id: number;
+            code: string;
+            credits: number;
+            semester: number;
+            description: string | null;
+        };
     } & {
-        gradeValue: number;
-        gradeType: import(".prisma/client").$Enums.GradeType;
-        examDate: Date | null;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         id: number;
         studentId: number;
-        subjectId: number;
+        notes: string | null;
         teacherId: number | null;
+        subjectId: number;
+        examDate: Date | null;
+        gradeValue: number;
+        gradeType: import(".prisma/client").$Enums.GradeType;
     }>;
     remove(id: number): Promise<{
         message: string;

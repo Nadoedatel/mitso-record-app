@@ -41,11 +41,7 @@
     </div>
   </Section>
 
-  <Modal v-model="showSubjectsModal" size="md" @close="closeSubjectsModal">
-    <ModalHeader
-      :title="`Предметы: ${managingTeacher?.lastName} ${managingTeacher?.firstName}`"
-      @close="closeSubjectsModal"
-    />
+  <Modal v-model="showSubjectsModal" size="md" :title="`Предметы: ${managingTeacher?.lastName} ${managingTeacher?.firstName}`" @close="closeSubjectsModal">
     <LoadingState v-if="subjectsLoading" message="Загрузка предметов..." />
     <div v-else class="subjects-list">
       <EmptyState v-if="allSubjects.length === 0" message="Предметы не найдены" />
@@ -67,11 +63,7 @@
     </ModalActions>
   </Modal>
 
-  <Modal v-model="showModal" size="lg" @close="closeModal">
-    <ModalHeader
-      :title="editingItem ? 'Редактировать преподавателя' : 'Добавить преподавателя'"
-      @close="closeModal"
-    />
+  <Modal v-model="showModal" size="lg" :title="editingItem ? 'Редактировать преподавателя' : 'Добавить преподавателя'" @close="closeModal">
     <Form @submit.prevent="save">
       <FormRow>
         <FormField label="Фамилия" required>
@@ -133,7 +125,6 @@ import {
   LoadingState,
   EmptyState,
   Modal,
-  ModalHeader,
   ModalActions,
   Form,
   FormField,

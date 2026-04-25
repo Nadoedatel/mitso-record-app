@@ -40,11 +40,7 @@
     </div>
   </Section>
 
-  <Modal v-model="showModal" size="lg" @close="closeModal">
-    <ModalHeader
-      :title="editingItem ? 'Редактировать дисциплину' : 'Добавить дисциплину'"
-      @close="closeModal"
-    />
+  <Modal v-model="showModal" size="lg" :title="editingItem ? 'Редактировать дисциплину' : 'Добавить дисциплину'" @close="closeModal">
     <Form @submit.prevent="save">
       <FormRow>
         <FormField label="Название" required>
@@ -93,7 +89,6 @@ import {
   LoadingState,
   EmptyState,
   Modal,
-  ModalHeader,
   ModalActions,
   Form,
   FormField,

@@ -109,14 +109,14 @@ defineExpose({
 
 <style scoped>
 .select-wrapper {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   position: relative;
 }
 
 .select-container {
   position: relative;
-  display: inline-flex;
+  display: flex;
   align-items: center;
 }
 
@@ -141,6 +141,7 @@ defineExpose({
   cursor: pointer;
   appearance: none;
   padding-right: 36px;
+  width: 100%;
 }
 
 .select:focus {
