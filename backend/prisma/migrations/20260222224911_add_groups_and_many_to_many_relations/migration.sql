@@ -93,3 +93,10 @@ ALTER TABLE "subject_groups" ADD CONSTRAINT "subject_groups_subject_id_fkey" FOR
 
 -- AddForeignKey
 ALTER TABLE "subject_groups" ADD CONSTRAINT "subject_groups_group_id_fkey" FOREIGN KEY ("group_id") REFERENCES "groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AlterTable groups - add faculty_id
+ALTER TABLE "groups" DROP COLUMN "faculty",
+ADD COLUMN "faculty_id" INTEGER;
+
+-- AddForeignKey
+ALTER TABLE "groups" ADD CONSTRAINT "groups_faculty_id_fkey" FOREIGN KEY ("faculty_id") REFERENCES "faculties"("id") ON DELETE SET NULL ON UPDATE CASCADE;
