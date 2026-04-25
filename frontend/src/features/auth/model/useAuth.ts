@@ -22,6 +22,10 @@ export const useAuthStore = defineStore('auth', () => {
       const httpClient = useHttpClient()
       httpClient.setAccessToken(response.accessToken)
 
+      // Set userRole cookie for middleware (auth.ts / admin.ts)
+      const userRole = useCookie('userRole')
+      userRole.value = response.user.role
+
       return response
     } catch (error) {
       console.error('Login failed:', error)
@@ -41,6 +45,10 @@ export const useAuthStore = defineStore('auth', () => {
       // Set token in HTTP client
       const httpClient = useHttpClient()
       httpClient.setAccessToken(response.accessToken)
+
+      // Set userRole cookie for middleware
+      const userRole = useCookie('userRole')
+      userRole.value = response.user.role
 
       return response
     } catch (error) {
@@ -64,6 +72,10 @@ export const useAuthStore = defineStore('auth', () => {
       // Clear all auth data from HTTP client
       const httpClient = useHttpClient()
       httpClient.clearAuth()
+
+      // Clear userRole cookie
+      const userRole = useCookie('userRole')
+      userRole.value = null
 
       // Clear local storage
       const { storage } = await import('~/shared/lib/storage')
@@ -94,6 +106,10 @@ export const useAuthStore = defineStore('auth', () => {
 
     const httpClient = useHttpClient()
     httpClient.setAccessToken(token)
+
+    // Sync userRole cookie for middleware
+    const userRole = useCookie('userRole')
+    userRole.value = userData.role
   }
 
   return {
