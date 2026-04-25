@@ -3,7 +3,6 @@ CREATE TABLE "groups" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "course" INTEGER NOT NULL,
-    "faculty" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -33,23 +32,21 @@ CREATE TABLE "subject_groups" (
 -- AddColumn to students table BEFORE using it in the migration script
 ALTER TABLE "students" ADD COLUMN IF NOT EXISTS "group_id" INTEGER;
 
--- Migrate existing data from students.group to groups table and link students
+-- Migrate existing data (faculty column already removed in previous migration)
 DO $$
 DECLARE
     group_record RECORD;
     new_group_id INTEGER;
 BEGIN
-    -- Create groups from existing student.group values
     FOR group_record IN
-        SELECT DISTINCT "group", course, faculty
-        FROM students
-        WHERE "group" IS NOT NULL
+    SELECT DISTINCT "group", course
+    FROM students
+    WHERE "group" IS NOT NULL
     LOOP
-        INSERT INTO groups (name, course, faculty, created_at, updated_at)
-        VALUES (group_record.group, group_record.course, group_record.faculty, NOW(), NOW())
+    INSERT INTO groups (name, course, created_at, updated_at)
+    VALUES (group_record.group, group_record.course, NOW(), NOW())
         RETURNING id INTO new_group_id;
 
-        -- Update students with new group_id
         UPDATE students
         SET group_id = new_group_id
         WHERE "group" = group_record.group;
@@ -95,8 +92,7 @@ ALTER TABLE "subject_groups" ADD CONSTRAINT "subject_groups_subject_id_fkey" FOR
 ALTER TABLE "subject_groups" ADD CONSTRAINT "subject_groups_group_id_fkey" FOREIGN KEY ("group_id") REFERENCES "groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AlterTable groups - add faculty_id
-ALTER TABLE "groups" DROP COLUMN "faculty",
-ADD COLUMN "faculty_id" INTEGER;
+ALTER TABLE "groups" ADD COLUMN "faculty_id" INTEGER;
 
 -- AddForeignKey
 ALTER TABLE "groups" ADD CONSTRAINT "groups_faculty_id_fkey" FOREIGN KEY ("faculty_id") REFERENCES "faculties"("id") ON DELETE SET NULL ON UPDATE CASCADE;
