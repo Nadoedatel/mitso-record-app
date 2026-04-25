@@ -23,20 +23,13 @@ CREATE TABLE "specializations" (
 -- CreateIndex
 CREATE UNIQUE INDEX "faculties_name_key" ON "faculties"("name");
 
--- AlterTable
-ALTER TABLE "groups" DROP COLUMN "faculty",
-ADD COLUMN     "faculty_id" INTEGER;
-
--- AlterTable
+-- AlterTable students
 ALTER TABLE "students" DROP COLUMN "faculty",
 DROP COLUMN "specialization",
-ADD COLUMN     "specialization_id" INTEGER;
+ADD COLUMN "specialization_id" INTEGER;
 
 -- AddForeignKey
 ALTER TABLE "students" ADD CONSTRAINT "students_specialization_id_fkey" FOREIGN KEY ("specialization_id") REFERENCES "specializations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "groups" ADD CONSTRAINT "groups_faculty_id_fkey" FOREIGN KEY ("faculty_id") REFERENCES "faculties"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "specializations" ADD CONSTRAINT "specializations_faculty_id_fkey" FOREIGN KEY ("faculty_id") REFERENCES "faculties"("id") ON DELETE CASCADE ON UPDATE CASCADE;
