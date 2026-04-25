@@ -78,7 +78,6 @@ export class SubjectsService {
               },
             },
           },
-          grades: true,
         },
         orderBy: {
           name: 'asc',
