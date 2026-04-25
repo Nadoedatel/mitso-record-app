@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { useToast } from '~/shared/lib/useToast'
 import {
   fetchGroups,
   createGroup,
@@ -14,6 +15,7 @@ import type { Faculty } from '~/entities/faculty'
 import type { Subject } from '~/entities/subject'
 
 export function useGroupsAdmin() {
+  const toast = useToast()
   const groups = ref<Group[]>([])
   const loading = ref(false)
   const search = ref('')
@@ -43,7 +45,7 @@ export function useGroupsAdmin() {
     try {
       groups.value = await fetchGroups({ search: search.value })
     } catch (err: unknown) {
-      alert('Ошибка загрузки групп: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка загрузки групп: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     } finally {
       loading.value = false
     }
@@ -77,19 +79,19 @@ export function useGroupsAdmin() {
           course: form.value.course,
           facultyId: form.value.facultyId,
         })
-        alert('Группа обновлена')
+        toast.success('Группа обновлена')
       } else {
         await createGroup({
           name: form.value.name,
           course: form.value.course,
           facultyId: form.value.facultyId,
         })
-        alert('Группа создана')
+        toast.success('Группа создана')
       }
       closeModal()
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 
@@ -97,10 +99,10 @@ export function useGroupsAdmin() {
     if (!confirm('Вы уверены, что хотите удалить группу?')) return
     try {
       await deleteGroup(id)
-      alert('Группа удалена')
+      toast.success('Группа удалена')
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 
@@ -116,7 +118,7 @@ export function useGroupsAdmin() {
       allSubjects.value = subjectsResult.data
       selectedSubjectIds.value = new Set(groupSubjects.map((s) => s.id))
     } catch (err: unknown) {
-      alert('Ошибка загрузки дисциплин: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка загрузки дисциплин: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     } finally {
       subjectsLoading.value = false
     }
@@ -143,10 +145,10 @@ export function useGroupsAdmin() {
     if (!managingGroup.value) return
     try {
       await setGroupSubjects(managingGroup.value.id, [...selectedSubjectIds.value])
-      alert('Дисциплины группы обновлены')
+      toast.success('Дисциплины группы обновлены')
       closeSubjectsModal()
     } catch (err: unknown) {
-      alert('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 

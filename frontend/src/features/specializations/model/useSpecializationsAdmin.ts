@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { useToast } from '~/shared/lib/useToast'
 import {
   fetchSpecializations,
   createSpecialization,
@@ -10,6 +11,7 @@ import type { Specialization } from '~/entities/specialization'
 import type { Faculty } from '~/entities/faculty'
 
 export function useSpecializationsAdmin() {
+  const toast = useToast()
   const specializations = ref<Specialization[]>([])
   const loading = ref(false)
   const search = ref('')
@@ -32,7 +34,7 @@ export function useSpecializationsAdmin() {
     try {
       specializations.value = await fetchSpecializations({ search: search.value })
     } catch (err: unknown) {
-      alert('Ошибка загрузки специализаций: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка загрузки специализаций: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     } finally {
       loading.value = false
     }
@@ -66,19 +68,19 @@ export function useSpecializationsAdmin() {
           code: form.value.code,
           facultyId: form.value.facultyId,
         })
-        alert('Специализация обновлена')
+        toast.success('Специализация обновлена')
       } else {
         await createSpecialization({
           name: form.value.name,
           code: form.value.code,
           facultyId: form.value.facultyId!,
         })
-        alert('Специализация создана')
+        toast.success('Специализация создана')
       }
       closeModal()
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 
@@ -86,10 +88,10 @@ export function useSpecializationsAdmin() {
     if (!confirm('Вы уверены, что хотите удалить специализацию?')) return
     try {
       await deleteSpecialization(id)
-      alert('Специализация удалена')
+      toast.success('Специализация удалена')
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 

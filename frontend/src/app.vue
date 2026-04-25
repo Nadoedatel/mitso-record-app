@@ -1,11 +1,12 @@
 <template>
   <div id="app">
     <NuxtPage />
+    <ToastContainer />
   </div>
 </template>
 
 <script setup lang="ts">
-// Global app setup
+import { ToastContainer } from '~/shared/ui'
 </script>
 
 <style>

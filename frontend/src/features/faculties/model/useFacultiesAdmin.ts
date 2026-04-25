@@ -1,8 +1,10 @@
 import { ref } from 'vue'
+import { useToast } from '~/shared/lib/useToast'
 import { fetchFaculties, createFaculty, updateFaculty, deleteFaculty } from '~/features/faculties/api/facultiesApi'
 import type { Faculty } from '~/entities/faculty'
 
 export function useFacultiesAdmin() {
+  const toast = useToast()
   const faculties = ref<Faculty[]>([])
   const loading = ref(false)
   const search = ref('')
@@ -16,7 +18,7 @@ export function useFacultiesAdmin() {
     try {
       faculties.value = await fetchFaculties({ search: search.value })
     } catch (err: unknown) {
-      alert('Ошибка загрузки факультетов: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка загрузки факультетов: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     } finally {
       loading.value = false
     }
@@ -42,15 +44,15 @@ export function useFacultiesAdmin() {
     try {
       if (editingItem.value) {
         await updateFaculty(editingItem.value.id, { name: form.value.name })
-        alert('Факультет обновлён')
+        toast.success('Факультет обновлён')
       } else {
         await createFaculty({ name: form.value.name })
-        alert('Факультет создан')
+        toast.success('Факультет создан')
       }
       closeModal()
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 
@@ -58,10 +60,10 @@ export function useFacultiesAdmin() {
     if (!confirm('Вы уверены, что хотите удалить факультет?')) return
     try {
       await deleteFaculty(id)
-      alert('Факультет удалён')
+      toast.success('Факультет удалён')
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 

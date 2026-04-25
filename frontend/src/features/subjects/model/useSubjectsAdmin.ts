@@ -1,10 +1,12 @@
 import { ref } from 'vue'
 import { subjectsApi } from '~/features/subjects/api/subjectsApi'
 import { teachersApi } from '~/features/teachers/api/teachersApi'
+import { useToast } from '~/shared/lib/useToast'
 import type { Subject } from '~/entities/subject'
 import type { Teacher } from '~/entities/teacher'
 
 export function useSubjectsAdmin() {
+  const toast = useToast()
   const subjects = ref<Subject[]>([])
   const loading = ref(false)
   const search = ref('')
@@ -34,7 +36,7 @@ export function useSubjectsAdmin() {
       const result = await subjectsApi.fetchSubjects({ search: search.value, limit: 100 })
       subjects.value = result.data
     } catch (err: unknown) {
-      alert('Ошибка загрузки дисциплин: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка загрузки дисциплин: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     } finally {
       loading.value = false
     }
@@ -86,7 +88,7 @@ export function useSubjectsAdmin() {
           description: form.value.description,
           teacherId: form.value.teacherId,
         })
-        alert('Дисциплина обновлена')
+        toast.success('Дисциплина обновлена')
       } else {
         await subjectsApi.createSubject({
           name: form.value.name,
@@ -96,12 +98,12 @@ export function useSubjectsAdmin() {
           description: form.value.description,
           teacherId: form.value.teacherId,
         })
-        alert('Дисциплина создана')
+        toast.success('Дисциплина создана')
       }
       closeModal()
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 
@@ -109,10 +111,10 @@ export function useSubjectsAdmin() {
     if (!confirm('Вы уверены, что хотите удалить дисциплину?')) return
     try {
       await subjectsApi.deleteSubject(id)
-      alert('Дисциплина удалена')
+      toast.success('Дисциплина удалена')
       await searchItems()
     } catch (err: unknown) {
-      alert('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
+      toast.error('Ошибка удаления: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     }
   }
 
