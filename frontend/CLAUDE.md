@@ -5,12 +5,12 @@
 
 ## Стек
 
-- **Nuxt 3** (Vue 3, Composition API, `<script setup>`)
+- **Nuxt 4** (Vue 3, Composition API, `<script setup>`)
 - **TypeScript** — строгий режим, без `any`
 - **Pinia** — стейт менеджмент (auth store)
-- **Tailwind CSS** + **SCSS** с токенами
+- **SCSS** с токенами (`_tokens.scss`), Tailwind не используется
 - **Файловый роутинг** через `pages/`
-- Node.js ^20.19.0 || >=22.12.0
+- Node.js: см. `.nvmrc` (22.19+, требование Nuxt 4); `ssr: false`, приложение работает только на клиенте
 
 ---
 
@@ -21,17 +21,23 @@ npm install
 npm run dev          # dev-сервер на порту 3000
 npm run build        # production сборка
 npm run preview      # превью сборки
-npm run typecheck    # проверка типов
+npm run typecheck    # проверка типов (vue-tsc)
+npm run lint         # ESLint (typescript-eslint + eslint-plugin-vue), no-explicit-any и no-console = error
+npm run lint:style   # Stylelint: запрещены hex-цвета вне _tokens.scss
+npm test             # Vitest (unit-тесты в tests/)
+npm run check        # всё вместе: lint + lint:style + typecheck + test
 ```
+
+Перед коммитом: `npm run check`. Ту же проверку гоняет CI (`.github/workflows/ci.yml`).
 
 ---
 
 ## Структура проекта (FSD)
 
 ```
-src/
+app/
 ├── app.vue                          # корневой компонент
-├── app/styles/main.scss             # точка входа глобальных стилей
+├── assets/styles/main.scss          # точка входа глобальных стилей
 ├── pages/
 │   ├── index.vue                    # главная — приветствие, навигация по роли
 │   ├── login.vue                    # форма входа
@@ -58,7 +64,7 @@ src/
 │       └── ui/SubjectsGrid.vue
 ├── features/
 │   ├── auth/
-│   │   ├── api/authApi.ts           # login, register, refresh, logout, getMe
+│   │   ├── api/authApi.ts           # login, logout, getMe
 │   │   └── model/useAuth.ts        # Pinia store авторизации
 │   ├── students/
 │   │   ├── api/studentsApi.ts
@@ -69,7 +75,7 @@ src/
 │   │   └── api/subjectsApi.ts
 │   ├── grades/
 │   │   ├── api/gradesApi.ts
-│   │   └── model/useGradeAssignment.ts
+│   │   └── model/useGradeEntry.ts   # ввод оценок: тип + дата на группу, значение на студента
 │   ├── groups/
 │   │   └── api/groupsApi.ts
 │   ├── faculties/
@@ -80,14 +86,14 @@ src/
 │   ├── student/model/types.ts       # Student (camelCase)
 │   ├── teacher/model/types.ts       # Teacher (camelCase)
 │   ├── user/model/types.ts          # User + Role enum
-│   ├── grade/model/types.ts         # Grade + GradeType enum
+│   ├── grade/model/                 # Grade, GradeType, rules.ts (диапазон оценок, зачёт/не зачёт)
 │   ├── subject/model/types.ts       # Subject
 │   ├── group/model/types.ts         # Group + DTO
 │   ├── faculty/model/types.ts       # Faculty + DTO
 │   └── specialization/model/types.ts # Specialization + DTO
 ├── shared/
 │   ├── api/httpClient.ts            # HTTP клиент с refresh interceptor
-│   ├── lib/storage.ts               # localStorage утилиты
+│   ├── lib/                         # useToast, useConfirm, useAbortable, usePagedList, formatDate, formatName
 │   ├── styles/
 │   │   ├── _tokens.scss             # CSS-переменные / design tokens
 │   │   ├── _mixins.scss             # SCSS миксины
@@ -159,7 +165,7 @@ interface Teacher {
 enum GradeType { EXAM = 'EXAM', CREDIT = 'CREDIT', COURSEWORK = 'COURSEWORK', TEST = 'TEST', LAB = 'LAB' }
 interface Grade {
   id: number; studentId: number; subjectId: number
-  gradeValue: number      // 0–100 по факту, 1–10 в UI
+  gradeValue: number      // 1–10; для CREDIT: 1 = зачёт, 0 = не зачёт
   gradeType: GradeType
   examDate?: string; notes?: string
   createdAt: string; updatedAt: string
@@ -202,29 +208,27 @@ const httpClient = useHttpClient()   // всегда на верхнем уро�
 3. `refreshToken` — браузер управляет автоматически через cookie
 4. При 401 — httpClient вызывает `/auth/refresh`, получает новый токен, повторяет запрос
 5. При ошибке refresh — `clearAuth()` + редирект на `/login`
-6. Роль пользователя пишется в cookie `userRole` для SSR middleware
+6. Роль пользователя пишется в cookie `userRole` (клиентом: API и фронт на разных доменах); настоящая проверка прав всегда на бэке (`RolesGuard`)
 
 ### Pinia Auth Store (`features/auth/model/useAuth.ts`)
 
 ```typescript
 // Методы:
 login(credentials)    // логин, синхронизирует токен с httpClient
-logout()              // вызывает /auth/logout, чистит store + httpClient + storage
+restoreSession()      // после F5: refresh токена + GET /auth/me, false если сессии нет
+logout()              // вызывает /auth/logout, чистит store + httpClient + cookie
 fetchProfile()        // GET /auth/me, обновляет user в store
-setAuth(user, token)  // ручная установка (после refresh)
-register(data)        // регистрация нового пользователя
 
-// Состояние:
+// Состояние (accessToken живёт только в httpClient):
 user: Ref<User | null>
-accessToken: Ref<string | null>
-isAuthenticated: ComputedRef<boolean>
+isAuthenticated: ComputedRef<boolean>  // !!user
 ```
 
 ---
 
 ## Роутинг и middleware
 
-Файловый роутинг Nuxt 3 через `pages/`:
+Файловый роутинг Nuxt 4 через `pages/`:
 
 | Файл | URL | Middleware | Описание |
 |---|---|---|---|
@@ -232,19 +236,19 @@ isAuthenticated: ComputedRef<boolean>
 | `pages/index.vue` | `/` | `auth` | Главная, навигация по роли |
 | `pages/student.vue` | `/student` | `auth` | Профиль студента + оценки |
 | `pages/teacher.vue` | `/teacher` | `auth` | Профиль преподавателя + выставление оценок |
-| `pages/admin.vue` | `/admin` | `admin` | Панель администратора |
+| `pages/admin.vue` | `/admin` | `auth`, `admin` | Панель администратора |
 | `pages/students/index.vue` | `/students` | `auth` | Поиск студентов |
 | `pages/students/[id].vue` | `/students/:id` | `auth` | Карточка студента |
 | `pages/subjects/[id]/grades.vue` | `/subjects/:id/grades` | `auth` | Оценки по предмету |
 
 **Защита страниц:**
-- `middleware/auth.ts` — проверяет cookie `userRole`, при отсутствии токена делает refresh
-- `middleware/admin.ts` — дополнительно проверяет `userRole === 'ADMIN'`
+- `middleware/auth.ts` — `authStore.restoreSession()` (refresh токена + профиль), без сессии редирект на `/login`
+- `middleware/admin.ts` — только проверка роли, подключается после `auth`
 - Каждая защищённая страница объявляет middleware через `definePageMeta`:
 
 ```typescript
 definePageMeta({ middleware: 'auth' })   // для обычных страниц
-definePageMeta({ middleware: 'admin' })  // для /admin
+definePageMeta({ middleware: ['auth', 'admin'] })  // для /admin
 ```
 
 ---
@@ -253,21 +257,14 @@ definePageMeta({ middleware: 'admin' })  // для /admin
 
 ```typescript
 export default defineNuxtConfig({
-  srcDir: 'src/',
-  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
-  typescript: { strict: true, typeCheck: true },
+  ssr: false, // закрытое приложение, токен в памяти, SEO не нужен
+  modules: ['@pinia/nuxt'],
+  typescript: { strict: true }, // типы проверяются отдельно: npm run typecheck
   runtimeConfig: {
-    public: { apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8080/api' }
+    public: { apiUrl: 'http://localhost:8080/api' } // переопределяется NUXT_PUBLIC_API_URL
   },
-  alias: { '@': './src' },
-  css: ['@/app/styles/main.scss'],
-  vite: {
-    css: {
-      preprocessorOptions: {
-        scss: { loadPaths: ['./src'], additionalData: "@use 'shared/styles/mixins' as *;" }
-      }
-    }
-  }
+  css: ['~/assets/styles/main.scss'],
+  vite: { css: { preprocessorOptions: { scss: { loadPaths: ['./app'] } } } }
 })
 ```
 
@@ -365,10 +362,10 @@ CSS-переменные доступны глобально. Использов
 | Файл | Назначение |
 |---|---|
 | `nuxt.config.ts` | конфигурация |
-| `src/app.vue` | корневой компонент |
-| `src/shared/api/httpClient.ts` | HTTP клиент, центральная точка всех запросов |
-| `src/features/auth/model/useAuth.ts` | Pinia auth store |
-| `src/shared/styles/_tokens.scss` | design tokens (CSS-переменные) |
-| `src/middleware/auth.ts` | защита маршрутов |
-| `src/middleware/admin.ts` | защита /admin |
-| `src/shared/ui/index.ts` | barrel export UI компонентов |
+| `app/app.vue` | корневой компонент |
+| `app/shared/api/httpClient.ts` | HTTP клиент, центральная точка всех запросов |
+| `app/features/auth/model/useAuth.ts` | Pinia auth store |
+| `app/shared/styles/_tokens.scss` | design tokens (CSS-переменные) |
+| `app/middleware/auth.ts` | защита маршрутов |
+| `app/middleware/admin.ts` | защита /admin |
+| `app/shared/ui/index.ts` | barrel export UI компонентов |

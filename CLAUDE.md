@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Структура монорепозитория:
 ```
 /
-├── frontend/   # Nuxt 3 приложение
+├── frontend/   # Nuxt 4 приложение
 ├── backend/    # NestJS приложение
 └── docker-compose.yml
 ```
@@ -19,11 +19,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Tech Stack
 
 ### Frontend
-- **Nuxt 3** (Vue 3 под капотом, Composition API, `<script setup>`)
+- **Nuxt 4** (Vue 3 под капотом, Composition API, `<script setup>`)
 - **TypeScript**
 - **Pinia** (state management)
 - **Vue Router** (файловый роутинг через `pages/`)
-- Node.js ^20.19.0 || >=22.12.0
+- Node.js ^22.19.0 (см. frontend/.nvmrc)
 
 ### Backend
 - **NestJS** (модульная архитектура, декораторы, DI)
@@ -79,7 +79,7 @@ docker-compose logs -f       # логи
 
 ## Architecture
 
-### Frontend (Nuxt 3 + FSD)
+### Frontend (Nuxt 4 + FSD)
 
 Фронтенд следует принципам **Feature-Sliced Design (FSD)**:
 
@@ -96,7 +96,7 @@ docker-compose logs -f       # логи
 - **shared/** — UI-компоненты, HTTP-клиент, SCSS-токены, утилиты
 
 **Path Aliasing:**
-- `@/` и `~/` → `frontend/src/` (настроено в `nuxt.config.ts`)
+- `@/` и `~/` → `frontend/app/` (папка `app/` — srcDir по умолчанию в Nuxt 4)
 
 ### Backend (NestJS)
 
@@ -206,15 +206,15 @@ backend/src/
 ## Key Files
 
 ### Frontend
-- `frontend/src/app.vue` — корневой компонент
-- `frontend/src/pages/` — все страницы приложения
+- `frontend/app/app.vue` — корневой компонент
+- `frontend/app/pages/` — все страницы приложения
 - `frontend/nuxt.config.ts` — конфигурация Nuxt
-- `frontend/src/shared/api/httpClient.ts` — HTTP клиент (единая точка запросов)
-- `frontend/src/features/auth/model/useAuth.ts` — Pinia auth store
-- `frontend/src/shared/styles/_tokens.scss` — design tokens (CSS-переменные)
-- `frontend/src/shared/ui/index.ts` — barrel export UI компонентов
-- `frontend/src/middleware/auth.ts` — защита маршрутов
-- `frontend/src/middleware/admin.ts` — защита /admin
+- `frontend/app/shared/api/httpClient.ts` — HTTP клиент (единая точка запросов)
+- `frontend/app/features/auth/model/useAuth.ts` — Pinia auth store
+- `frontend/app/shared/styles/_tokens.scss` — design tokens (CSS-переменные)
+- `frontend/app/shared/ui/index.ts` — barrel export UI компонентов
+- `frontend/app/middleware/auth.ts` — защита маршрутов
+- `frontend/app/middleware/admin.ts` — защита /admin
 
 ### Backend
 - `backend/src/main.ts` — точка входа, настройка CORS, Swagger, global pipes
