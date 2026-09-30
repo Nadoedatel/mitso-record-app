@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateSpecializationDto,
@@ -31,7 +32,7 @@ export class SpecializationsService {
   async findAll(query: QuerySpecializationDto) {
     const { facultyId, search, page = 1, limit = 20 } = query;
 
-    const where: any = {};
+    const where: Prisma.SpecializationWhereInput = {};
 
     if (facultyId) {
       where.facultyId = facultyId;

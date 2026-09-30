@@ -2,7 +2,6 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTeacherDto, UpdateTeacherDto, QueryTeacherDto } from './dto';
-import { PaginatedResponse } from '../common/dto';
 
 /**
  * TeachersService - business logic for teacher management
@@ -44,7 +43,7 @@ export class TeachersService {
    * Find all teachers with optional search and pagination
    * @param query - pagination and search parameters
    */
-  async findAll(query: QueryTeacherDto): Promise<PaginatedResponse<any>> {
+  async findAll(query: QueryTeacherDto) {
     const { search, page = 1, limit = 20 } = query;
 
     const where = search

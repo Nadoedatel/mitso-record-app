@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupDto, UpdateGroupDto, QueryGroupDto } from './dto';
-import { PaginatedResponse } from '../common/dto';
 
 /**
  * GroupsService - business logic for group management
@@ -31,10 +31,10 @@ export class GroupsService {
    * Find all groups with optional filters and pagination
    * @param query - pagination and filter parameters
    */
-  async findAll(query: QueryGroupDto): Promise<PaginatedResponse<any>> {
+  async findAll(query: QueryGroupDto) {
     const { subjectId, page = 1, limit = 20 } = query;
 
-    const where: any = {};
+    const where: Prisma.GroupWhereInput = {};
 
     if (subjectId) {
       where.subjectGroups = {
