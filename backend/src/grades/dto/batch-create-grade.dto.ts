@@ -1,16 +1,9 @@
-import { IsArray, ArrayMinSize, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
-import { CreateGradeDto } from './create-grade.dto';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { createGradeSchema } from './create-grade.dto';
 
-export class BatchCreateGradeDto {
-  @ApiProperty({
-    type: [CreateGradeDto],
-    description: 'Array of grades to create or update',
-  })
-  @IsArray()
-  @ArrayMinSize(1)
-  @ValidateNested({ each: true })
-  @Type(() => CreateGradeDto)
-  grades: CreateGradeDto[];
-}
+export const batchCreateGradeSchema = z.strictObject({
+  grades: z.array(createGradeSchema).min(1).meta({ description: 'Grades to create or update' }),
+});
+
+export class BatchCreateGradeDto extends createZodDto(batchCreateGradeSchema) {}

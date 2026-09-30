@@ -1,7 +1,7 @@
-import { OmitType, PartialType } from '@nestjs/mapped-types';
-import { CreateStudentDto } from './create-student.dto';
+import { createZodDto } from 'nestjs-zod';
+import { createStudentSchema } from './create-student.dto';
 
 // Credentials are not editable via student profile update
-export class UpdateStudentDto extends PartialType(
-  OmitType(CreateStudentDto, ['email', 'password'] as const),
-) {}
+export const updateStudentSchema = createStudentSchema.omit({ email: true, password: true }).partial();
+
+export class UpdateStudentDto extends createZodDto(updateStudentSchema) {}

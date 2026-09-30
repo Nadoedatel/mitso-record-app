@@ -1,10 +1,9 @@
-import { IsArray, IsInt, ArrayMinSize } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { idListSchema } from '../../common/dto';
 
-export class AssignGroupsDto {
-  @ApiProperty({ example: [1, 2, 3], description: 'Array of group IDs to assign' })
-  @IsArray()
-  @ArrayMinSize(1)
-  @IsInt({ each: true })
-  groupIds: number[];
-}
+export const assignGroupsSchema = z.strictObject({
+  groupIds: idListSchema.meta({ description: 'Array of group IDs to assign', example: [1, 2, 3] }),
+});
+
+export class AssignGroupsDto extends createZodDto(assignGroupsSchema) {}

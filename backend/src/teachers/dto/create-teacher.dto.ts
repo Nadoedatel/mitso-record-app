@@ -1,39 +1,17 @@
-import { IsString, IsOptional, IsEmail, MinLength, MaxLength } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 
-export class CreateTeacherDto {
-  @IsEmail()
-  email: string;
+export const createTeacherSchema = z.strictObject({
+  email: z.email().meta({ example: 'teacher@mitso.by' }),
+  password: z.string().min(6).max(128),
+  firstName: z.string(),
+  lastName: z.string(),
+  middleName: z.string().nullish(),
+  department: z.string(),
+  position: z.string(),
+  academicDegree: z.string().nullish(),
+  phone: z.string().nullish(),
+  officeNumber: z.string().nullish(),
+});
 
-  @IsString()
-  @MinLength(6)
-  @MaxLength(128)
-  password: string;
-
-  @IsString()
-  firstName: string;
-
-  @IsString()
-  lastName: string;
-
-  @IsString()
-  @IsOptional()
-  middleName?: string;
-
-  @IsString()
-  department: string;
-
-  @IsString()
-  position: string;
-
-  @IsString()
-  @IsOptional()
-  academicDegree?: string;
-
-  @IsString()
-  @IsOptional()
-  phone?: string;
-
-  @IsString()
-  @IsOptional()
-  officeNumber?: string;
-}
+export class CreateTeacherDto extends createZodDto(createTeacherSchema) {}

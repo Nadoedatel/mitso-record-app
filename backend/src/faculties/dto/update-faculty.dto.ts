@@ -1,4 +1,8 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateFacultyDto } from './create-faculty.dto';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { createFacultySchema } from './create-faculty.dto';
 
-export class UpdateFacultyDto extends PartialType(CreateFacultyDto) {}
+export const updateFacultySchema = createFacultySchema.partial();
+
+export class UpdateFacultyDto extends createZodDto(updateFacultySchema) {}
+export type UpdateFacultyInput = z.infer<typeof updateFacultySchema>;

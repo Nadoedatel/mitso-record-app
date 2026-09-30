@@ -1,4 +1,6 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateGroupDto } from './create-group.dto';
+import { createZodDto } from 'nestjs-zod';
+import { createGroupSchema } from './create-group.dto';
 
-export class UpdateGroupDto extends PartialType(CreateGroupDto) {}
+export const updateGroupSchema = createGroupSchema.partial();
+
+export class UpdateGroupDto extends createZodDto(updateGroupSchema) {}

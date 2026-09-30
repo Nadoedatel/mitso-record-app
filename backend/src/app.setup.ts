@@ -1,4 +1,5 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
+import { ZodValidationPipe } from 'nestjs-zod';
 import * as cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './common/filters';
 
@@ -13,17 +14,8 @@ export function configureApp(app: INestApplication): void {
   // Enable cookie parser for httpOnly cookies
   app.use(cookieParser());
 
-  // Global validation pipe with class-validator
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // Strip properties that don't have decorators
-      forbidNonWhitelisted: true, // Throw error if non-whitelisted properties are present
-      transform: true, // Automatically transform payloads to DTO instances
-      transformOptions: {
-        enableImplicitConversion: true, // Convert primitive types automatically
-      },
-    }),
-  );
+  // Validation: every DTO is a Zod schema (see dto/ folders)
+  app.useGlobalPipes(new ZodValidationPipe());
 
   // Global exception filter (handles HTTP exceptions + Prisma errors)
   app.useGlobalFilters(new AllExceptionsFilter());

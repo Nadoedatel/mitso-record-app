@@ -1,4 +1,6 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateSubjectDto } from './create-subject.dto';
+import { createZodDto } from 'nestjs-zod';
+import { createSubjectSchema } from './create-subject.dto';
 
-export class UpdateSubjectDto extends PartialType(CreateSubjectDto) {}
+export const updateSubjectSchema = createSubjectSchema.partial();
+
+export class UpdateSubjectDto extends createZodDto(updateSubjectSchema) {}

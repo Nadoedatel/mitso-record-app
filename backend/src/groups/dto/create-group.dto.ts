@@ -1,19 +1,11 @@
-import { IsString, IsInt, Min, Max, IsOptional } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { idSchema } from '../../common/dto';
 
-export class CreateGroupDto {
-  @ApiProperty({ example: 'ИТ-21', description: 'Group name' })
-  @IsString()
-  name: string;
+export const createGroupSchema = z.strictObject({
+  name: z.string().meta({ example: 'ИТ-21', description: 'Group name' }),
+  course: z.number().int().min(1).max(6).meta({ example: 2, description: 'Course number' }),
+  facultyId: idSchema.nullish().meta({ example: 1, description: 'Faculty ID' }),
+});
 
-  @ApiProperty({ example: 2, description: 'Course number' })
-  @IsInt()
-  @Min(1)
-  @Max(6)
-  course: number;
-
-  @ApiPropertyOptional({ example: 1, description: 'Faculty ID' })
-  @IsInt()
-  @IsOptional()
-  facultyId?: number;
-}
+export class CreateGroupDto extends createZodDto(createGroupSchema) {}

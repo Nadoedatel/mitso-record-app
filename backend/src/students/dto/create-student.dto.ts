@@ -1,64 +1,21 @@
-import {
-  IsEmail,
-  IsString,
-  MinLength,
-  MaxLength,
-  IsInt,
-  IsOptional,
-  IsDateString,
-  Min,
-  Max,
-} from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { dateOrDateTime, idSchema } from '../../common/dto';
 
-export class CreateStudentDto {
-  @IsEmail()
-  email: string;
+export const createStudentSchema = z.strictObject({
+  email: z.email().meta({ example: 'student@mitso.by' }),
+  password: z.string().min(6).max(128),
+  firstName: z.string(),
+  lastName: z.string(),
+  middleName: z.string().nullish(),
+  studentId: z.string().meta({ description: 'Номер зачетной книжки' }),
+  groupId: idSchema.nullish(),
+  course: z.number().int().min(1).max(6),
+  specializationId: idSchema.nullish(),
+  enrollmentYear: z.number().int().min(2000).max(2100),
+  phone: z.string().nullish(),
+  address: z.string().nullish(),
+  birthDate: dateOrDateTime.nullish(),
+});
 
-  @IsString()
-  @MinLength(6)
-  @MaxLength(128)
-  password: string;
-
-  @IsString()
-  firstName: string;
-
-  @IsString()
-  lastName: string;
-
-  @IsString()
-  @IsOptional()
-  middleName?: string;
-
-  @IsString()
-  studentId: string; // Номер зачетной книжки
-
-  @IsInt()
-  @IsOptional()
-  groupId?: number;
-
-  @IsInt()
-  @Min(1)
-  @Max(6)
-  course: number;
-
-  @IsInt()
-  @IsOptional()
-  specializationId?: number;
-
-  @IsInt()
-  @Min(2000)
-  @Max(2100)
-  enrollmentYear: number;
-
-  @IsString()
-  @IsOptional()
-  phone?: string;
-
-  @IsString()
-  @IsOptional()
-  address?: string;
-
-  @IsDateString()
-  @IsOptional()
-  birthDate?: string;
-}
+export class CreateStudentDto extends createZodDto(createStudentSchema) {}

@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { Prisma } from '@prisma/client';
+import { ZodValidationException } from 'nestjs-zod';
+import { ZodError } from 'zod';
 
 /**
  * HttpExceptionFilter - global exception filter
@@ -43,15 +45,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Internal server error';
+    let message: string | string[] = 'Internal server error';
 
-    if (exception instanceof HttpException) {
+    if (exception instanceof ZodValidationException) {
+      // Same shape as class-validator had: an array of "field: problem" strings
+      status = exception.getStatus();
+      const zodError = exception.getZodError();
+      message =
+        zodError instanceof ZodError
+          ? zodError.issues.map((i) => `${i.path.join('.') || 'body'}: ${i.message}`)
+          : 'Validation failed';
+    } else if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
       message =
         typeof exceptionResponse === 'string'
           ? exceptionResponse
-          : (exceptionResponse as { message?: string }).message ?? message;
+          : (exceptionResponse as { message?: string | string[] }).message ?? message;
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       switch (exception.code) {
         case 'P2002':

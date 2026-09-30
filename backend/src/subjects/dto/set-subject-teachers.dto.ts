@@ -1,9 +1,10 @@
-import { IsArray, IsInt } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { idSchema } from '../../common/dto';
 
-export class SetSubjectTeachersDto {
-  @ApiProperty({ description: 'Array of teacher IDs', example: [1, 2, 3] })
-  @IsArray()
-  @IsInt({ each: true })
-  teacherIds: number[];
-}
+/** Replaces the whole set, so an empty list is valid */
+export const setSubjectTeachersSchema = z.strictObject({
+  teacherIds: z.array(idSchema).meta({ description: 'Array of teacher IDs', example: [1, 2, 3] }),
+});
+
+export class SetSubjectTeachersDto extends createZodDto(setSubjectTeachersSchema) {}

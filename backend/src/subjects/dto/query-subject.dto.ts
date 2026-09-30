@@ -1,21 +1,11 @@
-import { IsOptional, IsInt } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PaginationDto } from '../../common/dto';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { paginationSchema, queryId } from '../../common/dto';
 
-/**
- * DTO for querying subjects with pagination and filters
- */
-export class QuerySubjectDto extends PaginationDto {
-  @ApiPropertyOptional({ description: 'Filter by teacher ID' })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  teacherId?: number;
+/** Subjects list: pagination and filters */
+export const querySubjectSchema = paginationSchema.extend({
+  teacherId: queryId.optional().meta({ description: 'Filter by teacher ID' }),
+  semester: z.coerce.number().int().optional().meta({ description: 'Filter by semester' }),
+});
 
-  @ApiPropertyOptional({ description: 'Filter by semester' })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  semester?: number;
-}
+export class QuerySubjectDto extends createZodDto(querySubjectSchema) {}

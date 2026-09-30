@@ -1,12 +1,9 @@
-import { IsOptional, IsInt } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PaginationDto } from '../../common/dto';
+import { createZodDto } from 'nestjs-zod';
+import { paginationSchema, queryId } from '../../common/dto';
 
-export class QueryGroupDto extends PaginationDto {
-  @ApiPropertyOptional({ description: 'Filter by subject ID' })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  subjectId?: number;
-}
+/** Groups list: pagination and subject filter */
+export const queryGroupSchema = paginationSchema.extend({
+  subjectId: queryId.optional().meta({ description: 'Filter by subject ID' }),
+});
+
+export class QueryGroupDto extends createZodDto(queryGroupSchema) {}

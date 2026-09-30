@@ -1,29 +1,12 @@
-import { IsString, IsInt, IsOptional, Min, Max } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 
-export class CreateSubjectDto {
-  @ApiProperty({ example: 'Математический анализ', description: 'Subject name' })
-  @IsString()
-  name: string;
+export const createSubjectSchema = z.strictObject({
+  name: z.string().meta({ example: 'Математический анализ', description: 'Subject name' }),
+  code: z.string().meta({ example: 'MATH101', description: 'Subject code' }),
+  credits: z.number().int().min(1).max(10).meta({ example: 4, description: 'Number of credits' }),
+  semester: z.number().int().min(1).max(12).meta({ example: 1, description: 'Semester number' }),
+  description: z.string().nullish().meta({ description: 'Subject description' }),
+});
 
-  @ApiProperty({ example: 'MATH101', description: 'Subject code' })
-  @IsString()
-  code: string;
-
-  @ApiProperty({ example: 4, description: 'Number of credits' })
-  @IsInt()
-  @Min(1)
-  @Max(10)
-  credits: number;
-
-  @ApiProperty({ example: 1, description: 'Semester number' })
-  @IsInt()
-  @Min(1)
-  @Max(12)
-  semester: number;
-
-  @ApiPropertyOptional({ description: 'Subject description' })
-  @IsString()
-  @IsOptional()
-  description?: string;
-}
+export class CreateSubjectDto extends createZodDto(createSubjectSchema) {}

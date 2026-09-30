@@ -1,24 +1,11 @@
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 
-export class QueryFacultyDto {
-  @ApiPropertyOptional({ description: 'Search by faculty name' })
-  @IsOptional()
-  @IsString()
-  search?: string;
+export const queryFacultySchema = z.strictObject({
+  search: z.string().optional().meta({ description: 'Search by faculty name' }),
+  page: z.coerce.number().int().min(1).optional().meta({ description: 'Page number', example: 1 }),
+  limit: z.coerce.number().int().min(1).optional().meta({ description: 'Items per page', example: 20 }),
+});
 
-  @ApiPropertyOptional({ description: 'Page number', default: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number;
-
-  @ApiPropertyOptional({ description: 'Items per page', default: 20 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  limit?: number;
-}
+export class QueryFacultyDto extends createZodDto(queryFacultySchema) {}
+export type QueryFacultyInput = z.infer<typeof queryFacultySchema>;
