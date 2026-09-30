@@ -25,7 +25,7 @@ export interface GradeBatchResult {
   total: number
   succeeded: number
   failed: number
-  errors: { reason: string }[]
+  errors: { index: number; reason: string }[]
 }
 
 export const gradesApi = {

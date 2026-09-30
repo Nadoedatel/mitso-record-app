@@ -112,7 +112,9 @@ export class SubjectsService {
   }
 
   /**
-   * Find subject by ID
+   * Find subject by ID with its teachers and groups.
+   * Grades are NOT included: a subject has thousands of them, and this detail is loaded just to show
+   * the subject's name. Grades have their own paginated endpoint (GET /grades?subjectId=).
    */
   async findOne(id: number) {
     const subject = await this.prisma.subject.findUnique({
@@ -139,18 +141,6 @@ export class SubjectsService {
                 name: true,
                 course: true,
                 faculty: true,
-              },
-            },
-          },
-        },
-        grades: {
-          include: {
-            student: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                studentId: true,
               },
             },
           },

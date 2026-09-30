@@ -68,14 +68,8 @@ export class GroupsService {
               name: true,
             },
           },
-          students: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              studentId: true,
-            },
-          },
+          // A count, not the students themselves: the list only shows how many there are
+          _count: { select: { students: true } },
           subjectGroups: {
             include: {
               subject: {
@@ -98,7 +92,7 @@ export class GroupsService {
     ]);
 
     return {
-      data,
+      data: data.map(({ _count, ...group }) => ({ ...group, studentCount: _count.students })),
       total,
       page,
       limit,

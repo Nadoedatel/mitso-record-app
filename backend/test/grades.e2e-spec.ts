@@ -161,6 +161,38 @@ describe('Grades (e2e)', () => {
       expect(await ctx.prisma.grade.count()).toBe(1);
     });
 
+    it('reports a student that does not exist with the position of the row, and saves the others', async () => {
+      const { student, subjectA, admin } = await scene();
+
+      const res = await http()
+        .post('/api/grades/batch')
+        .set('Authorization', await bearerFor(ctx.app, admin))
+        .send({
+          grades: [
+            { studentId: student.student.id, subjectId: subjectA.id, gradeType: 'EXAM', gradeValue: 9 },
+            { studentId: 999999, subjectId: subjectA.id, gradeType: 'EXAM', gradeValue: 9 },
+          ],
+        })
+        .expect(201);
+
+      expect(res.body).toMatchObject({ total: 2, succeeded: 1, failed: 1 });
+      expect(res.body.errors).toEqual([{ index: 1, reason: 'Student with ID 999999 not found' }]);
+      expect(await ctx.prisma.grade.count()).toBe(1);
+    });
+
+    it('records the teacher on grades created by a teacher batch', async () => {
+      const { student, subjectA, teacherA } = await scene();
+
+      await http()
+        .post('/api/grades/batch')
+        .set('Authorization', await bearerFor(ctx.app, teacherA.user))
+        .send({ grades: [{ studentId: student.student.id, subjectId: subjectA.id, gradeType: 'EXAM', gradeValue: 9 }] })
+        .expect(201);
+
+      const saved = await ctx.prisma.grade.findFirstOrThrow();
+      expect(saved.teacherId).toBe(teacherA.teacher.id);
+    });
+
     it('rejects the whole batch when one row is for a subject the teacher does not own', async () => {
       const { student, subjectA, subjectB, teacherA } = await scene();
 
