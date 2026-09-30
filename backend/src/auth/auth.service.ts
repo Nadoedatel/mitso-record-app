@@ -5,6 +5,10 @@ import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { JWT_ALGORITHM } from './jwt-secrets';
+
+/** Valid bcrypt hash of a random string; compared against when the email is unknown, so timing does not reveal which emails exist */
+const DUMMY_HASH = bcrypt.hashSync(randomUUID(), 10);
 
 /**
  * AuthService - handles authentication logic
@@ -26,14 +30,10 @@ export class AuthService {
       where: { email: dto.email },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    // Always run one bcrypt compare: unknown email must cost the same time as a wrong password
+    const isPasswordValid = await bcrypt.compare(dto.password, user?.password ?? DUMMY_HASH);
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-
-    if (!isPasswordValid) {
+    if (!user || !isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -69,6 +69,7 @@ export class AuthService {
       // Verify refresh token
       const payload = this.jwtService.verify(refreshToken, {
         secret: process.env.JWT_REFRESH_SECRET,
+        algorithms: [JWT_ALGORITHM],
       });
 
       // Find user
@@ -184,10 +185,12 @@ export class AuthService {
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_ACCESS_SECRET,
         expiresIn: '15m',
+        algorithm: JWT_ALGORITHM,
       }),
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_REFRESH_SECRET,
         expiresIn: '7d',
+        algorithm: JWT_ALGORITHM,
         // Unique id: two refresh tokens of one user must never be identical (even within one second)
         jwtid: randomUUID(),
       }),

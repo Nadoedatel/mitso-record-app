@@ -44,7 +44,7 @@ describe('Auth login validation (Zod)', () => {
 
   it.each([
     ['a malformed email', { ...valid, email: 'not-an-email' }],
-    ['a too short password', { ...valid, password: '123' }],
+    ['an empty password', { ...valid, password: '' }],
     ['a too long password', { ...valid, password: 'x'.repeat(129) }],
     ['a missing password', { email: valid.email }],
     ['an unexpected field (mass assignment of role)', { ...valid, role: 'ADMIN' }],

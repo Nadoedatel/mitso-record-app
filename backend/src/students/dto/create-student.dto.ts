@@ -4,7 +4,7 @@ import { dateOrDateTime, idSchema } from '../../common/dto';
 
 export const createStudentSchema = z.strictObject({
   email: z.email().meta({ example: 'student@mitso.by' }),
-  password: z.string().min(6).max(128),
+  password: z.string().min(8).max(128),
   firstName: z.string(),
   lastName: z.string(),
   middleName: z.string().nullish(),

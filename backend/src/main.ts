@@ -7,17 +7,14 @@ import helmet from 'helmet';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
 import { AppModule } from './app.module';
 import { configureApp } from './app.setup';
+import { assertJwtSecrets } from './auth/jwt-secrets';
 
 /**
  * Bootstrap function - initializes and starts the application
  */
 async function bootstrap() {
-  // Validate required secrets before starting
-  if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
-    throw new Error(
-      'JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be set in environment variables',
-    );
-  }
+  // Refuse to start with missing, short, placeholder or shared JWT secrets
+  assertJwtSecrets(process.env);
 
   // bufferLogs: hold early Nest logs until pino is attached, so every line has the same format
   const app = await NestFactory.create(AppModule, { bufferLogs: true });

@@ -2,6 +2,8 @@ import * as request from 'supertest';
 import { Role } from '@prisma/client';
 import { createTestApp, resetDb, TestApp } from './helpers/app';
 import { createUser, DEFAULT_PASSWORD } from './helpers/factories';
+import * as jwt from 'jsonwebtoken';
+import { bearerFor } from './helpers/auth';
 import { getCookieValue, getSetCookie } from './helpers/http';
 
 describe('Auth (e2e)', () => {
@@ -66,7 +68,7 @@ describe('Auth (e2e)', () => {
 
     it.each([
       ['a malformed email', { email: 'not-an-email', password: DEFAULT_PASSWORD }],
-      ['a too short password', { email: 'a@mitso.by', password: '123' }],
+      ['an empty password', { email: 'a@mitso.by', password: '' }],
       ['an unexpected field', { email: 'a@mitso.by', password: DEFAULT_PASSWORD, role: 'ADMIN' }],
     ])('rejects %s with 400', async (_name, body) => {
       await http().post('/api/auth/login').send(body).expect(400);
@@ -180,6 +182,32 @@ describe('Auth (e2e)', () => {
       const stored = await ctx.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
       expect(stored.refreshToken).toBeNull();
       expect(getCookieValue(res, 'refreshToken')).toBe('');
+    });
+  });
+
+  describe('hardening', () => {
+    it('still lets a user with a short legacy password log in (only creation enforces 8+)', async () => {
+      const user = await createUser(ctx.prisma, { password: '123456' });
+      await login(user.email, '123456').expect(200);
+    });
+
+    it('rejects an access token signed with another algorithm or with alg=none', async () => {
+      const user = await createUser(ctx.prisma);
+      const payload = { sub: user.id, email: user.email, role: user.role };
+      const hs512 = jwt.sign(payload, process.env.JWT_ACCESS_SECRET as string, { algorithm: 'HS512' });
+      const none = jwt.sign(payload, '', { algorithm: 'none' });
+
+      await http().get('/api/auth/me').set('Authorization', `Bearer ${hs512}`).expect(401);
+      await http().get('/api/auth/me').set('Authorization', `Bearer ${none}`).expect(401);
+    });
+
+    it('rejects creating an account with a password shorter than 8 characters', async () => {
+      const admin = await createUser(ctx.prisma, { role: Role.ADMIN });
+      const res = await http()
+        .post('/api/teachers')
+        .set('Authorization', await bearerFor(ctx.app, admin))
+        .send({ email: 'new@mitso.by', password: '1234567', firstName: 'A', lastName: 'B', department: 'IT', position: 'Lecturer' });
+      expect(res.status).toBe(400);
     });
   });
 });
