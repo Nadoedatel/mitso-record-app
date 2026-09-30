@@ -1,14 +1,13 @@
 # MITSO Record App - Frontend
 
-Nuxt 3 приложение для учёта студенческих зачёток с админ панелью. Версия: **v2.2.5**
+Nuxt 4 приложение для учёта студенческих зачёток с админ панелью. Версия: **v3.2.7**
 
 ## Стек
 
-- **Nuxt 3** (v3.11.0) - Full-stack Vue фреймворк
+- **Nuxt 4** - Vue фреймворк (SPA, `ssr: false`)
 - **Vue 3** - Composition API с `<script setup>`
 - **TypeScript** - Строгая типизация (strict mode)
 - **Pinia** - State management (`@pinia/nuxt`)
-- **TailwindCSS** - Utility-first CSS фреймворк (`@nuxtjs/tailwindcss`)
 - **FSD Architecture** - Feature-Sliced Design
 - **Shared UI Library** - собственная библиотека переиспользуемых компонентов
 - Node.js ^20.19.0 || >=22.12.0
@@ -38,10 +37,10 @@ npm run typecheck
 ## Архитектура (FSD)
 
 ```
-src/
+app/
 ├── app.vue                    # Корневой компонент
 ├── app/
-│   └── styles/main.css        # Глобальные стили и CSS reset
+│   └── styles/main.scss        # Глобальные стили и CSS reset
 ├── middleware/                # Route middleware
 │   ├── auth.ts                # Редирект на /login если нет токена
 │   └── admin.ts               # Редирект если роль != ADMIN
@@ -126,7 +125,7 @@ NUXT_PUBLIC_API_URL=http://localhost:8080/api
 
 ## Shared UI Library
 
-Все UI компоненты находятся в `src/shared/ui/` и импортируются через barrel:
+Все UI компоненты находятся в `app/shared/ui/` и импортируются через barrel:
 
 ```typescript
 import { Button, Input, Modal, Table, Badge } from '@/shared/ui'

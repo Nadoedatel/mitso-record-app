@@ -1,10 +1,10 @@
 # MITSO Record App
 
-Полноценное приложение для учёта студенческих зачёток, оценок и информации о предметах. Текущая версия: **v2.2.5**
+Полноценное приложение для учёта студенческих зачёток, оценок и информации о предметах. Текущая версия: **v3.2.7**
 
 Монорепозиторий включает три клиента:
 - **backend** — NestJS REST API (порт 8080)
-- **frontend** — Nuxt 3 веб-приложение (порт 3000)
+- **frontend** — Nuxt 4 веб-приложение (порт 3000)
 - **mobile** — Flutter мобильный клиент (Android / iOS)
 
 ## Стек технологий
@@ -19,14 +19,13 @@
 - **class-validator** - Валидация DTO
 
 ### Frontend
-- **Nuxt 3** - Full-stack Vue фреймворк (v3.11.0)
+- **Nuxt 4** - Vue фреймворк (SPA, `ssr: false`)
 - **Vue 3** - UI библиотека (Composition API, `<script setup>`)
 - **Pinia** - State management
-- **TailwindCSS** - Utility-first CSS (`@nuxtjs/tailwindcss`)
 - **TypeScript** - Строгая типизация
 - **FSD** - Feature-Sliced Design архитектура
 - **Shared UI Library** - переиспользуемые компоненты (Button, Input, Modal, Table, Badge и др.)
-- Node.js ^20.19.0 || >=22.12.0
+- Node.js ^22.19.0 (см. `frontend/.nvmrc`)
 
 ### Mobile
 - **Flutter 3.x** — кроссплатформенный UI фреймворк
@@ -39,6 +38,28 @@
 - Платформы: Android, iOS
 
 ## Быстрый старт
+
+### Одной командой (backend + frontend)
+
+```bash
+npm install              # в корне: ставит concurrently
+npm run install:all      # зависимости backend и frontend
+cp backend/.env.example backend/.env   # и вписать свои JWT-секреты
+npm run dev              # поднимает postgres в Docker, затем backend и frontend в одном терминале
+```
+
+Перед первым запуском примените миграции (шаг 3 ниже). Остановить всё: `Ctrl+C`, затем `npm run docker:down` для postgres.
+
+### Всё в Docker
+
+```bash
+cp .env.example .env     # вписать JWT-секреты
+npm run docker:up        # postgres + backend (миграции применяются сами) + frontend
+```
+
+Проверка, что backend жив: `GET http://localhost:8080/api/health`.
+
+### Пошагово
 
 ### 1. Установка зависимостей
 
@@ -133,11 +154,11 @@ mitso-record-app/
 │   │   └── seed.ts       # Seed данные
 │   └── package.json
 │
-├── frontend/             # Nuxt 3 приложение
-│   ├── src/
+├── frontend/             # Nuxt 4 приложение
+│   ├── app/
 │   │   ├── app.vue       # Корневой компонент
 │   │   ├── app/
-│   │   │   └── styles/main.css  # Глобальные стили
+│   │   │   └── styles/main.scss  # Глобальные стили
 │   │   ├── pages/        # Страницы (роутинг)
 │   │   │   ├── index.vue
 │   │   │   ├── login.vue
@@ -183,16 +204,18 @@ mitso-record-app/
 
 ## API Endpoints
 
+### Служебные
+- `GET /api/health` - Состояние приложения и БД (публичный, без лимитов)
+
 ### Аутентификация
 - `POST /api/auth/login` - Вход (email + password)
-- `POST /api/auth/register` - Регистрация
 - `POST /api/auth/refresh` - Обновление access токена
 - `POST /api/auth/logout` - Выход
 
 ### Студенты
 - `GET /api/students` - Список студентов (с поиском и фильтрами)
 - `GET /api/students/:id` - Студент по ID
-- `POST /api/students` - Создать студента (ADMIN)
+- `POST /api/students` - Создать студента вместе с учётной записью: email + password (ADMIN)
 - `PATCH /api/students/:id` - Обновить студента (ADMIN)
 - `DELETE /api/students/:id` - Удалить студента (ADMIN)
 
@@ -240,7 +263,7 @@ mitso-record-app/
 - `PATCH /api/specializations/:id` - Обновить специальность (ADMIN)
 - `DELETE /api/specializations/:id` - Удалить специальность (ADMIN)
 
-> Все эндпоинты (кроме login/register) требуют JWT токен в заголовке Authorization.
+> Все эндпоинты (кроме login и health) требуют JWT токен в заголовке Authorization.
 > Эндпоинты с пометкой (ADMIN) доступны только администраторам.
 > Эндпоинты с пометкой (TEACHER, ADMIN) доступны преподавателям и администраторам.
 
@@ -249,8 +272,8 @@ mitso-record-app/
 ### Backend (.env)
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mitso_db"
-JWT_ACCESS_SECRET="mitso-access-secret-key-2024"
-JWT_REFRESH_SECRET="mitso-refresh-secret-key-2024"
+JWT_ACCESS_SECRET="<сгенерировать, см. backend/.env.example>"
+JWT_REFRESH_SECRET="<сгенерировать, см. backend/.env.example>"
 JWT_ACCESS_EXPIRES_IN="15m"
 JWT_REFRESH_EXPIRES_IN="7d"
 FRONTEND_URL="http://localhost:3000"
@@ -261,6 +284,9 @@ PORT=8080
 ```env
 NUXT_PUBLIC_API_URL=http://localhost:8080/api
 ```
+
+### Docker Compose (корневой .env)
+Шаблон `.env.example` в корне: JWT-секреты и доступы postgres. Секреты в `docker-compose.yml` не хранятся.
 
 ## База данных
 
@@ -392,19 +418,19 @@ flutter build ios --release   # iOS (только macOS)
 flutter analyze
 ```
 
-## Тестирование
+## Проверка качества
 
-1. **Backend TypeScript check:**
-   ```bash
-   cd backend
-   npm run build
-   ```
+Из корня проекта:
 
-2. **Frontend TypeScript check:**
-   ```bash
-   cd frontend
-   npm run typecheck
-   ```
+```bash
+npm run check      # lint + typecheck + тесты (backend и frontend)
+npm run lint       # ESLint (backend, frontend) + Stylelint (frontend)
+npm run typecheck  # tsc (backend) + vue-tsc (frontend)
+npm test           # Jest (backend) + Vitest (frontend)
+```
+
+То же самое запускает CI (`.github/workflows/ci.yml`) на каждый push в `main` и на каждый pull request,
+плюс сборка backend и frontend. Тесты не требуют БД: Prisma в них подменяется.
 
 ## Основные возможности
 
@@ -444,6 +470,35 @@ flutter analyze
 4. **Seed:** Создать начальные данные через seed или админ панель
 5. **Build:** Собрать фронтенд и бекенд
 6. **Деплой:** Настроить CI/CD (например, через GitHub Actions)
+
+## Миграции БД
+
+История миграций начинается с одной baseline-миграции `backend/prisma/migrations/0_init` (полная схема).
+Раньше первая миграция делала `ALTER` над таблицей, которой не существовало, поэтому `migrate deploy` падал на пустой БД.
+Теперь пустая БД поднимается одной командой: `npx prisma migrate deploy` (то же делает `docker compose up`).
+
+Новая миграция: `npx prisma migrate dev --name <имя>`.
+
+### Уже существующая БД (Render и любая, созданная старыми миграциями)
+
+Один раз, до первого деплоя с baseline, пометить `0_init` применённой. Иначе `migrate deploy` попытается
+создать уже существующие таблицы и сборка упадёт (данные не пострадают).
+
+```bash
+cd backend
+export DATABASE_URL="<External Database URL из Render>"
+
+# 1. Схема БД должна совпадать с schema.prisma: команда должна вывести "No difference detected"
+npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+
+# 2. Пометить baseline применённой (SQL не выполняется)
+npx prisma migrate resolve --applied 0_init
+
+# 3. Проверка
+npx prisma migrate status
+```
+
+Если шаг 1 показал различия, шаг 2 не делать: сначала выясните, чем прод отличается от схемы.
 
 ## Troubleshooting
 
