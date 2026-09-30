@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStudentDto, UpdateStudentDto, QueryStudentDto } from './dto';
-import { PaginatedResponse } from '../common/dto';
 import { AuthUser } from '../auth/interfaces/auth-user.interface';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 
 /**
  * StudentsService - business logic for student management
@@ -13,23 +18,36 @@ export class StudentsService {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * Create a new student
+   * Create a new student with a linked user account in a single transaction
+   * @throws ConflictException if the email is already taken
    */
   async create(dto: CreateStudentDto) {
-    return this.prisma.student.create({
-      data: {
-        ...dto,
-        birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
+    const { email, password, birthDate, ...profileData } = dto;
+
+    const existingUser = await this.prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: { email, password: hashedPassword, role: Role.STUDENT },
+      });
+
+      return tx.student.create({
+        data: {
+          ...profileData,
+          userId: user.id,
+          birthDate: birthDate ? new Date(birthDate) : null,
+        },
+        include: {
+          user: {
+            select: { id: true, email: true, role: true },
           },
         },
-      },
+      });
     });
   }
 
@@ -37,10 +55,10 @@ export class StudentsService {
    * Find all students with optional search and pagination
    * @param query - pagination and search parameters
    */
-  async findAll(query: QueryStudentDto): Promise<PaginatedResponse<any>> {
+  async findAll(query: QueryStudentDto) {
     const { search, groupId, page = 1, limit = 20 } = query;
 
-    const where: any = {};
+    const where: Prisma.StudentWhereInput = {};
 
     // Add search filter
     if (search) {

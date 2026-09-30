@@ -1,5 +1,8 @@
 import {
+  IsEmail,
   IsString,
+  MinLength,
+  MaxLength,
   IsInt,
   IsOptional,
   IsDateString,
@@ -8,8 +11,13 @@ import {
 } from 'class-validator';
 
 export class CreateStudentDto {
-  @IsInt()
-  userId: number;
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(6)
+  @MaxLength(128)
+  password: string;
 
   @IsString()
   firstName: string;

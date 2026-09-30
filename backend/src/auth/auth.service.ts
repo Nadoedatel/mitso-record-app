@@ -1,17 +1,13 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-import { LoginDto, RegisterDto } from './dto';
+import { LoginDto } from './dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 /**
  * AuthService - handles authentication logic
- * Manages user registration, login, and token refresh
+ * Manages login, token refresh and logout (users are created by admins via students/teachers modules)
  */
 @Injectable()
 export class AuthService {
@@ -19,60 +15,6 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
   ) {}
-
-  /**
-   * Register a new user with Prisma transaction
-   */
-  async register(dto: RegisterDto) {
-    // Check if user already exists
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
-
-    if (existingUser) {
-      throw new ConflictException('User with this email already exists');
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
-
-    // Use transaction to ensure atomicity
-    const user = await this.prisma.$transaction(async (tx) => {
-      // Create user
-      const newUser = await tx.user.create({
-        data: {
-          email: dto.email,
-          password: hashedPassword,
-          role: dto.role || 'STUDENT',
-        },
-      });
-
-      // Generate tokens
-      const tokens = await this.generateTokens({
-        sub: newUser.id,
-        email: newUser.email,
-        role: newUser.role,
-      });
-
-      // Save refresh token (within transaction)
-      const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
-      await tx.user.update({
-        where: { id: newUser.id },
-        data: { refreshToken: hashedRefreshToken },
-      });
-
-      return {
-        user: {
-          id: newUser.id,
-          email: newUser.email,
-          role: newUser.role,
-        },
-        ...tokens,
-      };
-    });
-
-    return user;
-  }
 
   /**
    * Login user with email and password
