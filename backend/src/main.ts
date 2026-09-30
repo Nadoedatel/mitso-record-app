@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
 import { AppModule } from './app.module';
 import { configureApp } from './app.setup';
+import { getAllowedOrigins } from './common/config';
 import { assertJwtSecrets } from './auth/jwt-secrets';
 
 /**
@@ -30,7 +31,7 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: getAllowedOrigins(process.env),
     credentials: true,
     // The browser hides non-standard response headers from another origin unless exposed.
     // The frontend reads x-request-id to show/report it with an error.

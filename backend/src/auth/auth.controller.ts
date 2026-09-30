@@ -20,9 +20,26 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto';
-import { JwtAuthGuard } from '../common/guards';
+import { JwtAuthGuard, OriginGuard } from '../common/guards';
 import { CurrentUser } from '../common/decorators';
 import { AuthUser } from './interfaces/auth-user.interface';
+
+/** The refresh cookie is only ever needed by /api/auth/*, so the browser must not attach it to other API calls */
+const REFRESH_COOKIE_PATH = '/api/auth';
+const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+/** Cookies set before the path restriction lived on '/'; they are removed on the next login/refresh/logout */
+const LEGACY_REFRESH_COOKIE = { path: '/' };
+
+function refreshCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict' as const,
+    path: REFRESH_COOKIE_PATH,
+    maxAge: REFRESH_COOKIE_MAX_AGE,
+  };
+}
 
 /**
  * AuthController - handles authentication endpoints
@@ -55,12 +72,8 @@ export class AuthController {
     const result = await this.authService.login(dto);
 
     // Set refresh token in httpOnly cookie
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie('refreshToken', result.refreshToken, refreshCookieOptions());
+    res.clearCookie('refreshToken', LEGACY_REFRESH_COOKIE);
 
     // Set userRole cookie (readable by JS for SSR middleware)
     res.cookie('userRole', result.user.role, {
@@ -82,6 +95,7 @@ export class AuthController {
    * POST /api/auth/refresh
    */
   @Post('refresh')
+  @UseGuards(OriginGuard)
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiCookieAuth('refreshToken')
@@ -99,12 +113,8 @@ export class AuthController {
     const result = await this.authService.refresh(refreshToken);
 
     // Set new refresh token in httpOnly cookie
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie('refreshToken', result.refreshToken, refreshCookieOptions());
+    res.clearCookie('refreshToken', LEGACY_REFRESH_COOKIE);
 
     // Return only new accessToken (not refreshToken)
     return {
@@ -131,7 +141,7 @@ export class AuthController {
    * POST /api/auth/logout
    */
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OriginGuard, JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout user' })
@@ -145,7 +155,8 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     // Clear auth cookies
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', { path: REFRESH_COOKIE_PATH });
+    res.clearCookie('refreshToken', LEGACY_REFRESH_COOKIE);
     res.clearCookie('userRole');
 
     return this.authService.logout(user.id);

@@ -11,3 +11,8 @@ export function getCookieValue(res: request.Response, name: string): string | un
   const line = getSetCookie(res, name);
   return line?.split(';')[0].slice(name.length + 1);
 }
+
+/** Every raw `Set-Cookie` line of a response. */
+export function getAllSetCookies(res: request.Response): string[] {
+  return (res.headers['set-cookie'] as unknown as string[] | undefined) ?? [];
+}

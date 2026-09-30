@@ -32,6 +32,9 @@ services:
         value: 15m
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
+      # Render стоит перед сервисом одним прокси: верим одному X-Forwarded-For, иначе лимит запросов считает всех как одного
+      - key: TRUST_PROXY
+        value: "1"
       - key: FRONTEND_URL
         value: https://mitso-record-frontend-app.onrender.com
       - key: PORT
