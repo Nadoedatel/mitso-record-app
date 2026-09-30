@@ -99,7 +99,7 @@ model Grade {
   studentId  Int       @map("student_id")
   subjectId  Int       @map("subject_id")
   teacherId  Int?      @map("teacher_id")
-  gradeValue Int       @map("grade_value") // 1-10 или 0-100
+  gradeValue Int       @map("grade_value") // 1-10; для CREDIT: 1 = зачёт, 0 = не зачёт (см. grades/grade-rules.ts)
   gradeType  GradeType @map("grade_type")
   examDate   DateTime? @map("exam_date")
   notes      String?
