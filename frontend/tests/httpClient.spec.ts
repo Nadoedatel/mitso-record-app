@@ -1,0 +1,78 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { HttpClient } from '~/shared/api/httpClient'
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+
+describe('HttpClient', () => {
+  const fetchMock = vi.fn()
+
+  beforeEach(() => {
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('unwraps { data, message } responses but keeps paginated ones as-is', async () => {
+    const client = new HttpClient('http://api')
+    fetchMock.mockResolvedValueOnce(json({ data: { id: 1 }, message: 'ok' }))
+    expect(await client.get('/x')).toEqual({ id: 1 })
+
+    const page = { data: [1], total: 1, page: 1, limit: 20, totalPages: 1 }
+    fetchMock.mockResolvedValueOnce(json(page))
+    expect(await client.get('/y')).toEqual(page)
+  })
+
+  it('returns undefined for 204 responses', async () => {
+    const client = new HttpClient('http://api')
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }))
+    expect(await client.delete('/x')).toBeUndefined()
+  })
+
+  it('joins class-validator message arrays into one error', async () => {
+    const client = new HttpClient('http://api')
+    fetchMock.mockResolvedValueOnce(json({ message: ['email must be an email', 'password too short'] }, 400))
+    await expect(client.post('/x', {})).rejects.toThrow('email must be an email, password too short')
+  })
+
+  it('sends a body of 0 / empty string / false (falsy but defined)', async () => {
+    const client = new HttpClient('http://api')
+    fetchMock.mockResolvedValue(json({ ok: true }))
+    await client.post('/x', 0)
+    expect(fetchMock.mock.calls[0][1].body).toBe('0')
+  })
+
+  it('shares one refresh between parallel 401s and retries with the new token', async () => {
+    const client = new HttpClient('http://api')
+    client.setAccessToken('old')
+
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      if (url.endsWith('/auth/refresh')) return json({ accessToken: 'new' })
+      const auth = (init.headers as Record<string, string>).Authorization
+      return auth === 'Bearer new' ? json({ ok: true }) : json({ message: 'Unauthorized' }, 401)
+    })
+
+    const results = await Promise.all([client.get('/a'), client.get('/b'), client.get('/c')])
+
+    expect(results).toEqual([{ ok: true }, { ok: true }, { ok: true }])
+    const refreshCalls = fetchMock.mock.calls.filter(([url]) => String(url).endsWith('/auth/refresh'))
+    expect(refreshCalls).toHaveLength(1)
+    expect(client.getAccessToken()).toBe('new')
+  })
+
+  it('does not try to refresh on 401 from login or refresh itself', async () => {
+    const client = new HttpClient('http://api')
+    fetchMock.mockResolvedValue(json({ message: 'Invalid credentials' }, 401))
+    await expect(client.post('/auth/login', {})).rejects.toThrow('Invalid credentials')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('drops the token when refresh fails', async () => {
+    const client = new HttpClient('http://api')
+    client.setAccessToken('old')
+    fetchMock.mockResolvedValue(json({ message: 'Unauthorized' }, 401))
+
+    await expect(client.get('/a')).rejects.toThrow('Unauthorized')
+    expect(client.getAccessToken()).toBeNull()
+  })
+})

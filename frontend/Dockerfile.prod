@@ -1,0 +1,25 @@
+# Production image: nuxt build -> Nitro server. API URL is a runtime variable (NUXT_PUBLIC_API_URL)
+FROM node:22-slim AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+# postinstall (nuxt prepare) needs the sources; `nuxt build` prepares by itself
+RUN npm ci --ignore-scripts
+
+COPY . .
+RUN npm run build
+
+FROM node:22-slim
+
+WORKDIR /app
+
+COPY --from=build /app/.output ./.output
+
+ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
+    PORT=3000
+
+EXPOSE 3000
+
+CMD ["node", ".output/server/index.mjs"]

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters';
 
@@ -21,6 +22,10 @@ async function bootstrap() {
 
   // Set global prefix for all routes
   app.setGlobalPrefix('api');
+
+  // Security headers. CSP is off outside production: Swagger UI uses inline scripts/styles
+  const isProduction = process.env.NODE_ENV === 'production';
+  app.use(helmet({ contentSecurityPolicy: isProduction ? undefined : false }));
 
   // Enable cookie parser for httpOnly cookies
   app.use(cookieParser());
@@ -47,7 +52,7 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
 
   // Swagger API documentation (dev only)
-  if (process.env.NODE_ENV !== 'production') {
+  if (!isProduction) {
     const config = new DocumentBuilder()
       .setTitle('MITSO Record App API')
       .setDescription('API for student record management system')
@@ -57,6 +62,7 @@ async function bootstrap() {
       .addTag('teachers', 'Teacher management endpoints')
       .addTag('subjects', 'Subject management endpoints')
       .addTag('grades', 'Grade management endpoints')
+      .addTag('health', 'Health check')
       .addBearerAuth()
       .build();
 

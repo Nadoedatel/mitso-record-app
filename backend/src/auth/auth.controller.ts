@@ -19,7 +19,7 @@ import {
   ApiCookieAuth,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from './dto';
+import { LoginDto } from './dto';
 import { JwtAuthGuard } from '../common/guards';
 import { CurrentUser } from '../common/decorators';
 import { AuthUser } from './interfaces/auth-user.interface';
@@ -32,50 +32,6 @@ import { AuthUser } from './interfaces/auth-user.interface';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
-
-  /**
-   * Register new user
-   * POST /api/auth/register
-   * Rate limit: 10 requests per minute
-   */
-  @Post('register')
-  @HttpCode(HttpStatus.CREATED)
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
-  @ApiOperation({ summary: 'Register a new user' })
-  @ApiResponse({
-    status: 201,
-    description: 'User successfully registered. Refresh token set in httpOnly cookie.',
-  })
-  @ApiResponse({ status: 409, description: 'User already exists' })
-  @ApiResponse({ status: 429, description: 'Too many requests' })
-  async register(
-    @Body() dto: RegisterDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const result = await this.authService.register(dto);
-
-    // Set refresh token in httpOnly cookie
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    // Set userRole cookie (readable by JS for SSR middleware)
-    res.cookie('userRole', result.user.role, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    // Return only accessToken and user data (not refreshToken)
-    return {
-      user: result.user,
-      accessToken: result.accessToken,
-    };
-  }
 
   /**
    * Login user

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSubjectDto, UpdateSubjectDto, QuerySubjectDto } from './dto';
-import { PaginatedResponse } from '../common/dto';
 
 /**
  * SubjectsService - business logic for subject management
@@ -34,10 +34,10 @@ export class SubjectsService {
   /**
    * Find all subjects with optional filters and pagination
    */
-  async findAll(query: QuerySubjectDto): Promise<PaginatedResponse<any>> {
+  async findAll(query: QuerySubjectDto) {
     const { teacherId, semester, page = 1, limit = 20 } = query;
 
-    const where: any = {};
+    const where: Prisma.SubjectWhereInput = {};
 
     if (teacherId) {
       where.teacherSubjects = {

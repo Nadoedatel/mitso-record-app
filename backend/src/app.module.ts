@@ -11,6 +11,7 @@ import { GradesModule } from './grades/grades.module';
 import { GroupsModule } from './groups/groups.module';
 import { FacultiesModule } from './faculties/faculties.module';
 import { SpecializationsModule } from './specializations/specializations.module';
+import { HealthModule } from './health/health.module';
 
 /**
  * AppModule - root application module
@@ -40,6 +41,7 @@ import { SpecializationsModule } from './specializations/specializations.module'
     GroupsModule,
     FacultiesModule,
     SpecializationsModule,
+    HealthModule,
   ],
   providers: [
     // Global throttler guard for rate limiting
