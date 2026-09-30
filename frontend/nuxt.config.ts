@@ -3,50 +3,36 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
 
-  // Source directory
-  srcDir: 'src/',
+  // Closed app behind login with an in-memory bearer token: SSR gives nothing (no SEO)
+  // and would share module-level state between requests, so render on the client only
+  ssr: false,
 
   // Modules
-  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
+  modules: ['@pinia/nuxt'],
 
   // TypeScript configuration
+  // Type checking runs separately via `npm run typecheck`, not inside dev/build
   typescript: {
     strict: true,
-    typeCheck: true,
+    tsConfig: { compilerOptions: { noImplicitReturns: true } },
   },
 
-  // Runtime config
+  // Runtime config (override with NUXT_PUBLIC_API_URL)
   runtimeConfig: {
     public: {
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8080/api',
+      apiUrl: 'http://localhost:8080/api',
     },
   },
 
-  // Route rules
-  routeRules: {
-    '/': { redirect: '/login' },
-  },
-
-  // Path aliases
-  alias: {
-    '@': './src',
-  },
-
-  // Auto imports
-  imports: {
-    dirs: ['composables/**', 'utils/**'],
-  },
-
   // CSS
-  css: ['@/app/styles/main.scss'],
+  css: ['~/assets/styles/main.scss'],
 
   // Vite
   vite: {
     css: {
       preprocessorOptions: {
         scss: {
-          loadPaths: ['./src'],
-          additionalData: "@use 'shared/styles/mixins' as *;",
+          loadPaths: ['./app'],
         },
       },
     },
