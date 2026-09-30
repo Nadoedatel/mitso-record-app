@@ -12,6 +12,8 @@ import { GroupsModule } from './groups/groups.module';
 import { FacultiesModule } from './faculties/faculties.module';
 import { SpecializationsModule } from './specializations/specializations.module';
 import { HealthModule } from './health/health.module';
+import { LoggerModule } from 'nestjs-pino';
+import { buildLoggerParams } from './common/logger/logger.config';
 
 /**
  * AppModule - root application module
@@ -23,6 +25,8 @@ import { HealthModule } from './health/health.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    // Structured request logging (pino): JSON in production, request id on every line
+    LoggerModule.forRoot(buildLoggerParams()),
     // Throttler module for rate limiting
     ThrottlerModule.forRoot([
       {

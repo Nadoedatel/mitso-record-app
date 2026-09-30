@@ -12,6 +12,11 @@ services:
           property: connectionString
       - key: NODE_ENV
         value: production
+      - key: LOG_LEVEL
+        value: info
+      # Sentry выключен, пока не задан DSN (значение вписывается в панели Render, в репозиторий не кладём)
+      - key: SENTRY_DSN
+        sync: false
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
@@ -34,6 +39,9 @@ services:
     envVars:
       - key: NUXT_PUBLIC_API_URL
         value: https://mitso-record-app.onrender.com/api
+      # Sentry фронта выключен, пока не задан DSN (отдельный проект Sentry, значение в панели Render)
+      - key: NUXT_PUBLIC_SENTRY_DSN
+        sync: false
 
 databases:
   - name: mitso-db

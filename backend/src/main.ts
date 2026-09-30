@@ -1,5 +1,7 @@
+// Must stay first: starts Sentry before other modules are loaded (no-op without SENTRY_DSN)
+import './instrument';
 import { NestFactory } from '@nestjs/core';
-import { Logger } from '@nestjs/common';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
@@ -17,8 +19,10 @@ async function bootstrap() {
     );
   }
 
-  const app = await NestFactory.create(AppModule);
-  const logger = new Logger('Bootstrap');
+  // bufferLogs: hold early Nest logs until pino is attached, so every line has the same format
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const logger = app.get(PinoLogger);
+  app.useLogger(logger);
 
   // Prefix, cookies, validation and exception filter (shared with e2e tests)
   configureApp(app);
@@ -31,6 +35,9 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
+    // The browser hides non-standard response headers from another origin unless exposed.
+    // The frontend reads x-request-id to show/report it with an error.
+    exposedHeaders: ['x-request-id'],
   });
 
   // Swagger API documentation (dev only)

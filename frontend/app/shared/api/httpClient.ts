@@ -1,3 +1,6 @@
+import { ApiError } from './ApiError'
+import { reportError } from '~/shared/lib/errorReporter'
+
 /** Auth endpoints that must never trigger a token refresh on 401 */
 const NO_REFRESH_ENDPOINTS = ['/auth/login', '/auth/refresh']
 
@@ -56,21 +59,30 @@ class HttpClient {
       if (refreshed) {
         headers['Authorization'] = `Bearer ${this.accessToken}`
         const retryResponse = await fetch(url, { ...config, headers })
-        return this.handleResponse<T>(retryResponse)
+        return this.handleResponse<T>(retryResponse, endpoint)
       }
     }
 
-    return this.handleResponse<T>(response)
+    return this.handleResponse<T>(response, endpoint)
   }
 
-  private async handleResponse<T>(response: Response): Promise<T> {
+  private async handleResponse<T>(response: Response, endpoint = ''): Promise<T> {
     if (!response.ok) {
       const body: ApiErrorBody = await response.json().catch(() => ({
         message: response.statusText,
       }))
       // class-validator returns an array of messages
       const message = Array.isArray(body.message) ? body.message.join(', ') : body.message
-      throw new Error(message || 'Request failed')
+      const error = new ApiError(
+        message || 'Request failed',
+        response.status,
+        response.headers.get('x-request-id') ?? undefined,
+      )
+      // 4xx is the user's mistake and already shown in the UI; 5xx is our bug
+      if (response.status >= 500) {
+        reportError(error, { requestId: error.requestId, status: error.status, endpoint })
+      }
+      throw error
     }
 
     // 204 / empty body (e.g. delete)

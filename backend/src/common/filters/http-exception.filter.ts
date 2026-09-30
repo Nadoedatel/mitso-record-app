@@ -5,10 +5,12 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Logger } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { ZodValidationException } from 'nestjs-zod';
 import { ZodError } from 'zod';
+import { reportError } from '../monitoring/error-reporter';
 
 /**
  * HttpExceptionFilter - global exception filter
@@ -40,9 +42,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
  */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
+  private readonly fallbackLogger = new Logger(AllExceptionsFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<AppRequest>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Internal server error';
@@ -82,10 +87,45 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
     }
 
+    // The client only ever sees a generic message for 5xx, so the real cause must be logged here.
+    // Expected 4xx are not logged by the filter (the request logger already records them as warnings).
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      this.logFailure(exception, request);
+    }
+
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),
       message,
     });
   }
+
+  /**
+   * Log an unexpected failure with its stack. Uses the per-request pino logger when present,
+   * so the line carries the request id; falls back to the Nest logger otherwise.
+   * Then forwards the error to the monitoring service (a no-op when none is configured).
+   */
+  private logFailure(exception: unknown, request: AppRequest): void {
+    const error = exception instanceof Error ? exception : new Error(String(exception));
+    if (request.log) {
+      request.log.error({ err: error }, `Unhandled exception: ${error.message}`);
+    } else {
+      this.fallbackLogger.error(error.message, error.stack);
+    }
+
+    reportError(error, {
+      requestId: request.id === undefined ? undefined : String(request.id),
+      userId: request.user?.id,
+      method: request.method,
+      url: request.url,
+    });
+  }
+}
+
+/** Express request plus what pino-http (`log`, `id`) and the JWT guard (`user`) attach to it */
+type AppRequest = Request & { log?: RequestLogger; id?: string | number; user?: { id?: number } };
+
+/** The slice of pino's per-request logger this filter needs */
+interface RequestLogger {
+  error(obj: { err: Error }, message: string): void;
 }

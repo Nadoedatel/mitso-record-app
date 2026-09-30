@@ -17,10 +17,17 @@ export default defineNuxtConfig({
     tsConfig: { compilerOptions: { noImplicitReturns: true } },
   },
 
-  // Runtime config (override with NUXT_PUBLIC_API_URL)
+  // Runtime config (override with NUXT_PUBLIC_API_URL, NUXT_PUBLIC_SENTRY_DSN, ...)
   runtimeConfig: {
     public: {
       apiUrl: 'http://localhost:8080/api',
+      // Sentry is off until NUXT_PUBLIC_SENTRY_DSN is set. RENDER_GIT_COMMIT ties errors to the deployed commit
+      sentry: {
+        dsn: '',
+        environment: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+        release: process.env.RENDER_GIT_COMMIT ?? '',
+        tracesSampleRate: 0,
+      },
     },
   },
 

@@ -55,6 +55,7 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
       FRONTEND_URL: http://localhost:3000
+      SENTRY_DSN: ${SENTRY_DSN:-}
       PORT: 8080
     depends_on:
       postgres:
