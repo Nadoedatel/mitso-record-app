@@ -17,8 +17,8 @@ export class CreateGradeDto {
   subjectId: number;
 
   @IsInt()
-  @Min(0)
-  @Max(100)
+  @Min(0) // 0 = not passed (CREDIT); per-type rules in grade-rules.ts
+  @Max(10)
   gradeValue: number;
 
   @IsEnum(GradeType)
