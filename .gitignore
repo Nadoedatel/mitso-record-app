@@ -1,3 +1,6 @@
+# Dependencies (корневой package.json для общих команд)
+node_modules/
+
 # OS
 .DS_Store
 Thumbs.db

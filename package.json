@@ -1,0 +1,20 @@
+{
+  "name": "mitso-record-app",
+  "version": "3.2.7",
+  "private": true,
+  "description": "MITSO Record App monorepo: общие команды для backend и frontend",
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "db": "docker compose up -d postgres",
+    "dev": "npm run db && concurrently -k -n back,front -c blue,green \"npm run start:dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "lint": "npm run lint --prefix backend && npm run lint --prefix frontend && npm run lint:style --prefix frontend",
+    "test": "npm test --prefix backend && npm test --prefix frontend",
+    "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend",
+    "check": "npm run lint && npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
