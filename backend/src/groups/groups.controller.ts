@@ -58,6 +58,8 @@ export class GroupsController {
    * GET /api/groups/:id
    */
   @Get(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get group by ID' })
   @ApiResponse({ status: 200, description: 'Group found' })
   @ApiResponse({ status: 404, description: 'Group not found' })

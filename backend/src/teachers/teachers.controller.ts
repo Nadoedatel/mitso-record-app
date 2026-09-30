@@ -44,6 +44,8 @@ export class TeachersController {
    * GET /api/teachers?search=name&page=1&limit=20
    */
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get all teachers with search and pagination' })
   @ApiResponse({ status: 200, description: 'Teachers retrieved successfully' })
   findAll(@Query() query: QueryTeacherDto) {
@@ -55,6 +57,8 @@ export class TeachersController {
    * GET /api/teachers/:id
    */
   @Get(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get teacher by ID' })
   @ApiResponse({ status: 200, description: 'Teacher found' })
   @ApiResponse({ status: 404, description: 'Teacher not found' })
@@ -92,6 +96,8 @@ export class TeachersController {
    * GET /api/teachers/:id/subjects
    */
   @Get(':id/subjects')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get subjects for a teacher' })
   @ApiResponse({ status: 200, description: 'Teacher subjects retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Teacher not found' })
