@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGradeDto, UpdateGradeDto, QueryGradeDto } from './dto';
-import { PaginatedResponse } from '../common/dto';
 import { AuthUser } from '../auth/interfaces/auth-user.interface';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
+import { assertGradeValue } from './grade-rules';
 
 /**
  * GradesService - business logic for grade management
@@ -47,6 +47,8 @@ export class GradesService {
    * Teachers can only create grades for their own subjects
    */
   async create(dto: CreateGradeDto, user: AuthUser) {
+    assertGradeValue(dto.gradeType, dto.gradeValue);
+
     if (user.role === Role.TEACHER) {
       await this.assertTeacherOwnsSubject(user.id, dto.subjectId);
     }
@@ -72,10 +74,10 @@ export class GradesService {
    * Find all grades with optional filters and pagination
    * Students are forcibly filtered to their own records
    */
-  async findAll(query: QueryGradeDto, user: AuthUser): Promise<PaginatedResponse<any>> {
+  async findAll(query: QueryGradeDto, user: AuthUser) {
     const { studentId, subjectId, page = 1, limit = 20 } = query;
 
-    const where: any = {};
+    const where: Prisma.GradeWhereInput = {};
 
     if (user.role === Role.STUDENT) {
       // Force-filter to current student's records only
@@ -176,7 +178,14 @@ export class GradesService {
    */
   async update(id: number, dto: UpdateGradeDto) {
     // Check if grade exists
-    await this.findOne(id);
+    const existing = await this.findOne(id);
+
+    if (dto.gradeValue !== undefined || dto.gradeType !== undefined) {
+      assertGradeValue(
+        dto.gradeType ?? existing.gradeType,
+        dto.gradeValue ?? existing.gradeValue,
+      );
+    }
 
     return this.prisma.grade.update({
       where: { id },
@@ -320,8 +329,9 @@ export class GradesService {
       user.role === Role.TEACHER ? await this.getTeacherId(user.id) : null;
 
     const results = await Promise.allSettled(
-      grades.map((gradeDto) =>
-        this.prisma.grade.upsert({
+      grades.map(async (gradeDto) => {
+        assertGradeValue(gradeDto.gradeType, gradeDto.gradeValue);
+        return this.prisma.grade.upsert({
           where: {
             studentId_subjectId_gradeType: {
               studentId: gradeDto.studentId,
@@ -356,8 +366,8 @@ export class GradesService {
               },
             },
           },
-        }),
-      ),
+        });
+      }),
     );
 
     const succeeded = results.filter((r) => r.status === 'fulfilled').length;
