@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
@@ -80,7 +81,7 @@ export class AuthService {
       }
 
       // Verify stored refresh token
-      const isRefreshTokenValid = await bcrypt.compare(
+      const isRefreshTokenValid = this.matchesStoredToken(
         refreshToken,
         user.refreshToken,
       );
@@ -187,6 +188,8 @@ export class AuthService {
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_REFRESH_SECRET,
         expiresIn: '7d',
+        // Unique id: two refresh tokens of one user must never be identical (even within one second)
+        jwtid: randomUUID(),
       }),
     ]);
 
@@ -197,10 +200,29 @@ export class AuthService {
   }
 
   /**
+   * Hash a refresh token for storage.
+   * SHA-256 instead of bcrypt: bcrypt only reads the first 72 bytes, and the start of every JWT of
+   * one user is identical, so a bcrypt hash could not tell tokens apart. The token is long random
+   * data, so a fast hash is safe (no brute force of a weak secret, unlike passwords).
+   */
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  /**
+   * Constant-time comparison of a presented refresh token with the stored hash
+   */
+  private matchesStoredToken(token: string, storedHash: string): boolean {
+    const presented = Buffer.from(this.hashToken(token));
+    const stored = Buffer.from(storedHash);
+    return presented.length === stored.length && timingSafeEqual(presented, stored);
+  }
+
+  /**
    * Update user's refresh token in database
    */
   private async updateRefreshToken(userId: number, refreshToken: string) {
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    const hashedRefreshToken = this.hashToken(refreshToken);
 
     await this.prisma.user.update({
       where: { id: userId },

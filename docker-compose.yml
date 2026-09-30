@@ -20,6 +20,26 @@ services:
       timeout: 5s
       retries: 5
 
+  # Отдельная БД для e2e-тестов backend (npm run test:e2e). Данные в памяти, стираются при остановке.
+  # Запускается только явно (profile test), поэтому `docker compose up` её не поднимает.
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: mitso-postgres-test
+    profiles: ["test"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mitso_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mitso_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
   # Backend NestJS API
   backend:
     build:

@@ -155,8 +155,28 @@ export class GradesService {
 
   /**
    * Find grade by ID
+   * Students can only read their own grades
    */
-  async findOne(id: number) {
+  async findOne(id: number, user: AuthUser) {
+    const grade = await this.getOrThrow(id);
+
+    if (user.role === Role.STUDENT) {
+      const ownStudent = await this.prisma.student.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+      if (!ownStudent || ownStudent.id !== grade.studentId) {
+        throw new ForbiddenException('Access denied');
+      }
+    }
+
+    return grade;
+  }
+
+  /**
+   * Load a grade with relations or throw 404 (no access checks, for internal use)
+   */
+  private async getOrThrow(id: number) {
     const grade = await this.prisma.grade.findUnique({
       where: { id },
       include: {
@@ -175,10 +195,18 @@ export class GradesService {
 
   /**
    * Update grade
+   * Teachers can only edit grades of subjects assigned to them (and move a grade only to such subjects)
    */
-  async update(id: number, dto: UpdateGradeDto) {
+  async update(id: number, dto: UpdateGradeDto, user: AuthUser) {
     // Check if grade exists
-    const existing = await this.findOne(id);
+    const existing = await this.getOrThrow(id);
+
+    if (user.role === Role.TEACHER) {
+      await this.assertTeacherOwnsSubject(user.id, existing.subjectId);
+      if (dto.subjectId !== undefined && dto.subjectId !== existing.subjectId) {
+        await this.assertTeacherOwnsSubject(user.id, dto.subjectId);
+      }
+    }
 
     if (dto.gradeValue !== undefined || dto.gradeType !== undefined) {
       assertGradeValue(
@@ -206,7 +234,7 @@ export class GradesService {
    */
   async remove(id: number) {
     // Check if grade exists
-    await this.findOne(id);
+    await this.getOrThrow(id);
 
     await this.prisma.grade.delete({
       where: { id },
@@ -270,8 +298,13 @@ export class GradesService {
   /**
    * Get students for a specific group and subject
    * Returns students with their grades for this subject
+   * Teachers can only list groups for subjects assigned to them
    */
-  async findStudentsByGroupAndSubject(groupId: number, subjectId: number) {
+  async findStudentsByGroupAndSubject(groupId: number, subjectId: number, user: AuthUser) {
+    if (user.role === Role.TEACHER) {
+      await this.assertTeacherOwnsSubject(user.id, subjectId);
+    }
+
     // Get all students in the group
     const students = await this.prisma.student.findMany({
       where: { groupId },
