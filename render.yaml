@@ -14,6 +14,13 @@ services:
         value: production
       - key: LOG_LEVEL
         value: info
+      # Кэш справочников и счётчики лимитов. Внутренний адрес Key Value сервиса ниже;
+      # если убрать эту переменную, backend продолжит работать на памяти процесса
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: mitso-redis
+          property: connectionString
       # Sentry выключен, пока не задан DSN (значение вписывается в панели Render, в репозиторий не кладём)
       - key: SENTRY_DSN
         sync: false
@@ -29,6 +36,14 @@ services:
         value: https://mitso-record-frontend-app.onrender.com
       - key: PORT
         value: 8080
+
+  # Key Value (Redis-совместимое хранилище Render). Только для кэша: можно терять без последствий
+  - type: keyvalue
+    name: mitso-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    # Пустой список: доступ только из сервисов Render внутри сети, снаружи закрыто
+    ipAllowList: []
 
   - type: web
     name: mitso-frontend

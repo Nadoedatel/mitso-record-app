@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthUserCache, CacheService, InvalidatesCache } from '../cache';
 import { CreateTeacherDto, UpdateTeacherDto, QueryTeacherDto } from './dto';
 
 /**
@@ -8,11 +9,16 @@ import { CreateTeacherDto, UpdateTeacherDto, QueryTeacherDto } from './dto';
  */
 @Injectable()
 export class TeachersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+    private authUsers: AuthUserCache,
+  ) {}
 
   /**
    * Create a new teacher with a linked user account in a single transaction
    */
+  @InvalidatesCache()
   async create(dto: CreateTeacherDto) {
     const { email, password, ...profileData } = dto;
 
@@ -179,6 +185,7 @@ export class TeachersService {
   /**
    * Update teacher
    */
+  @InvalidatesCache()
   async update(id: number, dto: UpdateTeacherDto) {
     // Check if teacher exists
     await this.findOne(id);
@@ -199,20 +206,17 @@ export class TeachersService {
   }
 
   /**
-   * Delete teacher (cascades to user and teacherSubjects via Prisma schema)
-   * - User deletion: onDelete: Cascade (teacher.prisma line 73)
-   * - TeacherSubject deletion: onDelete: Cascade (teacher_subject.prisma line 143)
+   * Delete teacher together with their login account.
+   * `onDelete: Cascade` on the teacher's `userId` means deleting a USER removes the teacher
+   * (and their teacherSubjects), but deleting the teacher row would leave a user who can still log in.
    */
+  @InvalidatesCache()
   async remove(id: number) {
     // Check if teacher exists
-    await this.findOne(id);
+    const teacher = await this.findOne(id);
 
-    // Simply delete teacher - Prisma will cascade delete:
-    // 1. Related user (due to onDelete: Cascade on teacher.user relation)
-    // 2. Related teacherSubjects (due to onDelete: Cascade on teacherSubject.teacher relation)
-    await this.prisma.teacher.delete({
-      where: { id },
-    });
+    await this.prisma.user.delete({ where: { id: teacher.userId } });
+    await this.authUsers.invalidate(teacher.userId);
 
     return { message: 'Teacher deleted successfully' };
   }
@@ -252,6 +256,7 @@ export class TeachersService {
   /**
    * Assign subjects to a teacher
    */
+  @InvalidatesCache()
   async assignSubjects(teacherId: number, subjectIds: number[]) {
     // Check if teacher exists
     await this.findOne(teacherId);
@@ -290,6 +295,7 @@ export class TeachersService {
   /**
    * Remove a subject from a teacher
    */
+  @InvalidatesCache()
   async removeSubject(teacherId: number, subjectId: number) {
     // Check if teacher exists
     await this.findOne(teacherId);
@@ -314,6 +320,7 @@ export class TeachersService {
   /**
    * Set subjects for a teacher (replaces all existing)
    */
+  @InvalidatesCache()
   async setSubjects(teacherId: number, subjectIds: number[]) {
     // Check if teacher exists
     await this.findOne(teacherId);

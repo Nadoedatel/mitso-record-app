@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { CacheService, InvalidatesCache, DIRECTORY_NAMESPACE, DIRECTORY_TTL_SECONDS, stableKey } from '../cache';
 import { CreateSubjectDto, UpdateSubjectDto, QuerySubjectDto } from './dto';
 
 /**
@@ -8,11 +9,15 @@ import { CreateSubjectDto, UpdateSubjectDto, QuerySubjectDto } from './dto';
  */
 @Injectable()
 export class SubjectsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+  ) {}
 
   /**
    * Create a new subject
    */
+  @InvalidatesCache()
   async create(dto: CreateSubjectDto) {
     return this.prisma.subject.create({
       data: dto,
@@ -32,9 +37,18 @@ export class SubjectsService {
   }
 
   /**
-   * Find all subjects with optional filters and pagination
+   * Get all subjects (cached: the database is asked only on a miss, see cache invalidation on writes)
    */
   async findAll(query: QuerySubjectDto) {
+    return this.cache.getOrSet(DIRECTORY_NAMESPACE, `subjects:list:${stableKey(query)}`, DIRECTORY_TTL_SECONDS, () =>
+      this.loadAll(query),
+    );
+  }
+
+  /**
+   * Find all subjects with optional filters and pagination
+   */
+  private async loadAll(query: QuerySubjectDto) {
     const { teacherId, semester, page = 1, limit = 20 } = query;
 
     const where: Prisma.SubjectWhereInput = {};
@@ -154,6 +168,7 @@ export class SubjectsService {
   /**
    * Update subject
    */
+  @InvalidatesCache()
   async update(id: number, dto: UpdateSubjectDto) {
     // Check if subject exists
     await this.findOne(id);
@@ -179,6 +194,7 @@ export class SubjectsService {
   /**
    * Delete subject
    */
+  @InvalidatesCache()
   async remove(id: number) {
     // Check if subject exists
     await this.findOne(id);
@@ -193,6 +209,7 @@ export class SubjectsService {
   /**
    * Assign groups to a subject
    */
+  @InvalidatesCache()
   async assignGroups(subjectId: number, groupIds: number[]) {
     // Check if subject exists
     await this.findOne(subjectId);
@@ -259,6 +276,7 @@ export class SubjectsService {
   /**
    * Set teachers for a subject (replaces all existing)
    */
+  @InvalidatesCache()
   async setTeachers(subjectId: number, teacherIds: number[]) {
     // Check if subject exists
     await this.findOne(subjectId);

@@ -16,7 +16,7 @@ describe('Auth (e2e)', () => {
   });
 
   beforeEach(async () => {
-    await resetDb(ctx.prisma);
+    await resetDb(ctx.prisma, ctx.cache);
   });
 
   afterAll(async () => {

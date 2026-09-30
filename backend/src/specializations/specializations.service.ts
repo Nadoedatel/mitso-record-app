@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { CacheService, InvalidatesCache, DIRECTORY_NAMESPACE, DIRECTORY_TTL_SECONDS, stableKey } from '../cache';
 import {
   CreateSpecializationDto,
   UpdateSpecializationDto,
@@ -12,11 +13,15 @@ import {
  */
 @Injectable()
 export class SpecializationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+  ) {}
 
   /**
    * Create a new specialization
    */
+  @InvalidatesCache()
   async create(dto: CreateSpecializationDto) {
     return this.prisma.specialization.create({
       data: dto,
@@ -27,9 +32,18 @@ export class SpecializationsService {
   }
 
   /**
-   * Get all specializations with optional filters and pagination
+   * Get all specializations (cached: the database is asked only on a miss, see cache invalidation on writes)
    */
   async findAll(query: QuerySpecializationDto) {
+    return this.cache.getOrSet(DIRECTORY_NAMESPACE, `specializations:list:${stableKey(query)}`, DIRECTORY_TTL_SECONDS, () =>
+      this.loadAll(query),
+    );
+  }
+
+  /**
+   * Get all specializations with optional filters and pagination
+   */
+  private async loadAll(query: QuerySpecializationDto) {
     const { facultyId, search, page = 1, limit = 20 } = query;
 
     const where: Prisma.SpecializationWhereInput = {};
@@ -77,9 +91,18 @@ export class SpecializationsService {
   }
 
   /**
-   * Get specialization by ID
+   * Get one specialization by ID (cached; a missing ID throws and is never cached)
    */
   async findOne(id: number) {
+    return this.cache.getOrSet(DIRECTORY_NAMESPACE, `specializations:one:${id}`, DIRECTORY_TTL_SECONDS, () =>
+      this.loadOne(id),
+    );
+  }
+
+  /**
+   * Get specialization by ID
+   */
+  private async loadOne(id: number) {
     const specialization = await this.prisma.specialization.findUnique({
       where: { id },
       include: {
@@ -102,8 +125,9 @@ export class SpecializationsService {
   /**
    * Update specialization
    */
+  @InvalidatesCache()
   async update(id: number, dto: UpdateSpecializationDto) {
-    await this.findOne(id); // Check if exists
+    await this.loadOne(id); // Check if exists
 
     return this.prisma.specialization.update({
       where: { id },
@@ -117,8 +141,9 @@ export class SpecializationsService {
   /**
    * Delete specialization
    */
+  @InvalidatesCache()
   async remove(id: number) {
-    await this.findOne(id); // Check if exists
+    await this.loadOne(id); // Check if exists
 
     await this.prisma.specialization.delete({
       where: { id },

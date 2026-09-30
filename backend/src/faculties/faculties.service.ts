@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CacheService, InvalidatesCache, DIRECTORY_NAMESPACE, DIRECTORY_TTL_SECONDS, stableKey } from '../cache';
 import { CreateFacultyDto, UpdateFacultyDto, QueryFacultyDto } from './dto';
 
 /**
@@ -7,11 +8,15 @@ import { CreateFacultyDto, UpdateFacultyDto, QueryFacultyDto } from './dto';
  */
 @Injectable()
 export class FacultiesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+  ) {}
 
   /**
    * Create a new faculty
    */
+  @InvalidatesCache()
   async create(dto: CreateFacultyDto) {
     return this.prisma.faculty.create({
       data: dto,
@@ -19,9 +24,18 @@ export class FacultiesService {
   }
 
   /**
-   * Get all faculties with optional search and pagination
+   * Get all faculties (cached: the database is asked only on a miss, see cache invalidation on writes)
    */
   async findAll(query: QueryFacultyDto) {
+    return this.cache.getOrSet(DIRECTORY_NAMESPACE, `faculties:list:${stableKey(query)}`, DIRECTORY_TTL_SECONDS, () =>
+      this.loadAll(query),
+    );
+  }
+
+  /**
+   * Get all faculties with optional search and pagination
+   */
+  private async loadAll(query: QueryFacultyDto) {
     const { search, page = 1, limit = 20 } = query;
 
     const where = search
@@ -65,9 +79,18 @@ export class FacultiesService {
   }
 
   /**
-   * Get faculty by ID with specializations
+   * Get one faculty by ID (cached; a missing ID throws and is never cached)
    */
   async findOne(id: number) {
+    return this.cache.getOrSet(DIRECTORY_NAMESPACE, `faculties:one:${id}`, DIRECTORY_TTL_SECONDS, () =>
+      this.loadOne(id),
+    );
+  }
+
+  /**
+   * Get faculty by ID with specializations
+   */
+  private async loadOne(id: number) {
     const faculty = await this.prisma.faculty.findUnique({
       where: { id },
       include: {
@@ -92,8 +115,9 @@ export class FacultiesService {
   /**
    * Update faculty
    */
+  @InvalidatesCache()
   async update(id: number, dto: UpdateFacultyDto) {
-    await this.findOne(id); // Check if exists
+    await this.loadOne(id); // Check if exists
 
     return this.prisma.faculty.update({
       where: { id },
@@ -104,8 +128,9 @@ export class FacultiesService {
   /**
    * Delete faculty
    */
+  @InvalidatesCache()
   async remove(id: number) {
-    await this.findOne(id); // Check if exists
+    await this.loadOne(id); // Check if exists
 
     await this.prisma.faculty.delete({
       where: { id },
