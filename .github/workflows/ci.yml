@@ -29,6 +29,56 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  # e2e на настоящей БД: накатывают те же миграции, что и прод (global-setup делает `prisma migrate deploy`).
+  # Два прогона: кэш и счётчики лимитов в памяти процесса и на реальном Redis (ветка с REDIS_URL).
+  backend-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        cache: [memory, redis]
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mitso_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mitso_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5433/mitso_test
+      # Пусто = память; для redis-прогона адрес сервиса (контейнер доступен на localhost)
+      REDIS_URL: ${{ matrix.cache == 'redis' && 'redis://localhost:6379' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx jest --config ./test/jest-e2e.json --runInBand
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
