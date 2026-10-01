@@ -134,3 +134,35 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  # Уязвимости зависимостей. Пока НЕ блокирует: на старте красный (в backend есть критическая через bcrypt -> tar
+  # и мажорные обновления Nest), поэтому job только показывает отчёт. Станет обязательным, когда базу вычистим.
+  audit:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [backend, frontend]
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Только production-зависимости: dev-инструменты на пользователей не влияют
+      - run: npm audit --omit=dev --audit-level=high
+
+  # Prod-образы должны собираться: иначе поломку увидишь только при деплое
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f ${{ matrix.project }}/Dockerfile.prod -t mitso-${{ matrix.project }}:ci ${{ matrix.project }}

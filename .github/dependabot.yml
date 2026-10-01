@@ -1,0 +1,40 @@
+# Раз в неделю Dependabot открывает PR с обновлениями. Минорные и патч-обновления сведены в один PR на каталог,
+# чтобы не получать десятки отдельных; мажорные приходят отдельно (их надо читать и тестировать руками).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /backend
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5
+    groups:
+      backend-minor-patch:
+        update-types: [minor, patch]
+    commit-message: { prefix: "chore(backend, deps)" }
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5
+    groups:
+      frontend-minor-patch:
+        update-types: [minor, patch]
+    commit-message: { prefix: "chore(frontend, deps)" }
+
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 2
+    commit-message: { prefix: "chore(deps)" }
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message: { prefix: "ci(deps)" }
+
+  - package-ecosystem: docker
+    directories: [/backend, /frontend]
+    schedule: { interval: monthly }
+    commit-message: { prefix: "chore(docker)" }
