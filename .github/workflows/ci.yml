@@ -79,6 +79,43 @@ jobs:
       - run: npx prisma generate
       - run: npx jest --config ./test/jest-e2e.json --runInBand
 
+  # Схема и миграции не должны расходиться: забыл `prisma migrate dev` -> этот job красный, а не прод.
+  # `migrate diff --from-migrations` накатывает все миграции на пустую shadow-БД (заодно доказывает,
+  # что они применяются с нуля) и сравнивает результат с schema.prisma; расхождение = код выхода 2.
+  backend-migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mitso_shadow
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mitso_shadow"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      # validate читает env("DATABASE_URL") из схемы, подключения не делает
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5434/mitso_shadow
+      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5434/mitso_shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run db:check-migrations
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
