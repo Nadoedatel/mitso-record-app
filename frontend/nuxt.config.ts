@@ -7,6 +7,20 @@ export default defineNuxtConfig({
   // and would share module-level state between requests, so render on the client only
   ssr: false,
 
+  // Headers for every page served by the Nitro server (Render runs `node .output/server/index.mjs`).
+  // No script CSP on purpose: the Nuxt bootstrap is an inline script, so a useful CSP needs nonces or
+  // hashes and tuning for Sentry. frame-ancestors alone is safe and stops clickjacking.
+  routeRules: {
+    '/**': {
+      headers: {
+        'X-Content-Type-Options': 'nosniff',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+        'Content-Security-Policy': "frame-ancestors 'none'",
+      },
+    },
+  },
+
   // Modules
   modules: ['@pinia/nuxt'],
 

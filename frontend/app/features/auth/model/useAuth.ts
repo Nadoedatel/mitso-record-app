@@ -4,17 +4,32 @@ import type { User } from '~/entities/user'
 import { authApi, type LoginDto } from '../api/authApi'
 import { useHttpClient } from '~/shared/api/httpClient'
 
+const SESSION_HINT_KEY = 'mitso:session'
+
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const isAuthenticated = computed(() => !!user.value)
 
   /**
-   * Mirror the role into a cookie read by route middleware.
-   * Client-set on purpose: API and frontend live on different domains in production.
+   * "This browser had a session" hint for the login page, so anonymous visitors do not trigger a
+   * failing refresh request. Holds no role and grants nothing: access is decided by the httpOnly
+   * refresh cookie and the backend (RolesGuard); the role comes from /auth/me.
    */
-  function syncRoleCookie(role: string | null) {
-    const userRole = useCookie('userRole', { sameSite: 'strict', maxAge: 60 * 60 * 24 * 7 })
-    userRole.value = role
+  function setSessionHint(present: boolean) {
+    try {
+      if (present) localStorage.setItem(SESSION_HINT_KEY, '1')
+      else localStorage.removeItem(SESSION_HINT_KEY)
+    } catch {
+      // Storage blocked: the login page just always tries to restore
+    }
+  }
+
+  function hasSessionHint(): boolean {
+    try {
+      return localStorage.getItem(SESSION_HINT_KEY) !== null
+    } catch {
+      return true
+    }
   }
 
   /**
@@ -24,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
     const response = await authApi.login(credentials)
     user.value = response.user
     useHttpClient().setAccessToken(response.accessToken)
-    syncRoleCookie(response.user.role)
+    setSessionHint(true)
     return response
   }
 
@@ -52,7 +67,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
     }
 
-    syncRoleCookie(user.value.role)
+    setSessionHint(true)
     return true
   }
 
@@ -81,7 +96,7 @@ export const useAuthStore = defineStore('auth', () => {
   function clearLocalSession() {
     user.value = null
     useHttpClient().clearAuth()
-    syncRoleCookie(null)
+    setSessionHint(false)
   }
 
   return {
@@ -89,6 +104,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     login,
     restoreSession,
+    hasSessionHint,
     logout,
     fetchProfile,
   }
