@@ -29,6 +29,16 @@ export class RedisCacheStore implements CacheStore {
     return this.redis.incr(this.prefix + key);
   }
 
+  async incrWithTtl(key: string, ttlSeconds: number): Promise<number> {
+    const count = await this.redis.incr(this.prefix + key);
+    if (count === 1) await this.redis.expire(this.prefix + key, ttlSeconds);
+    return count;
+  }
+
+  async del(key: string): Promise<void> {
+    await this.redis.del(this.prefix + key);
+  }
+
   async clear(): Promise<void> {
     const keys: string[] = [];
     for await (const batch of this.redis.scanStream({ match: `${this.prefix}*`, count: 200 })) {

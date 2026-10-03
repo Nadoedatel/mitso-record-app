@@ -12,6 +12,7 @@ interface Entry {
 export class MemoryCacheStore implements CacheStore {
   private readonly entries = new Map<string, Entry>();
   private readonly counters = new Map<string, number>();
+  private readonly windowCounters = new Map<string, { count: number; expiresAt: number }>();
 
   constructor(private readonly maxEntries = 1000) {}
 
@@ -19,6 +20,8 @@ export class MemoryCacheStore implements CacheStore {
     // Counters share the keyspace with values, like INCR and GET do in Redis
     const counter = this.counters.get(key);
     if (counter !== undefined) return String(counter);
+    const window = this.windowCounters.get(key);
+    if (window && window.expiresAt > Date.now()) return String(window.count);
     const entry = this.entries.get(key);
     if (!entry) return null;
     if (entry.expiresAt <= Date.now()) {
@@ -44,9 +47,26 @@ export class MemoryCacheStore implements CacheStore {
     return next;
   }
 
+  async incrWithTtl(key: string, ttlSeconds: number): Promise<number> {
+    const current = this.windowCounters.get(key);
+    if (current && current.expiresAt > Date.now()) {
+      current.count += 1;
+      return current.count;
+    }
+    this.windowCounters.set(key, { count: 1, expiresAt: Date.now() + ttlSeconds * 1000 });
+    return 1;
+  }
+
+  async del(key: string): Promise<void> {
+    this.entries.delete(key);
+    this.counters.delete(key);
+    this.windowCounters.delete(key);
+  }
+
   async clear(): Promise<void> {
     this.entries.clear();
     this.counters.clear();
+    this.windowCounters.clear();
   }
 
   async close(): Promise<void> {

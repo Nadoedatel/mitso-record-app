@@ -98,6 +98,8 @@ describe('AuthUserCache', () => {
       get: jest.fn().mockRejectedValue(new Error('down')),
       set: jest.fn().mockRejectedValue(new Error('down')),
       incr: jest.fn().mockRejectedValue(new Error('down')),
+      incrWithTtl: jest.fn().mockRejectedValue(new Error('down')),
+      del: jest.fn().mockRejectedValue(new Error('down')),
       clear: jest.fn(),
       close: jest.fn(),
     };

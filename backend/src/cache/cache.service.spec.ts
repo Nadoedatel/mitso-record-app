@@ -125,6 +125,8 @@ describe('CacheService', () => {
       get: jest.fn().mockRejectedValue(new Error('ECONNREFUSED')),
       set: jest.fn().mockRejectedValue(new Error('ECONNREFUSED')),
       incr: jest.fn().mockRejectedValue(new Error('ECONNREFUSED')),
+      incrWithTtl: jest.fn().mockRejectedValue(new Error('ECONNREFUSED')),
+      del: jest.fn().mockRejectedValue(new Error('ECONNREFUSED')),
       clear: jest.fn().mockRejectedValue(new Error('ECONNREFUSED')),
       close: jest.fn(),
     };

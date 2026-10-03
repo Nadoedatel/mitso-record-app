@@ -55,6 +55,27 @@ export class CacheService {
     await this.safely(() => this.store.incr(`ver:${namespace}`));
   }
 
+  /**
+   * Raw key-value helpers for short-lived state that is not a cache of the database (login
+   * attempt counters, lockouts). Like everything here they fail soft: a store outage is
+   * logged and the call behaves as "nothing stored" (null / 0).
+   */
+  async count(key: string, windowSeconds: number): Promise<number> {
+    return (await this.safely(() => this.store.incrWithTtl(`raw:${key}`, windowSeconds))) ?? 0;
+  }
+
+  async peek(key: string): Promise<string | null> {
+    return this.safely(() => this.store.get(`raw:${key}`));
+  }
+
+  async put(key: string, value: string, ttlSeconds: number): Promise<void> {
+    await this.safely(() => this.store.set(`raw:${key}`, value, ttlSeconds));
+  }
+
+  async forget(key: string): Promise<void> {
+    await this.safely(() => this.store.del(`raw:${key}`));
+  }
+
   /** Drop everything (tests) */
   async clear(): Promise<void> {
     await this.safely(() => this.store.clear());
