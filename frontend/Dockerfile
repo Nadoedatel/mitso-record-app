@@ -1,5 +1,5 @@
 # Dev-образ frontend для docker-compose (исходники монтируются volume-ом, запуск nuxt dev)
-FROM node:22-slim
+FROM node:26-slim
 
 WORKDIR /app
 
