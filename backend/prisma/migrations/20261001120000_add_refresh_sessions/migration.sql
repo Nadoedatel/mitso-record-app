@@ -1,0 +1,28 @@
+-- Old single-slot refresh tokens are dropped: every user logs in again once.
+ALTER TABLE "users" DROP COLUMN "refresh_token";
+
+-- CreateTable
+CREATE TABLE "refresh_sessions" (
+    "id" SERIAL NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "family_id" TEXT NOT NULL,
+    "token_hash" TEXT NOT NULL,
+    "used_at" TIMESTAMP(3),
+    "expires_at" TIMESTAMP(3) NOT NULL,
+    "user_agent" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "refresh_sessions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "refresh_sessions_token_hash_key" ON "refresh_sessions"("token_hash");
+
+-- CreateIndex
+CREATE INDEX "refresh_sessions_user_id_idx" ON "refresh_sessions"("user_id");
+
+-- CreateIndex
+CREATE INDEX "refresh_sessions_family_id_idx" ON "refresh_sessions"("family_id");
+
+-- AddForeignKey
+ALTER TABLE "refresh_sessions" ADD CONSTRAINT "refresh_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
