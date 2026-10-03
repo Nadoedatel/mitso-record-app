@@ -38,6 +38,7 @@ describe('Account deletion (e2e)', () => {
     await http().get('/api/auth/me').set('Authorization', studentAuth).expect(401);
     await login(user.email).expect(401);
     expect(await ctx.prisma.user.findUnique({ where: { id: user.id } })).toBeNull();
+    expect(await ctx.prisma.refreshSession.count({ where: { userId: user.id } })).toBe(0);
   });
 
   it('deleting a student also removes their grades', async () => {

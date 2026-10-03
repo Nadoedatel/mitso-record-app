@@ -36,15 +36,14 @@ describe('Auth (e2e)', () => {
       expect(res.body).not.toHaveProperty('refreshToken');
     });
 
-    it('sets the refresh token as an httpOnly cookie and the role as a readable one', async () => {
+    it('sets the refresh token as an httpOnly cookie and does not mirror the role into any cookie', async () => {
       const user = await createUser(ctx.prisma);
 
       const res = await login(user.email).expect(200);
 
       expect(getSetCookie(res, 'refreshToken')).toMatch(/HttpOnly/i);
       expect(getSetCookie(res, 'refreshToken')).toMatch(/SameSite=Strict/i);
-      expect(getSetCookie(res, 'userRole')).not.toMatch(/HttpOnly/i);
-      expect(getCookieValue(res, 'userRole')).toBe('STUDENT');
+      expect(getCookieValue(res, 'userRole')).toBe(''); // only an expiry of the legacy cookie, never a role value
     });
 
     it('stores only a hash of the refresh token in the database', async () => {
@@ -52,9 +51,9 @@ describe('Auth (e2e)', () => {
 
       const res = await login(user.email).expect(200);
 
-      const stored = await ctx.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
-      expect(stored.refreshToken).toBeTruthy();
-      expect(stored.refreshToken).not.toBe(getCookieValue(res, 'refreshToken'));
+      const sessions = await ctx.prisma.refreshSession.findMany({ where: { userId: user.id } });
+      expect(sessions).toHaveLength(1);
+      expect(sessions[0].tokenHash).not.toBe(getCookieValue(res, 'refreshToken'));
     });
 
     it('answers a wrong password and an unknown email identically (no user enumeration)', async () => {
@@ -64,6 +63,31 @@ describe('Auth (e2e)', () => {
       const unknownEmail = await login('nobody@mitso.by').expect(401);
 
       expect(wrongPassword.body.message).toBe(unknownEmail.body.message);
+    });
+
+    it('locks the email after 5 wrong passwords, even for the right password, and unlocks on success elsewhere', async () => {
+      const user = await createUser(ctx.prisma);
+
+      for (let i = 0; i < 5; i++) await login(user.email, 'wrong-password').expect(401);
+
+      await login(user.email).expect(429);
+      await login('other-user@mitso.by', 'wrong-password').expect(401);
+    });
+
+    it('locks an unknown email the same way (the lock does not reveal which accounts exist)', async () => {
+      for (let i = 0; i < 5; i++) await login('ghost@mitso.by', 'wrong-password').expect(401);
+
+      await login('ghost@mitso.by', 'wrong-password').expect(429);
+    });
+
+    it('a successful login resets the failure counter', async () => {
+      const user = await createUser(ctx.prisma);
+
+      for (let i = 0; i < 4; i++) await login(user.email, 'wrong-password').expect(401);
+      await login(user.email).expect(200);
+      for (let i = 0; i < 4; i++) await login(user.email, 'wrong-password').expect(401);
+
+      await login(user.email).expect(200);
     });
 
     it.each([
@@ -118,6 +142,101 @@ describe('Auth (e2e)', () => {
       await http().post('/api/auth/refresh').set('Cookie', [`refreshToken=${oldToken}`]).expect(401);
     });
 
+    const refreshWith = (token: string) =>
+      http().post('/api/auth/refresh').set('Cookie', [`refreshToken=${token}`]);
+    const afterGrace = () => jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 60_000);
+
+    it('keeps two devices logged in independently', async () => {
+      const user = await createUser(ctx.prisma);
+      const phone = getCookieValue(await login(user.email).expect(200), 'refreshToken') as string;
+      const laptop = getCookieValue(await login(user.email).expect(200), 'refreshToken') as string;
+
+      await refreshWith(phone).expect(200);
+      await refreshWith(laptop).expect(200);
+    });
+
+    it('revokes the whole family when a used token is replayed after the grace window', async () => {
+      const user = await createUser(ctx.prisma);
+      const stolen = getCookieValue(await login(user.email).expect(200), 'refreshToken') as string;
+      const rotated = await refreshWith(stolen).expect(200);
+      const legit = getCookieValue(rotated, 'refreshToken') as string;
+
+      const spy = afterGrace();
+      await refreshWith(stolen).expect(401);
+      spy.mockRestore();
+
+      // the legitimate newest token of that device is dead too
+      await refreshWith(legit).expect(401);
+      expect(await ctx.prisma.refreshSession.count({ where: { userId: user.id } })).toBe(0);
+    });
+
+    it('does not revoke other devices when one family is revoked', async () => {
+      const user = await createUser(ctx.prisma);
+      const phone = getCookieValue(await login(user.email).expect(200), 'refreshToken') as string;
+      const laptop = getCookieValue(await login(user.email).expect(200), 'refreshToken') as string;
+      await refreshWith(phone).expect(200);
+
+      const spy = afterGrace();
+      await refreshWith(phone).expect(401);
+      spy.mockRestore();
+
+      await refreshWith(laptop).expect(200);
+    });
+
+    it('treats an immediate replay (two tabs racing) as a plain 401 without revoking the family', async () => {
+      const user = await createUser(ctx.prisma);
+      const first = getCookieValue(await login(user.email).expect(200), 'refreshToken') as string;
+      const rotated = await refreshWith(first).expect(200);
+
+      await refreshWith(first).expect(401);
+      await refreshWith(getCookieValue(rotated, 'refreshToken') as string).expect(200);
+    });
+
+    it('logout revokes only the calling device', async () => {
+      const user = await createUser(ctx.prisma);
+      const phoneLogin = await login(user.email).expect(200);
+      const laptop = getCookieValue(await login(user.email).expect(200), 'refreshToken') as string;
+
+      await http()
+        .post('/api/auth/logout')
+        .set('Authorization', `Bearer ${phoneLogin.body.accessToken}`)
+        .set('Cookie', [`refreshToken=${getCookieValue(phoneLogin, 'refreshToken')}`])
+        .expect(200);
+
+      await refreshWith(getCookieValue(phoneLogin, 'refreshToken') as string).expect(401);
+      await refreshWith(laptop).expect(200);
+    });
+
+    it('logout kills the access token of that device at once, not after 15 minutes', async () => {
+      const user = await createUser(ctx.prisma);
+      const phone = await login(user.email).expect(200);
+      const laptop = await login(user.email).expect(200);
+      const me = (accessToken: string) => http().get('/api/auth/me').set('Authorization', `Bearer ${accessToken}`);
+      await me(phone.body.accessToken).expect(200);
+
+      await http()
+        .post('/api/auth/logout')
+        .set('Authorization', `Bearer ${phone.body.accessToken}`)
+        .set('Cookie', [`refreshToken=${getCookieValue(phone, 'refreshToken')}`])
+        .expect(200);
+
+      await me(phone.body.accessToken).expect(401);
+      await me(laptop.body.accessToken).expect(200);
+    });
+
+    it('a detected token theft also kills the access tokens of that login', async () => {
+      const user = await createUser(ctx.prisma);
+      const first = await login(user.email).expect(200);
+      const stolen = getCookieValue(first, 'refreshToken') as string;
+      const rotated = await refreshWith(stolen).expect(200);
+
+      const spy = afterGrace();
+      await refreshWith(stolen).expect(401);
+      spy.mockRestore();
+
+      await http().get('/api/auth/me').set('Authorization', `Bearer ${rotated.body.accessToken}`).expect(401);
+    });
+
     it('rejects the refresh token after logout', async () => {
       const user = await createUser(ctx.prisma);
       const loginRes = await login(user.email).expect(200);
@@ -170,7 +289,7 @@ describe('Auth (e2e)', () => {
       await http().post('/api/auth/logout').expect(401);
     });
 
-    it('wipes the stored refresh token and clears the cookies', async () => {
+    it('wipes the stored refresh sessions and clears the cookies', async () => {
       const user = await createUser(ctx.prisma);
       const loginRes = await login(user.email).expect(200);
 
@@ -179,9 +298,84 @@ describe('Auth (e2e)', () => {
         .set('Authorization', `Bearer ${loginRes.body.accessToken}`)
         .expect(200);
 
-      const stored = await ctx.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
-      expect(stored.refreshToken).toBeNull();
+      expect(await ctx.prisma.refreshSession.count({ where: { userId: user.id } })).toBe(0);
       expect(getCookieValue(res, 'refreshToken')).toBe('');
+    });
+  });
+
+  describe('POST /api/auth/change-password', () => {
+    const change = (accessToken: string, body: object) =>
+      http().post('/api/auth/change-password').set('Authorization', `Bearer ${accessToken}`).send(body);
+
+    it('requires authentication', async () => {
+      await http().post('/api/auth/change-password').send({ currentPassword: 'a', newPassword: 'b'.repeat(8) }).expect(401);
+    });
+
+    it('changes the password, revokes every device and lets the user log in with the new one', async () => {
+      const user = await createUser(ctx.prisma);
+      const phone = await login(user.email).expect(200);
+      const laptop = await login(user.email).expect(200);
+
+      await change(phone.body.accessToken, { currentPassword: DEFAULT_PASSWORD, newPassword: 'brand-new-pass' }).expect(200);
+
+      await http().get('/api/auth/me').set('Authorization', `Bearer ${phone.body.accessToken}`).expect(401);
+      await http().get('/api/auth/me').set('Authorization', `Bearer ${laptop.body.accessToken}`).expect(401);
+      await http()
+        .post('/api/auth/refresh')
+        .set('Cookie', [`refreshToken=${getCookieValue(laptop, 'refreshToken')}`])
+        .expect(401);
+      await login(user.email).expect(401);
+      await login(user.email, 'brand-new-pass').expect(200);
+    });
+
+    it('rejects a wrong current password and keeps the old one', async () => {
+      const user = await createUser(ctx.prisma);
+      const session = await login(user.email).expect(200);
+
+      await change(session.body.accessToken, { currentPassword: 'wrong-password', newPassword: 'brand-new-pass' }).expect(400);
+
+      await login(user.email).expect(200);
+    });
+
+    it.each([
+      ['a new password shorter than 8', { currentPassword: DEFAULT_PASSWORD, newPassword: '1234567' }],
+      ['a new password equal to the current one', { currentPassword: DEFAULT_PASSWORD, newPassword: DEFAULT_PASSWORD }],
+      ['an unexpected field', { currentPassword: DEFAULT_PASSWORD, newPassword: 'brand-new-pass', role: 'ADMIN' }],
+    ])('rejects %s with 400', async (_name, body) => {
+      const user = await createUser(ctx.prisma);
+      const session = await login(user.email).expect(200);
+
+      await change(session.body.accessToken, body).expect(400);
+    });
+
+    it('counts wrong current passwords toward the login lockout (no guessing oracle for a stolen token)', async () => {
+      const user = await createUser(ctx.prisma);
+      const session = await login(user.email).expect(200);
+
+      for (let i = 0; i < 4; i++) {
+        await change(session.body.accessToken, { currentPassword: `wrong-${i}`, newPassword: 'brand-new-pass' }).expect(400);
+      }
+      await change(session.body.accessToken, { currentPassword: 'wrong-4', newPassword: 'brand-new-pass' }).expect(400);
+
+      await change(session.body.accessToken, { currentPassword: DEFAULT_PASSWORD, newPassword: 'brand-new-pass' }).expect(429);
+      await login(user.email).expect(429);
+    });
+  });
+
+  describe('CSRF: cookie and state-changing endpoints refuse foreign browser origins', () => {
+    it.each(['/api/auth/refresh', '/api/auth/logout', '/api/auth/change-password'])('%s answers 403 to Origin evil.example', async (path) => {
+      const user = await createUser(ctx.prisma);
+      const session = await login(user.email).expect(200);
+
+      await http()
+        .post(path)
+        .set('Origin', 'https://evil.example')
+        .set('Authorization', `Bearer ${session.body.accessToken}`)
+        .set('Cookie', [`refreshToken=${getCookieValue(session, 'refreshToken')}`])
+        .send({ currentPassword: DEFAULT_PASSWORD, newPassword: 'brand-new-pass' })
+        .expect(403);
+
+      await http().get('/api/auth/me').set('Authorization', `Bearer ${session.body.accessToken}`).expect(200);
     });
   });
 

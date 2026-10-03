@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthUserCache } from '../../cache';
 import { JWT_ALGORITHM } from '../jwt-secrets';
+import { SessionRevocationService } from '../session-revocation.service';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 /**
@@ -10,7 +11,10 @@ import { JwtPayload } from '../interfaces/jwt-payload.interface';
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private authUsers: AuthUserCache) {
+  constructor(
+    private authUsers: AuthUserCache,
+    private revocation: SessionRevocationService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -24,6 +28,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * so a deleted user is rejected as soon as the cache entry is invalidated.
    */
   async validate(payload: JwtPayload) {
+    if (payload.sid && (await this.revocation.isRevoked(payload.sid))) {
+      throw new UnauthorizedException('Session revoked');
+    }
+
     const user = await this.authUsers.get(payload.sub);
 
     if (!user) {

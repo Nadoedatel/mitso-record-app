@@ -19,7 +19,7 @@ import {
   ApiCookieAuth,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto';
+import { ChangePasswordDto, LoginDto } from './dto';
 import { JwtAuthGuard, OriginGuard } from '../common/guards';
 import { CurrentUser } from '../common/decorators';
 import { AuthUser } from './interfaces/auth-user.interface';
@@ -67,21 +67,17 @@ export class AuthController {
   @ApiResponse({ status: 429, description: 'Too many requests' })
   async login(
     @Body() dto: LoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.login(dto);
+    const result = await this.authService.login(dto, req.headers['user-agent']);
 
     // Set refresh token in httpOnly cookie
     res.cookie('refreshToken', result.refreshToken, refreshCookieOptions());
     res.clearCookie('refreshToken', LEGACY_REFRESH_COOKIE);
 
-    // Set userRole cookie (readable by JS for SSR middleware)
-    res.cookie('userRole', result.user.role, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    // The role is no longer mirrored into a JS-readable cookie (anyone could edit it); drop the old one
+    res.clearCookie('userRole');
 
     // Return only accessToken and user data (not refreshToken)
     return {
@@ -110,7 +106,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = req.cookies['refreshToken'];
-    const result = await this.authService.refresh(refreshToken);
+    const result = await this.authService.refresh(refreshToken, req.headers['user-agent']);
 
     // Set new refresh token in httpOnly cookie
     res.cookie('refreshToken', result.refreshToken, refreshCookieOptions());
@@ -152,6 +148,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async logout(
     @CurrentUser() user: AuthUser,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     // Clear auth cookies
@@ -159,6 +156,32 @@ export class AuthController {
     res.clearCookie('refreshToken', LEGACY_REFRESH_COOKIE);
     res.clearCookie('userRole');
 
-    return this.authService.logout(user.id);
+    return this.authService.logout(user.id, req.cookies['refreshToken']);
+  }
+
+  /**
+   * Change own password; every session of the user is revoked, so the client must log in again
+   * POST /api/auth/change-password
+   */
+  @Post('change-password')
+  @UseGuards(OriginGuard, JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change own password and sign out everywhere' })
+  @ApiResponse({ status: 200, description: 'Password changed, all sessions revoked' })
+  @ApiResponse({ status: 400, description: 'Wrong current password or invalid new password' })
+  @ApiResponse({ status: 429, description: 'Too many attempts' })
+  async changePassword(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: ChangePasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.changePassword(user.id, dto);
+
+    res.clearCookie('refreshToken', { path: REFRESH_COOKIE_PATH });
+    res.clearCookie('refreshToken', LEGACY_REFRESH_COOKIE);
+
+    return result;
   }
 }

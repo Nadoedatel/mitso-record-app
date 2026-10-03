@@ -39,7 +39,7 @@ describe('Auth login validation (Zod)', () => {
   it('passes valid credentials to the service', async () => {
     await http().post('/api/auth/login').send(valid).expect(200);
 
-    expect(service.login).toHaveBeenCalledWith(valid);
+    expect(service.login).toHaveBeenCalledWith(valid, undefined);
   });
 
   it.each([
