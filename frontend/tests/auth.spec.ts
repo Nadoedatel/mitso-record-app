@@ -17,16 +17,20 @@ import { useAuthStore } from '~/features/auth/model/useAuth'
 const admin = { id: 1, email: 'admin@mitso.by', role: 'ADMIN' }
 
 describe('auth store', () => {
-  const roleCookie = { value: null as string | null }
+  const storage = new Map<string, string>()
 
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    roleCookie.value = null
-    vi.stubGlobal('useCookie', () => roleCookie)
+    storage.clear()
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    })
   })
 
-  it('restores the session after reload: refresh token, then profile, then role cookie', async () => {
+  it('restores the session after reload: refresh token, then profile, then the session hint (no role anywhere in storage)', async () => {
     httpClient.getAccessToken.mockReturnValue(null)
     httpClient.refresh.mockResolvedValue(true)
     authApi.getMe.mockResolvedValue(admin)
@@ -36,7 +40,8 @@ describe('auth store', () => {
 
     expect(httpClient.refresh).toHaveBeenCalledTimes(1)
     expect(store.user).toEqual(admin)
-    expect(roleCookie.value).toBe('ADMIN')
+    expect(storage.get('mitso:session')).toBe('1')
+    expect([...storage.values()]).not.toContain('ADMIN')
   })
 
   it('does not refresh again when a token is already in memory and the user is loaded', async () => {
@@ -51,16 +56,16 @@ describe('auth store', () => {
     expect(authApi.getMe).toHaveBeenCalledTimes(1)
   })
 
-  it('clears local state and the role cookie when the refresh token is gone', async () => {
+  it('clears local state and the session hint when the refresh token is gone', async () => {
     httpClient.getAccessToken.mockReturnValue(null)
     httpClient.refresh.mockResolvedValue(false)
-    roleCookie.value = 'ADMIN'
+    storage.set('mitso:session', '1')
 
     const store = useAuthStore()
     expect(await store.restoreSession()).toBe(false)
 
     expect(store.user).toBeNull()
-    expect(roleCookie.value).toBeNull()
+    expect(store.hasSessionHint()).toBe(false)
     expect(httpClient.clearAuth).toHaveBeenCalled()
   })
 

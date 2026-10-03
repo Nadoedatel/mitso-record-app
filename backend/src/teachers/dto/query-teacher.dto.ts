@@ -1,11 +1,10 @@
-import { IsOptional, IsString } from 'class-validator';
-import { PaginationDto } from '../../common/dto';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { paginationSchema } from '../../common/dto';
 
-/**
- * DTO for querying teachers with pagination and search
- */
-export class QueryTeacherDto extends PaginationDto {
-  @IsOptional()
-  @IsString()
-  search?: string;
-}
+/** Teachers list: pagination and search */
+export const queryTeacherSchema = paginationSchema.extend({
+  search: z.string().optional().meta({ description: 'Search by name' }),
+});
+
+export class QueryTeacherDto extends createZodDto(queryTeacherSchema) {}

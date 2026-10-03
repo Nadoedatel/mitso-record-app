@@ -1,4 +1,6 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateSpecializationDto } from './create-specialization.dto';
+import { createZodDto } from 'nestjs-zod';
+import { createSpecializationSchema } from './create-specialization.dto';
 
-export class UpdateSpecializationDto extends PartialType(CreateSpecializationDto) {}
+export const updateSpecializationSchema = createSpecializationSchema.partial();
+
+export class UpdateSpecializationDto extends createZodDto(updateSpecializationSchema) {}

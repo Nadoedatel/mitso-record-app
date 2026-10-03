@@ -1,7 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from '../../prisma/prisma.service';
+import { AuthUserCache } from '../../cache';
+import { JWT_ALGORITHM } from '../jwt-secrets';
+import { SessionRevocationService } from '../session-revocation.service';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 /**
@@ -9,27 +11,33 @@ import { JwtPayload } from '../interfaces/jwt-payload.interface';
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private prisma: PrismaService) {
+  constructor(
+    private authUsers: AuthUserCache,
+    private revocation: SessionRevocationService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
+      algorithms: [JWT_ALGORITHM],
       secretOrKey: process.env.JWT_ACCESS_SECRET,
     });
   }
 
+  /**
+   * Resolve the token's user. The row comes from a short-lived cache (see AuthUserCache),
+   * so a deleted user is rejected as soon as the cache entry is invalidated.
+   */
   async validate(payload: JwtPayload) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-    });
+    if (payload.sid && (await this.revocation.isRevoked(payload.sid))) {
+      throw new UnauthorizedException('Session revoked');
+    }
+
+    const user = await this.authUsers.get(payload.sub);
 
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    };
+    return user;
   }
 }

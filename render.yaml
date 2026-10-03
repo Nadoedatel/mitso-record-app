@@ -12,6 +12,18 @@ services:
           property: connectionString
       - key: NODE_ENV
         value: production
+      - key: LOG_LEVEL
+        value: info
+      # Кэш справочников и счётчики лимитов. Внутренний адрес Key Value сервиса ниже;
+      # если убрать эту переменную, backend продолжит работать на памяти процесса
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: mitso-redis
+          property: connectionString
+      # Sentry выключен, пока не задан DSN (значение вписывается в панели Render, в репозиторий не кладём)
+      - key: SENTRY_DSN
+        sync: false
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
@@ -20,10 +32,21 @@ services:
         value: 15m
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
+      # Render стоит перед сервисом одним прокси: верим одному X-Forwarded-For, иначе лимит запросов считает всех как одного
+      - key: TRUST_PROXY
+        value: "1"
       - key: FRONTEND_URL
         value: https://mitso-record-frontend-app.onrender.com
       - key: PORT
         value: 8080
+
+  # Key Value (Redis-совместимое хранилище Render). Только для кэша: можно терять без последствий
+  - type: keyvalue
+    name: mitso-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    # Пустой список: доступ только из сервисов Render внутри сети, снаружи закрыто
+    ipAllowList: []
 
   - type: web
     name: mitso-frontend
@@ -34,6 +57,9 @@ services:
     envVars:
       - key: NUXT_PUBLIC_API_URL
         value: https://mitso-record-app.onrender.com/api
+      # Sentry фронта выключен, пока не задан DSN (отдельный проект Sentry, значение в панели Render)
+      - key: NUXT_PUBLIC_SENTRY_DSN
+        sync: false
 
 databases:
   - name: mitso-db

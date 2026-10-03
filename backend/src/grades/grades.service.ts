@@ -32,6 +32,31 @@ export class GradesService {
   }
 
   /**
+   * Assert that a teacher owns ALL the given subjects, with two queries regardless of how many subjects
+   * (profile + one `IN` lookup), instead of two queries per subject.
+   * @returns the teacher's profile ID, so the caller does not need another lookup
+   */
+  private async assertTeacherOwnsSubjects(userId: number, subjectIds: number[]): Promise<number> {
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (!teacher) {
+      throw new ForbiddenException('Teacher profile not found');
+    }
+
+    const owned = await this.prisma.teacherSubject.findMany({
+      where: { teacherId: teacher.id, subjectId: { in: subjectIds } },
+      select: { subjectId: true },
+    });
+    if (new Set(owned.map((link) => link.subjectId)).size !== subjectIds.length) {
+      throw new ForbiddenException('You are not assigned to this subject');
+    }
+
+    return teacher.id;
+  }
+
+  /**
    * Resolve teacher ID from user ID
    */
   private async getTeacherId(userId: number): Promise<number | null> {
@@ -155,8 +180,28 @@ export class GradesService {
 
   /**
    * Find grade by ID
+   * Students can only read their own grades
    */
-  async findOne(id: number) {
+  async findOne(id: number, user: AuthUser) {
+    const grade = await this.getOrThrow(id);
+
+    if (user.role === Role.STUDENT) {
+      const ownStudent = await this.prisma.student.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+      if (!ownStudent || ownStudent.id !== grade.studentId) {
+        throw new ForbiddenException('Access denied');
+      }
+    }
+
+    return grade;
+  }
+
+  /**
+   * Load a grade with relations or throw 404 (no access checks, for internal use)
+   */
+  private async getOrThrow(id: number) {
     const grade = await this.prisma.grade.findUnique({
       where: { id },
       include: {
@@ -175,10 +220,18 @@ export class GradesService {
 
   /**
    * Update grade
+   * Teachers can only edit grades of subjects assigned to them (and move a grade only to such subjects)
    */
-  async update(id: number, dto: UpdateGradeDto) {
+  async update(id: number, dto: UpdateGradeDto, user: AuthUser) {
     // Check if grade exists
-    const existing = await this.findOne(id);
+    const existing = await this.getOrThrow(id);
+
+    if (user.role === Role.TEACHER) {
+      await this.assertTeacherOwnsSubject(user.id, existing.subjectId);
+      if (dto.subjectId !== undefined && dto.subjectId !== existing.subjectId) {
+        await this.assertTeacherOwnsSubject(user.id, dto.subjectId);
+      }
+    }
 
     if (dto.gradeValue !== undefined || dto.gradeType !== undefined) {
       assertGradeValue(
@@ -206,7 +259,7 @@ export class GradesService {
    */
   async remove(id: number) {
     // Check if grade exists
-    await this.findOne(id);
+    await this.getOrThrow(id);
 
     await this.prisma.grade.delete({
       where: { id },
@@ -242,11 +295,7 @@ export class GradesService {
                 name: true,
               },
             },
-            students: {
-              select: {
-                id: true,
-              },
-            },
+            _count: { select: { students: true } },
           },
         },
       },
@@ -263,15 +312,20 @@ export class GradesService {
       course: sg.group.course,
       facultyId: sg.group.facultyId,
       faculty: sg.group.faculty,
-      studentCount: sg.group.students.length,
+      studentCount: sg.group._count.students,
     }));
   }
 
   /**
    * Get students for a specific group and subject
    * Returns students with their grades for this subject
+   * Teachers can only list groups for subjects assigned to them
    */
-  async findStudentsByGroupAndSubject(groupId: number, subjectId: number) {
+  async findStudentsByGroupAndSubject(groupId: number, subjectId: number, user: AuthUser) {
+    if (user.role === Role.TEACHER) {
+      await this.assertTeacherOwnsSubject(user.id, subjectId);
+    }
+
     // Get all students in the group
     const students = await this.prisma.student.findMany({
       where: { groupId },
@@ -314,75 +368,121 @@ export class GradesService {
   }
 
   /**
-   * Batch create or update grades
-   * Teachers can only create grades for their own subjects
+   * Batch create or update grades.
+   *
+   * 1. Permissions: a teacher must own every subject in the batch, otherwise the whole batch is refused (403).
+   * 2. Validation BEFORE any write: the grade value for its type, and that the student and the subject exist.
+   *    Rows that fail are reported in `errors` (with their position) and skipped: partial success is part of
+   *    the API contract, the frontend shows "saved N of M".
+   * 3. All valid rows are written in ONE transaction: they are saved together or not at all. A database failure
+   *    during the write rolls everything back and is thrown (it is not a problem with a row), so a half-saved
+   *    batch can no longer happen.
    */
   async batchCreate(grades: CreateGradeDto[], user: AuthUser) {
+    let teacherId: number | null = null;
     if (user.role === Role.TEACHER) {
       const subjectIds = [...new Set(grades.map((g) => g.subjectId))];
-      for (const subjectId of subjectIds) {
-        await this.assertTeacherOwnsSubject(user.id, subjectId);
-      }
+      teacherId = await this.assertTeacherOwnsSubjects(user.id, subjectIds);
     }
 
-    const teacherId =
-      user.role === Role.TEACHER ? await this.getTeacherId(user.id) : null;
+    const { valid, errors } = await this.validateBatch(grades);
 
-    const results = await Promise.allSettled(
-      grades.map(async (gradeDto) => {
-        assertGradeValue(gradeDto.gradeType, gradeDto.gradeValue);
-        return this.prisma.grade.upsert({
-          where: {
-            studentId_subjectId_gradeType: {
-              studentId: gradeDto.studentId,
-              subjectId: gradeDto.subjectId,
-              gradeType: gradeDto.gradeType,
-            },
-          },
-          create: {
-            ...gradeDto,
-            teacherId,
-            examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
-          },
-          update: {
-            gradeValue: gradeDto.gradeValue,
-            examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
-            notes: gradeDto.notes,
-          },
-          include: {
-            student: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                studentId: true,
-              },
-            },
-            subject: {
-              select: {
-                id: true,
-                name: true,
-                code: true,
-              },
-            },
-          },
-        });
-      }),
-    );
-
-    const succeeded = results.filter((r) => r.status === 'fulfilled').length;
-    const failed = results.filter((r) => r.status === 'rejected');
+    const saved =
+      valid.length === 0
+        ? []
+        : await this.prisma.$transaction(
+            valid.map((gradeDto) =>
+              this.prisma.grade.upsert({
+                where: {
+                  studentId_subjectId_gradeType: {
+                    studentId: gradeDto.studentId,
+                    subjectId: gradeDto.subjectId,
+                    gradeType: gradeDto.gradeType,
+                  },
+                },
+                create: {
+                  ...gradeDto,
+                  teacherId,
+                  examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
+                },
+                update: {
+                  gradeValue: gradeDto.gradeValue,
+                  examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
+                  notes: gradeDto.notes,
+                },
+                include: {
+                  student: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                      lastName: true,
+                      studentId: true,
+                    },
+                  },
+                  subject: {
+                    select: {
+                      id: true,
+                      name: true,
+                      code: true,
+                    },
+                  },
+                },
+              }),
+            ),
+          );
 
     return {
       total: grades.length,
-      succeeded,
-      failed: failed.length,
-      errors: failed.map((f) => ({
-        reason: f.status === 'rejected' ? f.reason.message : 'Unknown error',
-      })),
-      data: results
-        .filter((r) => r.status === 'fulfilled')
-        .map((r) => (r.status === 'fulfilled' ? r.value : null)),
+      succeeded: saved.length,
+      failed: errors.length,
+      errors,
+      data: saved,
     };
+  }
+
+  /**
+   * Split a batch into rows that can be written and rows that cannot, without writing anything.
+   * Existence of students and subjects is checked with one query each for the whole batch.
+   */
+  private async validateBatch(
+    grades: CreateGradeDto[],
+  ): Promise<{ valid: CreateGradeDto[]; errors: { index: number; reason: string }[] }> {
+    const errors: { index: number; reason: string }[] = [];
+    const candidates: { index: number; dto: CreateGradeDto }[] = [];
+
+    grades.forEach((dto, index) => {
+      try {
+        assertGradeValue(dto.gradeType, dto.gradeValue);
+        candidates.push({ index, dto });
+      } catch (error) {
+        errors.push({ index, reason: (error as Error).message });
+      }
+    });
+
+    const [students, subjects] = await Promise.all([
+      this.prisma.student.findMany({
+        where: { id: { in: [...new Set(candidates.map((c) => c.dto.studentId))] } },
+        select: { id: true },
+      }),
+      this.prisma.subject.findMany({
+        where: { id: { in: [...new Set(candidates.map((c) => c.dto.subjectId))] } },
+        select: { id: true },
+      }),
+    ]);
+    const studentIds = new Set(students.map((s) => s.id));
+    const subjectIds = new Set(subjects.map((s) => s.id));
+
+    const valid: CreateGradeDto[] = [];
+    for (const { index, dto } of candidates) {
+      if (!studentIds.has(dto.studentId)) {
+        errors.push({ index, reason: `Student with ID ${dto.studentId} not found` });
+      } else if (!subjectIds.has(dto.subjectId)) {
+        errors.push({ index, reason: `Subject with ID ${dto.subjectId} not found` });
+      } else {
+        valid.push(dto);
+      }
+    }
+
+    return { valid, errors: errors.sort((a, b) => a.index - b.index) };
   }
 }

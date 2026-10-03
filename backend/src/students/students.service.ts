@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthUserCache, CacheService, InvalidatesCache } from '../cache';
 import { CreateStudentDto, UpdateStudentDto, QueryStudentDto } from './dto';
 import { AuthUser } from '../auth/interfaces/auth-user.interface';
 import { Prisma, Role } from '@prisma/client';
@@ -15,12 +16,17 @@ import { Prisma, Role } from '@prisma/client';
  */
 @Injectable()
 export class StudentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+    private authUsers: AuthUserCache,
+  ) {}
 
   /**
    * Create a new student with a linked user account in a single transaction
    * @throws ConflictException if the email is already taken
    */
+  @InvalidatesCache()
   async create(dto: CreateStudentDto) {
     const { email, password, birthDate, ...profileData } = dto;
 
@@ -255,6 +261,7 @@ export class StudentsService {
   /**
    * Update student
    */
+  @InvalidatesCache()
   async update(id: number, dto: UpdateStudentDto) {
     // Check if student exists
     await this.findById(id);
@@ -304,20 +311,18 @@ export class StudentsService {
   }
 
   /**
-   * Delete student (cascades to user and grades via Prisma schema)
-   * - User deletion: onDelete: Cascade (students.prisma line 51)
-   * - Grades deletion: onDelete: Cascade (grades.prisma line 107)
+   * Delete student together with their login account.
+   * The relation's `onDelete: Cascade` lives on the student's `userId`, i.e. deleting a USER removes
+   * the student (and, through the student, the grades), but deleting a student row leaves the user row
+   * behind, and that user could still log in. So the user is deleted, and the cascade does the rest.
    */
+  @InvalidatesCache()
   async remove(id: number) {
     // Check if student exists
-    await this.findById(id);
+    const student = await this.findById(id);
 
-    // Simply delete student - Prisma will cascade delete:
-    // 1. Related user (due to onDelete: Cascade on student.user relation)
-    // 2. Related grades (due to onDelete: Cascade on grade.student relation)
-    await this.prisma.student.delete({
-      where: { id },
-    });
+    await this.prisma.user.delete({ where: { id: student.userId } });
+    await this.authUsers.invalidate(student.userId);
 
     return { message: 'Student deleted successfully' };
   }

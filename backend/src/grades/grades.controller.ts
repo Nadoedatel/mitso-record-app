@@ -99,13 +99,16 @@ export class GradesController {
    * GET /api/grades/subject/:subjectId/group/:groupId/students
    */
   @Get('subject/:subjectId/group/:groupId/students')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get students for a specific group and subject with their grades' })
   @ApiResponse({ status: 200, description: 'Students retrieved successfully' })
   findStudentsByGroupAndSubject(
     @Param('subjectId', ParseIntPipe) subjectId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.gradesService.findStudentsByGroupAndSubject(groupId, subjectId);
+    return this.gradesService.findStudentsByGroupAndSubject(groupId, subjectId, user);
   }
 
   /**
@@ -116,8 +119,8 @@ export class GradesController {
   @ApiOperation({ summary: 'Get grade by ID' })
   @ApiResponse({ status: 200, description: 'Grade found' })
   @ApiResponse({ status: 404, description: 'Grade not found' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.gradesService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
+    return this.gradesService.findOne(id, user);
   }
 
   /**
@@ -130,8 +133,9 @@ export class GradesController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateGradeDto,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.gradesService.update(id, dto);
+    return this.gradesService.update(id, dto, user);
   }
 
   /**

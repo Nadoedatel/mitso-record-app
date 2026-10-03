@@ -86,9 +86,9 @@ const handleLogin = async () => {
   }
 }
 
-// Already logged in (role cookie present): restore the session and skip the form
+// Already logged in (session hint present): restore the session and skip the form
 onMounted(async () => {
-  if (!useCookie('userRole').value) return
+  if (!authStore.hasSessionHint()) return
   if (await authStore.restoreSession() && authStore.user) {
     router.push(getHomeRoute(authStore.user.role))
   }

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard, ThrottlerStorage } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
@@ -12,6 +12,10 @@ import { GroupsModule } from './groups/groups.module';
 import { FacultiesModule } from './faculties/faculties.module';
 import { SpecializationsModule } from './specializations/specializations.module';
 import { HealthModule } from './health/health.module';
+import { CacheModule } from './cache';
+import { THROTTLER_STORAGE, ThrottlingModule } from './throttling';
+import { LoggerModule } from 'nestjs-pino';
+import { buildLoggerParams } from './common/logger/logger.config';
 
 /**
  * AppModule - root application module
@@ -23,15 +27,27 @@ import { HealthModule } from './health/health.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    // Structured request logging (pino): JSON in production, request id on every line
+    LoggerModule.forRoot(buildLoggerParams()),
     // Throttler module for rate limiting
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000, // Time window in milliseconds (60 seconds)
-        limit: 60, // Maximum number of requests per ttl window (default for all endpoints)
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      imports: [ThrottlingModule],
+      inject: [THROTTLER_STORAGE],
+      useFactory: (storage: ThrottlerStorage | undefined) => ({
+        throttlers: [
+          {
+            ttl: 60000, // Time window in milliseconds (60 seconds)
+            limit: 60, // Maximum number of requests per ttl window (default for all endpoints)
+          },
+        ],
+        // Shared counters in Redis when REDIS_URL is set, per-process memory otherwise
+        storage,
+      }),
+    }),
     // Database module (global)
     PrismaModule,
+    // Cache (global): Redis when REDIS_URL is set, memory otherwise
+    CacheModule,
     // Feature modules
     AuthModule,
     StudentsModule,

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { CacheService, InvalidatesCache, DIRECTORY_NAMESPACE, DIRECTORY_TTL_SECONDS, stableKey } from '../cache';
 import { CreateGroupDto, UpdateGroupDto, QueryGroupDto } from './dto';
 
 /**
@@ -8,11 +9,15 @@ import { CreateGroupDto, UpdateGroupDto, QueryGroupDto } from './dto';
  */
 @Injectable()
 export class GroupsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+  ) {}
 
   /**
    * Create a new group
    */
+  @InvalidatesCache()
   async create(dto: CreateGroupDto) {
     return this.prisma.group.create({
       data: dto,
@@ -28,10 +33,19 @@ export class GroupsService {
   }
 
   /**
+   * Get all groups (cached: the database is asked only on a miss, see cache invalidation on writes)
+   */
+  async findAll(query: QueryGroupDto) {
+    return this.cache.getOrSet(DIRECTORY_NAMESPACE, `groups:list:${stableKey(query)}`, DIRECTORY_TTL_SECONDS, () =>
+      this.loadAll(query),
+    );
+  }
+
+  /**
    * Find all groups with optional filters and pagination
    * @param query - pagination and filter parameters
    */
-  async findAll(query: QueryGroupDto) {
+  private async loadAll(query: QueryGroupDto) {
     const { subjectId, page = 1, limit = 20 } = query;
 
     const where: Prisma.GroupWhereInput = {};
@@ -54,14 +68,8 @@ export class GroupsService {
               name: true,
             },
           },
-          students: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              studentId: true,
-            },
-          },
+          // A count, not the students themselves: the list only shows how many there are
+          _count: { select: { students: true } },
           subjectGroups: {
             include: {
               subject: {
@@ -84,7 +92,7 @@ export class GroupsService {
     ]);
 
     return {
-      data,
+      data: data.map(({ _count, ...group }) => ({ ...group, studentCount: _count.students })),
       total,
       page,
       limit,
@@ -93,9 +101,18 @@ export class GroupsService {
   }
 
   /**
-   * Find group by ID
+   * Get one group by ID (cached; a missing ID throws and is never cached)
    */
   async findOne(id: number) {
+    return this.cache.getOrSet(DIRECTORY_NAMESPACE, `groups:one:${id}`, DIRECTORY_TTL_SECONDS, () =>
+      this.loadOne(id),
+    );
+  }
+
+  /**
+   * Find group by ID
+   */
+  private async loadOne(id: number) {
     const group = await this.prisma.group.findUnique({
       where: { id },
       include: {
@@ -141,9 +158,10 @@ export class GroupsService {
   /**
    * Update group
    */
+  @InvalidatesCache()
   async update(id: number, dto: UpdateGroupDto) {
     // Check if group exists
-    await this.findOne(id);
+    await this.loadOne(id);
 
     return this.prisma.group.update({
       where: { id },
@@ -163,7 +181,7 @@ export class GroupsService {
    * Get all subjects assigned to a group
    */
   async getSubjects(groupId: number) {
-    await this.findOne(groupId);
+    await this.loadOne(groupId);
 
     const subjectGroups = await this.prisma.subjectGroup.findMany({
       where: { groupId },
@@ -186,8 +204,9 @@ export class GroupsService {
   /**
    * Set subjects for a group (replaces all existing)
    */
+  @InvalidatesCache()
   async setSubjects(groupId: number, subjectIds: number[]) {
-    await this.findOne(groupId);
+    await this.loadOne(groupId);
 
     if (subjectIds.length > 0) {
       const subjects = await this.prisma.subject.findMany({
@@ -215,9 +234,10 @@ export class GroupsService {
   /**
    * Delete group
    */
+  @InvalidatesCache()
   async remove(id: number) {
     // Check if group exists
-    await this.findOne(id);
+    await this.loadOne(id);
 
     await this.prisma.group.delete({
       where: { id },

@@ -1,20 +1,11 @@
-import { IsOptional, IsString, IsInt } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PaginationDto } from '../../common/dto';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { paginationSchema, queryId } from '../../common/dto';
 
-/**
- * DTO for querying students with pagination and search
- */
-export class QueryStudentDto extends PaginationDto {
-  @ApiPropertyOptional({ description: 'Search by name (first, last, or middle name)' })
-  @IsOptional()
-  @IsString()
-  search?: string;
+/** Students list: pagination, search by name and group filter */
+export const queryStudentSchema = paginationSchema.extend({
+  search: z.string().optional().meta({ description: 'Search by name (first, last, or middle name)' }),
+  groupId: queryId.optional().meta({ description: 'Filter by group ID' }),
+});
 
-  @ApiPropertyOptional({ description: 'Filter by group ID' })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  groupId?: number;
-}
+export class QueryStudentDto extends createZodDto(queryStudentSchema) {}

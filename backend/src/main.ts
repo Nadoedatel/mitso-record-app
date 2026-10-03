@@ -1,55 +1,42 @@
+// Must stay first: starts Sentry before other modules are loaded (no-op without SENTRY_DSN)
+import './instrument';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/filters';
+import { configureApp } from './app.setup';
+import { getAllowedOrigins } from './common/config';
+import { assertJwtSecrets } from './auth/jwt-secrets';
 
 /**
  * Bootstrap function - initializes and starts the application
  */
 async function bootstrap() {
-  // Validate required secrets before starting
-  if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
-    throw new Error(
-      'JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be set in environment variables',
-    );
-  }
+  // Refuse to start with missing, short, placeholder or shared JWT secrets
+  assertJwtSecrets(process.env);
 
-  const app = await NestFactory.create(AppModule);
-  const logger = new Logger('Bootstrap');
+  // bufferLogs: hold early Nest logs until pino is attached, so every line has the same format
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const logger = app.get(PinoLogger);
+  app.useLogger(logger);
 
-  // Set global prefix for all routes
-  app.setGlobalPrefix('api');
+  // Prefix, cookies, validation and exception filter (shared with e2e tests)
+  configureApp(app);
 
   // Security headers. CSP is off outside production: Swagger UI uses inline scripts/styles
   const isProduction = process.env.NODE_ENV === 'production';
   app.use(helmet({ contentSecurityPolicy: isProduction ? undefined : false }));
 
-  // Enable cookie parser for httpOnly cookies
-  app.use(cookieParser());
-
   // Enable CORS
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: getAllowedOrigins(process.env),
     credentials: true,
+    // The browser hides non-standard response headers from another origin unless exposed.
+    // The frontend reads x-request-id to show/report it with an error.
+    exposedHeaders: ['x-request-id'],
   });
-
-  // Global validation pipe with class-validator
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // Strip properties that don't have decorators
-      forbidNonWhitelisted: true, // Throw error if non-whitelisted properties are present
-      transform: true, // Automatically transform payloads to DTO instances
-      transformOptions: {
-        enableImplicitConversion: true, // Convert primitive types automatically
-      },
-    }),
-  );
-
-  // Global exception filter (handles HTTP exceptions + Prisma errors)
-  app.useGlobalFilters(new AllExceptionsFilter());
 
   // Swagger API documentation (dev only)
   if (!isProduction) {
@@ -66,7 +53,7 @@ async function bootstrap() {
       .addBearerAuth()
       .build();
 
-    const document = SwaggerModule.createDocument(app, config);
+    const document = cleanupOpenApiDoc(SwaggerModule.createDocument(app, config));
     SwaggerModule.setup('api/docs', app, document);
   }
 

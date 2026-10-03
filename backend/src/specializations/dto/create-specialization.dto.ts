@@ -1,17 +1,11 @@
-import { IsString, IsInt, IsOptional } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { idSchema } from '../../common/dto';
 
-export class CreateSpecializationDto {
-  @ApiProperty({ description: 'Specialization name', example: 'Программная инженерия' })
-  @IsString()
-  name: string;
+export const createSpecializationSchema = z.strictObject({
+  name: z.string().meta({ description: 'Specialization name', example: 'Программная инженерия' }),
+  code: z.string().nullish().meta({ description: 'Specialization code', example: '1-40 01 02' }),
+  facultyId: idSchema.meta({ description: 'Faculty ID', example: 1 }),
+});
 
-  @ApiPropertyOptional({ description: 'Specialization code', example: '1-40 01 02' })
-  @IsString()
-  @IsOptional()
-  code?: string;
-
-  @ApiProperty({ description: 'Faculty ID', example: 1 })
-  @IsInt()
-  facultyId: number;
-}
+export class CreateSpecializationDto extends createZodDto(createSpecializationSchema) {}

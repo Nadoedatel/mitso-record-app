@@ -121,6 +121,8 @@ export class SubjectsController {
    * GET /api/subjects/:id/teachers
    */
   @Get(':id/teachers')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get teachers for a subject' })
   @ApiResponse({ status: 200, description: 'Subject teachers retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Subject not found' })

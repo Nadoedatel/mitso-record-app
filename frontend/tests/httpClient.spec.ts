@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { HttpClient } from '~/shared/api/httpClient'
+import { ApiError } from '~/shared/api/ApiError'
+import { resetErrorReporter, setErrorReporter } from '~/shared/lib/errorReporter'
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
@@ -74,5 +76,50 @@ describe('HttpClient', () => {
 
     await expect(client.get('/a')).rejects.toThrow('Unauthorized')
     expect(client.getAccessToken()).toBeNull()
+  })
+
+  describe('error reporting', () => {
+    const capture = vi.fn()
+
+    beforeEach(() => {
+      capture.mockReset()
+      setErrorReporter({ capture })
+    })
+    afterEach(() => resetErrorReporter())
+
+    const failing = (status: number, requestId?: string) =>
+      new Response(JSON.stringify({ message: 'boom' }), {
+        status,
+        headers: { 'Content-Type': 'application/json', ...(requestId ? { 'x-request-id': requestId } : {}) },
+      })
+
+    it('throws an ApiError carrying the status and the backend request id', async () => {
+      const client = new HttpClient('http://api')
+      fetchMock.mockResolvedValueOnce(failing(404, 'req-9'))
+
+      const error = await client.get('/x').catch((e: unknown) => e)
+
+      expect(error).toBeInstanceOf(ApiError)
+      expect(error).toMatchObject({ message: 'boom', status: 404, requestId: 'req-9' })
+    })
+
+    it('reports a 5xx with the request id and endpoint', async () => {
+      const client = new HttpClient('http://api')
+      fetchMock.mockResolvedValueOnce(failing(500, 'req-1'))
+
+      await expect(client.get('/grades')).rejects.toThrow('boom')
+
+      expect(capture).toHaveBeenCalledTimes(1)
+      expect(capture.mock.calls[0][1]).toEqual({ requestId: 'req-1', status: 500, endpoint: '/grades' })
+    })
+
+    it.each([400, 401, 403, 404, 409])('does not report a %i (the user\'s mistake, shown in the UI)', async (status) => {
+      const client = new HttpClient('http://api')
+      fetchMock.mockResolvedValueOnce(failing(status))
+
+      await expect(client.get('/x')).rejects.toThrow()
+
+      expect(capture).not.toHaveBeenCalled()
+    })
   })
 })

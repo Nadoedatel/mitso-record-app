@@ -72,6 +72,11 @@ export interface BaseInputProps {
   errorMessage?: string
 
   /**
+   * Минимальная длина (браузер подсветит форму при отправке)
+   */
+  minlength?: number
+
+  /**
    * Максимальная длина
    */
   maxlength?: number

@@ -75,7 +75,7 @@
       </FormRow>
       <FormRow v-if="!editingItem">
         <FormField label="Пароль" required>
-          <Input v-model="form.password" type="password" required />
+          <Input v-model="form.password" type="password" :minlength="8" placeholder="Минимум 8 символов" required />
         </FormField>
       </FormRow>
       <FormRow>

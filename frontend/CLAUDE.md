@@ -115,7 +115,7 @@ app/
 │       ├── Tabs/
 │       └── index.ts       # barrel export всех компонентов
 └── middleware/
-    ├── auth.ts             # защита маршрутов (проверка userRole cookie + refresh)
+    ├── auth.ts             # защита маршрутов (restoreSession: refresh + /auth/me)
     └── admin.ts            # защита /admin (роль ADMIN)
 ```
 
@@ -208,7 +208,7 @@ const httpClient = useHttpClient()   // всегда на верхнем уро�
 3. `refreshToken` — браузер управляет автоматически через cookie
 4. При 401 — httpClient вызывает `/auth/refresh`, получает новый токен, повторяет запрос
 5. При ошибке refresh — `clearAuth()` + редирект на `/login`
-6. Роль пользователя пишется в cookie `userRole` (клиентом: API и фронт на разных доменах); настоящая проверка прав всегда на бэке (`RolesGuard`)
+6. Роль живёт только в памяти (store, из `/auth/me`); cookie `userRole` убрана (её мог подделать любой). В localStorage лежит лишь подсказка `mitso:session` для страницы логина, прав она не даёт. Настоящая проверка прав всегда на бэке (`RolesGuard`)
 
 ### Pinia Auth Store (`features/auth/model/useAuth.ts`)
 

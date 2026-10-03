@@ -45,6 +45,8 @@ export class StudentsController {
    * GET /api/students?search=name&page=1&limit=20
    */
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get all students with search and pagination' })
   @ApiResponse({ status: 200, description: 'Students retrieved successfully' })
   findAll(@Query() query: QueryStudentDto) {

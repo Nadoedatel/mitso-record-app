@@ -1,6 +1,8 @@
 import { ConflictException } from '@nestjs/common';
 import { StudentsService } from './students.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthUserCache, CacheService } from '../cache';
+import { MemoryCacheStore } from '../cache/memory-cache.store';
 import { CreateStudentDto } from './dto';
 
 describe('StudentsService.create', () => {
@@ -12,7 +14,11 @@ describe('StudentsService.create', () => {
     user: { findUnique: jest.fn() },
     $transaction: jest.fn((fn: (t: typeof tx) => unknown) => fn(tx)),
   };
-  const service = new StudentsService(prisma as unknown as PrismaService);
+  const service = new StudentsService(
+    prisma as unknown as PrismaService,
+    new CacheService(new MemoryCacheStore()),
+    { invalidate: jest.fn() } as unknown as AuthUserCache,
+  );
 
   const dto: CreateStudentDto = {
     email: 'new@mitso.by',

@@ -1,30 +1,12 @@
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { queryId } from '../../common/dto';
 
-export class QuerySpecializationDto {
-  @ApiPropertyOptional({ description: 'Filter by faculty ID' })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  facultyId?: number;
+export const querySpecializationSchema = z.strictObject({
+  facultyId: queryId.optional().meta({ description: 'Filter by faculty ID' }),
+  search: z.string().optional().meta({ description: 'Search by specialization name' }),
+  page: z.coerce.number().int().min(1).optional().meta({ description: 'Page number', example: 1 }),
+  limit: z.coerce.number().int().min(1).optional().meta({ description: 'Items per page', example: 20 }),
+});
 
-  @ApiPropertyOptional({ description: 'Search by specialization name' })
-  @IsOptional()
-  @IsString()
-  search?: string;
-
-  @ApiPropertyOptional({ description: 'Page number', default: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number;
-
-  @ApiPropertyOptional({ description: 'Items per page', default: 20 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  limit?: number;
-}
+export class QuerySpecializationDto extends createZodDto(querySpecializationSchema) {}

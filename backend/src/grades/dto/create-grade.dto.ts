@@ -1,34 +1,20 @@
-import {
-  IsInt,
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsDateString,
-  Min,
-  Max,
-} from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
 import { GradeType } from '@prisma/client';
+import { z } from 'zod';
+import { dateOrDateTime, idSchema } from '../../common/dto';
 
-export class CreateGradeDto {
-  @IsInt()
-  studentId: number;
+/**
+ * Structural rules only (types, 0-10 range). The per-type rule ("CREDIT accepts only 0 or 1")
+ * lives in grade-rules.ts and runs in the service, so a batch can report a bad row
+ * without rejecting the whole request.
+ */
+export const createGradeSchema = z.strictObject({
+  studentId: idSchema,
+  subjectId: idSchema,
+  gradeValue: z.number().int().min(0).max(10).meta({ description: '1-10; for CREDIT 0 = not passed, 1 = passed' }),
+  gradeType: z.enum(GradeType),
+  examDate: dateOrDateTime.nullish(),
+  notes: z.string().nullish(),
+});
 
-  @IsInt()
-  subjectId: number;
-
-  @IsInt()
-  @Min(0) // 0 = not passed (CREDIT); per-type rules in grade-rules.ts
-  @Max(10)
-  gradeValue: number;
-
-  @IsEnum(GradeType)
-  gradeType: GradeType;
-
-  @IsDateString()
-  @IsOptional()
-  examDate?: string;
-
-  @IsString()
-  @IsOptional()
-  notes?: string;
-}
+export class CreateGradeDto extends createZodDto(createGradeSchema) {}

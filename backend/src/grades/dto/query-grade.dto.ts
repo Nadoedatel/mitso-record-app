@@ -1,18 +1,9 @@
-import { IsOptional, IsInt } from 'class-validator';
-import { Type } from 'class-transformer';
-import { PaginationDto } from '../../common/dto';
+import { createZodDto } from 'nestjs-zod';
+import { paginationSchema, queryId } from '../../common/dto';
 
-/**
- * DTO for querying grades with pagination and filters
- */
-export class QueryGradeDto extends PaginationDto {
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  studentId?: number;
+export const queryGradeSchema = paginationSchema.extend({
+  studentId: queryId.optional(),
+  subjectId: queryId.optional(),
+});
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  subjectId?: number;
-}
+export class QueryGradeDto extends createZodDto(queryGradeSchema) {}

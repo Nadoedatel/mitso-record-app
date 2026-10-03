@@ -1,8 +1,13 @@
-import { IsString } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 
-export class CreateFacultyDto {
-  @ApiProperty({ description: 'Faculty name', example: 'Факультет информационных технологий' })
-  @IsString()
-  name: string;
-}
+export const createFacultySchema = z
+  .strictObject({
+    name: z.string().trim().min(1).meta({
+      description: 'Faculty name',
+      example: 'Факультет информационных технологий',
+    }),
+  });
+
+export class CreateFacultyDto extends createZodDto(createFacultySchema) {}
+export type CreateFacultyInput = z.infer<typeof createFacultySchema>;

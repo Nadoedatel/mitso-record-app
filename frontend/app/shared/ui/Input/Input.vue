@@ -12,6 +12,7 @@
       :disabled="disabled"
       :readonly="readonly"
       :required="required"
+      :minlength="minlength"
       :maxlength="maxlength"
       :autofocus="autofocus"
       :class="inputClasses"

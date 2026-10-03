@@ -29,6 +29,93 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  # e2e на настоящей БД: накатывают те же миграции, что и прод (global-setup делает `prisma migrate deploy`).
+  # Два прогона: кэш и счётчики лимитов в памяти процесса и на реальном Redis (ветка с REDIS_URL).
+  backend-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        cache: [memory, redis]
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mitso_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mitso_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5433/mitso_test
+      # Пусто = память; для redis-прогона адрес сервиса (контейнер доступен на localhost)
+      REDIS_URL: ${{ matrix.cache == 'redis' && 'redis://localhost:6379' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx jest --config ./test/jest-e2e.json --runInBand
+
+  # Схема и миграции не должны расходиться: забыл `prisma migrate dev` -> этот job красный, а не прод.
+  # `migrate diff --from-migrations` накатывает все миграции на пустую shadow-БД (заодно доказывает,
+  # что они применяются с нуля) и сравнивает результат с schema.prisma; расхождение = код выхода 2.
+  backend-migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mitso_shadow
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mitso_shadow"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      # validate читает env("DATABASE_URL") из схемы, подключения не делает
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5434/mitso_shadow
+      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5434/mitso_shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run db:check-migrations
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -47,3 +134,35 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  # Уязвимости зависимостей. Пока НЕ блокирует: на старте красный (в backend есть критическая через bcrypt -> tar
+  # и мажорные обновления Nest), поэтому job только показывает отчёт. Станет обязательным, когда базу вычистим.
+  audit:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [backend, frontend]
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Только production-зависимости: dev-инструменты на пользователей не влияют
+      - run: npm audit --omit=dev --audit-level=high
+
+  # Prod-образы должны собираться: иначе поломку увидишь только при деплое
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f ${{ matrix.project }}/Dockerfile.prod -t mitso-${{ matrix.project }}:ci ${{ matrix.project }}

@@ -20,6 +20,41 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis: общий кэш справочников и (позже) хранилище лимитов. Без него backend работает на памяти процесса
+  redis:
+    image: redis:7-alpine
+    container_name: mitso-redis
+    restart: unless-stopped
+    # Кэш можно потерять без последствий: на диск не пишем, память ограничена, вытесняем по давности
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Отдельная БД для e2e-тестов backend (npm run test:e2e). Данные в памяти, стираются при остановке.
+  # Запускается только явно (profile test), поэтому `docker compose up` её не поднимает.
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: mitso-postgres-test
+    profiles: ["test"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mitso_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mitso_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
   # Backend NestJS API
   backend:
     build:
@@ -35,10 +70,14 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
       FRONTEND_URL: http://localhost:3000
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      REDIS_URL: redis://redis:6379
       PORT: 8080
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - ./backend:/app
       - /app/node_modules

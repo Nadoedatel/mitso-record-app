@@ -1,10 +1,9 @@
-import { IsArray, IsInt, ArrayMinSize } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { idListSchema } from '../../common/dto';
 
-export class AssignSubjectsDto {
-  @ApiProperty({ example: [1, 2, 3], description: 'Array of subject IDs to assign' })
-  @IsArray()
-  @ArrayMinSize(1)
-  @IsInt({ each: true })
-  subjectIds: number[];
-}
+export const assignSubjectsSchema = z.strictObject({
+  subjectIds: idListSchema.meta({ description: 'Array of subject IDs to assign', example: [1, 2, 3] }),
+});
+
+export class AssignSubjectsDto extends createZodDto(assignSubjectsSchema) {}
