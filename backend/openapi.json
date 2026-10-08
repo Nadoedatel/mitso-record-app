@@ -1,0 +1,2781 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "summary": "Login user",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User successfully logged in. Refresh token set in httpOnly cookie."
+          },
+          "401": {
+            "description": "Invalid credentials"
+          },
+          "429": {
+            "description": "Too many requests"
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "summary": "Refresh access token using httpOnly cookie",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Access token refreshed successfully. New refresh token set in cookie."
+          },
+          "401": {
+            "description": "Invalid or expired refresh token"
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "refreshToken": []
+          }
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "AuthController_getMe",
+        "summary": "Get current user profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User profile retrieved successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "summary": "Logout user",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User logged out successfully. Refresh token cookie cleared."
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/change-password": {
+      "post": {
+        "operationId": "AuthController_changePassword",
+        "summary": "Change own password and sign out everywhere",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed, all sessions revoked"
+          },
+          "400": {
+            "description": "Wrong current password or invalid new password"
+          },
+          "429": {
+            "description": "Too many attempts"
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/students": {
+      "post": {
+        "operationId": "StudentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStudentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "students"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "StudentsController_findAll",
+        "summary": "Get all students with search and pagination",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (max 500)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 500,
+              "example": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by name (first, last, or middle name)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by group ID",
+            "schema": {
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": true,
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Students retrieved successfully"
+          }
+        },
+        "tags": [
+          "students"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/students/{id}": {
+      "get": {
+        "operationId": "StudentsController_findOne",
+        "summary": "Get student by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student found"
+          },
+          "404": {
+            "description": "Student not found"
+          }
+        },
+        "tags": [
+          "students"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "StudentsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStudentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "students"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "StudentsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "students"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/teachers": {
+      "post": {
+        "operationId": "TeachersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeacherDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "teachers"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "TeachersController_findAll",
+        "summary": "Get all teachers with search and pagination",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (max 500)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 500,
+              "example": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by name",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Teachers retrieved successfully"
+          }
+        },
+        "tags": [
+          "teachers"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/teachers/{id}": {
+      "get": {
+        "operationId": "TeachersController_findOne",
+        "summary": "Get teacher by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Teacher found"
+          },
+          "404": {
+            "description": "Teacher not found"
+          }
+        },
+        "tags": [
+          "teachers"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "TeachersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeacherDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "teachers"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "TeachersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "teachers"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/teachers/{id}/subjects": {
+      "get": {
+        "operationId": "TeachersController_getSubjects",
+        "summary": "Get subjects for a teacher",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Teacher subjects retrieved successfully"
+          },
+          "404": {
+            "description": "Teacher not found"
+          }
+        },
+        "tags": [
+          "teachers"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "TeachersController_setSubjects",
+        "summary": "Set subjects for a teacher - replaces all existing (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignSubjectsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subjects set successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Teacher or subject not found"
+          }
+        },
+        "tags": [
+          "teachers"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/teachers/{id}/subjects/{subjectId}": {
+      "delete": {
+        "operationId": "TeachersController_removeSubject",
+        "summary": "Remove subject from teacher (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "subjectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subject removed successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Teacher or assignment not found"
+          }
+        },
+        "tags": [
+          "teachers"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/subjects": {
+      "post": {
+        "operationId": "SubjectsController_create",
+        "summary": "Create new subject (ADMIN only)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Subject created successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "tags": [
+          "subjects"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "SubjectsController_findAll",
+        "summary": "Get all subjects with filters and pagination",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (max 500)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 500,
+              "example": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "teacherId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by teacher ID",
+            "schema": {
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": true,
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "semester",
+            "required": false,
+            "in": "query",
+            "description": "Filter by semester",
+            "schema": {
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subjects retrieved successfully"
+          }
+        },
+        "tags": [
+          "subjects"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/subjects/{id}": {
+      "get": {
+        "operationId": "SubjectsController_findOne",
+        "summary": "Get subject by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subject found"
+          },
+          "404": {
+            "description": "Subject not found"
+          }
+        },
+        "tags": [
+          "subjects"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "SubjectsController_update",
+        "summary": "Update subject (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subject updated successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Subject not found"
+          }
+        },
+        "tags": [
+          "subjects"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "SubjectsController_remove",
+        "summary": "Delete subject (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subject deleted successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Subject not found"
+          }
+        },
+        "tags": [
+          "subjects"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/subjects/{id}/groups": {
+      "post": {
+        "operationId": "SubjectsController_assignGroups",
+        "summary": "Assign groups to a subject (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignGroupsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Groups assigned successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Subject or group not found"
+          }
+        },
+        "tags": [
+          "subjects"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/subjects/{id}/teachers": {
+      "get": {
+        "operationId": "SubjectsController_getTeachers",
+        "summary": "Get teachers for a subject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subject teachers retrieved successfully"
+          },
+          "404": {
+            "description": "Subject not found"
+          }
+        },
+        "tags": [
+          "subjects"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "SubjectsController_setTeachers",
+        "summary": "Set teachers for a subject - replaces all existing (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSubjectTeachersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Teachers set successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Subject or teacher not found"
+          }
+        },
+        "tags": [
+          "subjects"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/grades": {
+      "post": {
+        "operationId": "GradesController_create",
+        "summary": "Create new grade (ADMIN/TEACHER only)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGradeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Grade created successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "tags": [
+          "grades"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "GradesController_findAll",
+        "summary": "Get all grades with filters and pagination",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (max 500)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 500,
+              "example": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": true,
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "subjectId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": true,
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Grades retrieved successfully"
+          }
+        },
+        "tags": [
+          "grades"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/grades/batch": {
+      "post": {
+        "operationId": "GradesController_batchCreate",
+        "summary": "Batch create or update grades (ADMIN/TEACHER only)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchCreateGradeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Grades processed successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "tags": [
+          "grades"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/grades/student/{id}": {
+      "get": {
+        "operationId": "GradesController_findByStudent",
+        "summary": "Get all grades for a specific student",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student grades retrieved successfully"
+          }
+        },
+        "tags": [
+          "grades"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/grades/subject/{subjectId}/groups": {
+      "get": {
+        "operationId": "GradesController_findGroupsBySubject",
+        "summary": "Get groups assigned to a specific subject",
+        "parameters": [
+          {
+            "name": "subjectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subject groups retrieved successfully"
+          }
+        },
+        "tags": [
+          "grades"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/grades/subject/{subjectId}/group/{groupId}/students": {
+      "get": {
+        "operationId": "GradesController_findStudentsByGroupAndSubject",
+        "summary": "Get students for a specific group and subject with their grades",
+        "parameters": [
+          {
+            "name": "subjectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Students retrieved successfully"
+          }
+        },
+        "tags": [
+          "grades"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/grades/{id}": {
+      "get": {
+        "operationId": "GradesController_findOne",
+        "summary": "Get grade by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Grade found"
+          },
+          "404": {
+            "description": "Grade not found"
+          }
+        },
+        "tags": [
+          "grades"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "GradesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGradeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "grades"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "GradesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "grades"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/groups": {
+      "post": {
+        "operationId": "GroupsController_create",
+        "summary": "Create new group (ADMIN only)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGroupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Group created successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "tags": [
+          "groups"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "GroupsController_findAll",
+        "summary": "Get all groups with filters and pagination",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (max 500)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 500,
+              "example": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "subjectId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by subject ID",
+            "schema": {
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": true,
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Groups retrieved successfully"
+          }
+        },
+        "tags": [
+          "groups"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/groups/{id}": {
+      "get": {
+        "operationId": "GroupsController_findOne",
+        "summary": "Get group by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Group found"
+          },
+          "404": {
+            "description": "Group not found"
+          }
+        },
+        "tags": [
+          "groups"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "GroupsController_update",
+        "summary": "Update group (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGroupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Group updated successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Group not found"
+          }
+        },
+        "tags": [
+          "groups"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "GroupsController_remove",
+        "summary": "Delete group (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Group deleted successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Group not found"
+          }
+        },
+        "tags": [
+          "groups"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/groups/{id}/subjects": {
+      "get": {
+        "operationId": "GroupsController_getSubjects",
+        "summary": "Get subjects assigned to a group",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Group subjects retrieved successfully"
+          },
+          "404": {
+            "description": "Group not found"
+          }
+        },
+        "tags": [
+          "groups"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "GroupsController_setSubjects",
+        "summary": "Set subjects for a group - replaces all existing (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetGroupSubjectsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subjects set successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Group or subject not found"
+          }
+        },
+        "tags": [
+          "groups"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/faculties": {
+      "post": {
+        "operationId": "FacultiesController_create",
+        "summary": "Create new faculty (ADMIN only)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFacultyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Faculty created successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "tags": [
+          "faculties"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "FacultiesController_findAll",
+        "summary": "Get all faculties with search and pagination",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by faculty name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "example": 20,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Faculties retrieved successfully"
+          }
+        },
+        "tags": [
+          "faculties"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/faculties/{id}": {
+      "get": {
+        "operationId": "FacultiesController_findOne",
+        "summary": "Get faculty by ID with specializations and groups",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Faculty found"
+          },
+          "404": {
+            "description": "Faculty not found"
+          }
+        },
+        "tags": [
+          "faculties"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "FacultiesController_update",
+        "summary": "Update faculty (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFacultyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Faculty updated successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Faculty not found"
+          }
+        },
+        "tags": [
+          "faculties"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "FacultiesController_remove",
+        "summary": "Delete faculty (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Faculty deleted successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Faculty not found"
+          }
+        },
+        "tags": [
+          "faculties"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/specializations": {
+      "post": {
+        "operationId": "SpecializationsController_create",
+        "summary": "Create new specialization (ADMIN only)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSpecializationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Specialization created successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "tags": [
+          "specializations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "SpecializationsController_findAll",
+        "summary": "Get all specializations with filters and pagination",
+        "parameters": [
+          {
+            "name": "facultyId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by faculty ID",
+            "schema": {
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": true,
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by specialization name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "example": 20,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Specializations retrieved successfully"
+          }
+        },
+        "tags": [
+          "specializations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/specializations/{id}": {
+      "get": {
+        "operationId": "SpecializationsController_findOne",
+        "summary": "Get specialization by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Specialization found"
+          },
+          "404": {
+            "description": "Specialization not found"
+          }
+        },
+        "tags": [
+          "specializations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "SpecializationsController_update",
+        "summary": "Update specialization (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSpecializationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Specialization updated successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Specialization not found"
+          }
+        },
+        "tags": [
+          "specializations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "SpecializationsController_remove",
+        "summary": "Delete specialization (ADMIN only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Specialization deleted successfully"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Specialization not found"
+          }
+        },
+        "tags": [
+          "specializations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "summary": "Health check (public)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "App and database are up"
+          },
+          "503": {
+            "description": "Database is unreachable"
+          }
+        },
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "MITSO Record App API",
+    "description": "API for student record management system",
+    "version": "2.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "students",
+      "description": "Student management endpoints"
+    },
+    {
+      "name": "teachers",
+      "description": "Teacher management endpoints"
+    },
+    {
+      "name": "subjects",
+      "description": "Subject management endpoints"
+    },
+    {
+      "name": "grades",
+      "description": "Grade management endpoints"
+    },
+    {
+      "name": "health",
+      "description": "Health check"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "example": "student@mitso.by"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "additionalProperties": false
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
+        "additionalProperties": false
+      },
+      "CreateStudentDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "example": "student@mitso.by"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "studentId": {
+            "type": "string",
+            "description": "Номер зачетной книжки"
+          },
+          "groupId": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "course": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
+          "specializationId": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "enrollmentYear": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2100
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "firstName",
+          "lastName",
+          "studentId",
+          "course",
+          "enrollmentYear"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateStudentDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "studentId": {
+            "type": "string",
+            "description": "Номер зачетной книжки"
+          },
+          "groupId": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "course": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
+          "specializationId": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "enrollmentYear": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2100
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateTeacherDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "example": "teacher@mitso.by"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "department": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string"
+          },
+          "academicDegree": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "officeNumber": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "firstName",
+          "lastName",
+          "department",
+          "position"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateTeacherDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "example": "teacher@mitso.by"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "department": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string"
+          },
+          "academicDegree": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "officeNumber": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssignSubjectsDto": {
+        "type": "object",
+        "properties": {
+          "subjectIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991,
+              "minimum": 0
+            },
+            "description": "Array of subject IDs to assign",
+            "example": [
+              1,
+              2,
+              3
+            ]
+          }
+        },
+        "required": [
+          "subjectIds"
+        ],
+        "additionalProperties": false
+      },
+      "CreateSubjectDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Математический анализ",
+            "description": "Subject name"
+          },
+          "code": {
+            "type": "string",
+            "example": "MATH101",
+            "description": "Subject code"
+          },
+          "credits": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "example": 4,
+            "description": "Number of credits"
+          },
+          "semester": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "example": 1,
+            "description": "Semester number"
+          },
+          "description": {
+            "description": "Subject description",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "code",
+          "credits",
+          "semester"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateSubjectDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Математический анализ",
+            "description": "Subject name"
+          },
+          "code": {
+            "type": "string",
+            "example": "MATH101",
+            "description": "Subject code"
+          },
+          "credits": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "example": 4,
+            "description": "Number of credits"
+          },
+          "semester": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "example": 1,
+            "description": "Semester number"
+          },
+          "description": {
+            "description": "Subject description",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssignGroupsDto": {
+        "type": "object",
+        "properties": {
+          "groupIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991,
+              "minimum": 0
+            },
+            "description": "Array of group IDs to assign",
+            "example": [
+              1,
+              2,
+              3
+            ]
+          }
+        },
+        "required": [
+          "groupIds"
+        ],
+        "additionalProperties": false
+      },
+      "SetSubjectTeachersDto": {
+        "type": "object",
+        "properties": {
+          "teacherIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991,
+              "minimum": 0
+            },
+            "description": "Array of teacher IDs",
+            "example": [
+              1,
+              2,
+              3
+            ]
+          }
+        },
+        "required": [
+          "teacherIds"
+        ],
+        "additionalProperties": false
+      },
+      "CreateGradeDto": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0
+          },
+          "subjectId": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0
+          },
+          "gradeValue": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10,
+            "description": "1-10; for CREDIT 0 = not passed, 1 = passed"
+          },
+          "gradeType": {
+            "type": "string",
+            "enum": [
+              "EXAM",
+              "CREDIT",
+              "COURSEWORK",
+              "TEST",
+              "LAB"
+            ]
+          },
+          "examDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              }
+            ],
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "studentId",
+          "subjectId",
+          "gradeValue",
+          "gradeType"
+        ],
+        "additionalProperties": false
+      },
+      "BatchCreateGradeDto": {
+        "type": "object",
+        "properties": {
+          "grades": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "studentId": {
+                  "type": "integer",
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0
+                },
+                "subjectId": {
+                  "type": "integer",
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0
+                },
+                "gradeValue": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 10,
+                  "description": "1-10; for CREDIT 0 = not passed, 1 = passed"
+                },
+                "gradeType": {
+                  "type": "string",
+                  "enum": [
+                    "EXAM",
+                    "CREDIT",
+                    "COURSEWORK",
+                    "TEST",
+                    "LAB"
+                  ]
+                },
+                "examDate": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  ],
+                  "nullable": true
+                },
+                "notes": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "studentId",
+                "subjectId",
+                "gradeValue",
+                "gradeType"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Grades to create or update"
+          }
+        },
+        "required": [
+          "grades"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateGradeDto": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0
+          },
+          "subjectId": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0
+          },
+          "gradeValue": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10,
+            "description": "1-10; for CREDIT 0 = not passed, 1 = passed"
+          },
+          "gradeType": {
+            "type": "string",
+            "enum": [
+              "EXAM",
+              "CREDIT",
+              "COURSEWORK",
+              "TEST",
+              "LAB"
+            ]
+          },
+          "examDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              }
+            ],
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateGroupDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "ИТ-21",
+            "description": "Group name"
+          },
+          "course": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6,
+            "example": 2,
+            "description": "Course number"
+          },
+          "facultyId": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "example": 1,
+            "description": "Faculty ID",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "course"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateGroupDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "ИТ-21",
+            "description": "Group name"
+          },
+          "course": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6,
+            "example": 2,
+            "description": "Course number"
+          },
+          "facultyId": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "example": 1,
+            "description": "Faculty ID",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetGroupSubjectsDto": {
+        "type": "object",
+        "properties": {
+          "subjectIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991,
+              "minimum": 0
+            },
+            "description": "Subject IDs to assign to the group"
+          }
+        },
+        "required": [
+          "subjectIds"
+        ],
+        "additionalProperties": false
+      },
+      "CreateFacultyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Faculty name",
+            "example": "Факультет информационных технологий"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateFacultyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Faculty name",
+            "example": "Факультет информационных технологий"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateSpecializationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Specialization name",
+            "example": "Программная инженерия"
+          },
+          "code": {
+            "description": "Specialization code",
+            "example": "1-40 01 02",
+            "type": "string",
+            "nullable": true
+          },
+          "facultyId": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "description": "Faculty ID",
+            "example": 1,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "name",
+          "facultyId"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateSpecializationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Specialization name",
+            "example": "Программная инженерия"
+          },
+          "code": {
+            "description": "Specialization code",
+            "example": "1-40 01 02",
+            "type": "string",
+            "nullable": true
+          },
+          "facultyId": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "description": "Faculty ID",
+            "example": 1,
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

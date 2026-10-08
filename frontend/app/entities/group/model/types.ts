@@ -1,3 +1,4 @@
+import type { ApiSchemas } from '~/shared/api/generated';
 import type { Faculty } from '../../faculty/model/types';
 
 export interface Group {
@@ -11,14 +12,6 @@ export interface Group {
   updatedAt?: string;
 }
 
-export interface CreateGroupDto {
-  name: string;
-  course: number;
-  facultyId?: number;
-}
+export type CreateGroupDto = ApiSchemas['CreateGroupDto']
 
-export interface UpdateGroupDto {
-  name?: string;
-  course?: number;
-  facultyId?: number;
-}
+export type UpdateGroupDto = ApiSchemas['UpdateGroupDto']

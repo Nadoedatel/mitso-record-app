@@ -28,6 +28,10 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      # openapi.json (источник для клиентов) должен совпадать с контроллерами и DTO; сборка без БД и Redis
+      - run: npm run openapi:check
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/unused
 
   # e2e на настоящей БД: накатывают те же миграции, что и прод (global-setup делает `prisma migrate deploy`).
   # Два прогона: кэш и счётчики лимитов в памяти процесса и на реальном Redis (ветка с REDIS_URL).
@@ -134,6 +138,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      # Сгенерированные типы API не должны отставать от backend/openapi.json
+      - run: npm run api:types && git diff --exit-code -- app/shared/api/generated
 
   # Уязвимости зависимостей. Пока НЕ блокирует: на старте красный (в backend есть критическая через bcrypt -> tar
   # и мажорные обновления Nest), поэтому job только показывает отчёт. Станет обязательным, когда базу вычистим.

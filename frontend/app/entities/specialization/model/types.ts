@@ -1,3 +1,4 @@
+import type { ApiSchemas } from '~/shared/api/generated'
 import type { Faculty } from '../../faculty'
 
 export interface Specialization {
@@ -13,14 +14,6 @@ export interface Specialization {
   }
 }
 
-export interface CreateSpecializationDto {
-  name: string
-  code?: string
-  facultyId: number
-}
+export type CreateSpecializationDto = ApiSchemas['CreateSpecializationDto']
 
-export interface UpdateSpecializationDto {
-  name?: string
-  code?: string
-  facultyId?: number
-}
+export type UpdateSpecializationDto = ApiSchemas['UpdateSpecializationDto']

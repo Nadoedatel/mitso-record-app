@@ -2,10 +2,10 @@
 import './instrument';
 import { NestFactory } from '@nestjs/core';
 import { Logger as PinoLogger } from 'nestjs-pino';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
-import { cleanupOpenApiDoc } from 'nestjs-zod';
 import { AppModule } from './app.module';
+import { buildOpenApiDocument } from './openapi';
 import { configureApp } from './app.setup';
 import { getAllowedOrigins } from './common/config';
 import { assertJwtSecrets } from './auth/jwt-secrets';
@@ -40,20 +40,7 @@ async function bootstrap() {
 
   // Swagger API documentation (dev only)
   if (!isProduction) {
-    const config = new DocumentBuilder()
-      .setTitle('MITSO Record App API')
-      .setDescription('API for student record management system')
-      .setVersion('2.0')
-      .addTag('auth', 'Authentication endpoints')
-      .addTag('students', 'Student management endpoints')
-      .addTag('teachers', 'Teacher management endpoints')
-      .addTag('subjects', 'Subject management endpoints')
-      .addTag('grades', 'Grade management endpoints')
-      .addTag('health', 'Health check')
-      .addBearerAuth()
-      .build();
-
-    const document = cleanupOpenApiDoc(SwaggerModule.createDocument(app, config));
+    const document = buildOpenApiDocument(app);
     SwaggerModule.setup('api/docs', app, document);
   }
 

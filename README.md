@@ -460,6 +460,17 @@ npm test           # Jest (backend) + Vitest (frontend)
 - Middleware для защиты роутов (auth, admin)
 - Seed скрипт для тестовых данных
 
+## Контракт API (OpenAPI)
+
+Источник правды: контроллеры и Zod-DTO бэкенда. `backend/openapi.json` генерируется без БД и Redis:
+
+```bash
+cd backend && npm run openapi:generate   # обновить openapi.json
+cd ../frontend && npm run api:types      # обновить app/shared/api/generated/schema.d.ts
+```
+
+CI падает, если `openapi.json` или сгенерированные типы отстали от кода (`openapi:check`, `api:types` + `git diff`). Типы тел запросов (`Create*Dto`, `Update*Dto`) на фронте берутся из `ApiSchemas`. Ответы в спеке пока не описаны (у контроллеров нет `type` в `@ApiResponse`), поэтому типы сущностей (`Faculty`, `Group` и т.д.) остаются ручными.
+
 ## Production Deployment
 
 Для деплоя на production:
