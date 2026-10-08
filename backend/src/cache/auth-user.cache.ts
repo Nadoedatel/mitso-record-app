@@ -20,6 +20,8 @@ class UserNotFound extends Error {}
  * - only a user that EXISTS is cached, so a newly created account works at once;
  * - whoever deletes a user or changes their email or role MUST call `invalidate(userId)`
  *   (today: students.remove and teachers.remove). The TTL is only the backstop.
+ *   No code path changes a user's role or email yet; add the call (and a refresh-session revoke) with the first one.
+ *   Deleting a user also removes their refresh sessions: `RefreshSession.user` is `onDelete: Cascade`.
  */
 @Injectable()
 export class AuthUserCache {
