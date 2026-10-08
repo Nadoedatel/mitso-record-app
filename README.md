@@ -498,6 +498,14 @@ npx prisma migrate resolve --applied 0_init
 npx prisma migrate status
 ```
 
+### Production-стек в Docker
+
+`docker-compose.prod.yml` собирает prod-образы (`Dockerfile.prod`) и поднимает Postgres, Redis, backend и frontend. Миграции применяются при старте backend. Переменные (`JWT_*`, `POSTGRES_PASSWORD`, `FRONTEND_URL`, `API_PUBLIC_URL`) берутся из `.env`, шаблон в `.env.example`. TLS и обратный прокси ставятся снаружи.
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+```
+
 Если шаг 1 показал различия, шаг 2 не делать: сначала выясните, чем прод отличается от схемы.
 
 ## Troubleshooting
