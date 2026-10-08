@@ -469,7 +469,14 @@ npm test           # Jest (backend) + Vitest (frontend)
 3. **Миграции:** Выполнить `npx prisma migrate deploy`
 4. **Seed:** Создать начальные данные через seed или админ панель
 5. **Build:** Собрать фронтенд и бекенд
-6. **Деплой:** Настроить CI/CD (например, через GitHub Actions)
+6. **Деплой:** `.github/workflows/deploy.yml` (см. ниже)
+
+### CI и выкладка
+
+- `ci.yml` на каждый PR и пуш в `main`: lint, typecheck, unit и e2e (Postgres, Redis и без него), проверка миграций против схемы, сборка prod-образов, `npm audit` отчётом.
+- `deploy.yml` (пуш в `main` или ручной запуск с выбором окружения `production` / `staging`): сначала `prisma migrate deploy` отдельным job, потом вызов Deploy Hook Render, если он задан.
+- В Settings → Environments создать `production` (и `staging`) и добавить secret `DATABASE_URL` (External Database URL), при желании `RENDER_DEPLOY_HOOK_BACKEND` и `RENDER_DEPLOY_HOOK_FRONTEND`. Для `production` можно включить обязательное подтверждение.
+- Пока Render собирает с `autoDeploy` и сам гоняет `migrate deploy` в `buildCommand`, второй прогон безвреден (команда идемпотентна). Чтобы миграции шли только из GitHub: убрать `npx prisma migrate deploy` из `buildCommand` в `render.yaml` и поставить `autoDeploy: false` у сервисов.
 
 ## Миграции БД
 
