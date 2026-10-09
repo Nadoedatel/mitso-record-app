@@ -3,10 +3,21 @@
     <Transition name="modal-fade">
       <div v-if="modelValue" class="modal-overlay" @click="handleOverlayClick">
         <Transition name="modal-slide">
-          <div v-if="modelValue" :class="modalClasses" @click.stop>
+          <div
+            v-if="modelValue"
+            ref="dialogRef"
+            :class="modalClasses"
+            role="dialog"
+            aria-modal="true"
+            :aria-labelledby="title ? titleId : undefined"
+            tabindex="-1"
+            @click.stop
+            @keydown.tab="trapFocus"
+          >
             <ModalHeader
               v-if="title || showClose"
               :title="title"
+              :title-id="titleId"
               :show-close="showClose"
               @close="handleClose"
             />
@@ -26,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed, nextTick, ref, useId, watch, onMounted, onBeforeUnmount } from 'vue'
 import ModalHeader from './ModalHeader.vue'
 import type { ModalProps, ModalEmits } from './types'
 
@@ -75,13 +86,51 @@ const handleEscape = (e: KeyboardEvent) => {
   }
 }
 
+const titleId = useId()
+const dialogRef = ref<HTMLElement | null>(null)
+let returnFocusTo: HTMLElement | null = null
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+const focusableInside = () =>
+  Array.from(dialogRef.value?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter(
+    (element) => element.offsetParent !== null,
+  )
+
+/** Keeps Tab / Shift+Tab inside the open dialog */
+const trapFocus = (event: KeyboardEvent) => {
+  const items = focusableInside()
+  if (items.length === 0) {
+    event.preventDefault()
+    return
+  }
+  const first = items[0]!
+  const last = items[items.length - 1]!
+  const active = document.activeElement
+  if (event.shiftKey && (active === first || active === dialogRef.value)) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
 watch(
   () => props.modelValue,
-  (isOpen) => {
+  async (isOpen) => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
+      returnFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      await nextTick()
+      // First field of the form, otherwise the first control, otherwise the dialog itself
+      const body = dialogRef.value?.querySelector<HTMLElement>('.modal-body input, .modal-body select, .modal-body textarea')
+      ;(body ?? focusableInside()[0] ?? dialogRef.value)?.focus()
     } else {
       document.body.style.overflow = ''
+      returnFocusTo?.focus()
+      returnFocusTo = null
     }
   }
 )

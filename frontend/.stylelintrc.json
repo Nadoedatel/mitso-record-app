@@ -21,7 +21,8 @@
     ".nuxt/**",
     ".output/**",
     "node_modules/**",
-    "app/shared/styles/_tokens.scss"
+    "app/shared/styles/_tokens.scss",
+    "app/shared/styles/_mixins.scss"
   ],
   "rules": {
     "color-no-hex": true,

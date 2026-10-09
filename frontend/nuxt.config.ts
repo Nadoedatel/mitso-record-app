@@ -21,6 +21,15 @@ export default defineNuxtConfig({
     },
   },
 
+  // The component showcase (pages/dev/ui.vue) is a development tool: it is not part of the production routes
+  hooks: {
+    'pages:extend'(pages) {
+      if (process.env.NODE_ENV !== 'production') return
+      const index = pages.findIndex((page) => page.path === '/dev/ui')
+      if (index >= 0) pages.splice(index, 1)
+    },
+  },
+
   // Modules
   modules: ['@pinia/nuxt'],
 

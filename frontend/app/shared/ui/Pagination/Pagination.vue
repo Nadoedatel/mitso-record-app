@@ -1,17 +1,22 @@
 <template>
-  <div class="pagination">
+  <nav class="pagination" aria-label="Страницы">
     <button
       class="pagination-button"
+      type="button"
+      aria-label="Предыдущая страница"
       :disabled="currentPage === 1"
       @click="handlePageChange(currentPage - 1)"
     >
-      ←
+      <Icon name="chevron-left" :size="16" />
     </button>
 
     <button
       v-for="page in visiblePages"
       :key="page"
+      type="button"
       :class="pageClasses(page)"
+      :aria-current="page === currentPage ? 'page' : undefined"
+      :aria-label="`Страница ${page}`"
       @click="handlePageChange(page)"
     >
       {{ page }}
@@ -19,20 +24,23 @@
 
     <button
       class="pagination-button"
+      type="button"
+      aria-label="Следующая страница"
       :disabled="currentPage === totalPages"
       @click="handlePageChange(currentPage + 1)"
     >
-      →
+      <Icon name="chevron-right" :size="16" />
     </button>
 
     <div v-if="total" class="pagination-info">
       Всего: {{ total }}
     </div>
-  </div>
+  </nav>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Icon } from '../Icon'
 import type { PaginationProps, PaginationEmits } from './types'
 
 const props = withDefaults(defineProps<PaginationProps>(), {

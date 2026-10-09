@@ -13,7 +13,9 @@
       </button>
 
       <input
-        :id="id"
+        :id="controlId"
+        :aria-invalid="isInvalid || undefined"
+        :aria-describedby="describedBy"
         ref="inputRef"
         type="number"
         :name="name"
@@ -55,6 +57,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useFieldContext } from '../Form/fieldContext'
 import type { NumberInputProps, InputEmits } from './types'
 
 /**
@@ -84,6 +87,12 @@ const props = withDefaults(defineProps<NumberInputProps>(), {
   showControls: false,
 })
 
+// Inside a FormField the control takes its id, error state and description from it
+const field = useFieldContext()
+const controlId = computed(() => props.id ?? field?.id)
+const isInvalid = computed(() => props.error || !!field?.invalid.value)
+const describedBy = computed(() => field?.describedBy.value)
+
 const emit = defineEmits<InputEmits>()
 
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -91,7 +100,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const inputClasses = computed(() => {
   const classes = ['number-input']
   classes.push(`number-input-${props.size}`)
-  if (props.error) {
+  if (isInvalid.value) {
     classes.push('number-input-error')
   }
   return classes.join(' ')

@@ -39,6 +39,11 @@ export interface ModalEmits {
 
 export interface ModalHeaderProps {
   /**
+   * id заголовка: Modal ссылается на него через aria-labelledby
+   */
+  titleId?: string
+
+  /**
    * Заголовок
    */
   title?: string

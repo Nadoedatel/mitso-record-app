@@ -177,6 +177,7 @@ onMounted(async () => {
 <style scoped>
 .section-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-5);
@@ -185,8 +186,9 @@ onMounted(async () => {
 
 .search-filters {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-3);
-  flex: 1;
+  flex: 1 1 280px;
   max-width: 600px;
 }
 

@@ -337,11 +337,13 @@ inline-скрипт в `nuxt.config.ts` (иначе будет белая всп
 | `Select` | dropdown с options `[{ value, label }]` |
 | `Card` | variant: elevated/bordered; padding: sm/md/lg |
 | `Modal` + `ModalHeader` + `ModalActions` | модальные окна |
-| `Form` + `FormField` + `FormRow` | формы с лейблами |
-| `Table` + `TableRow` + `TableCell` | таблицы данных |
+| `Form` + `FormField` + `FormRow` | формы с лейблами; `FormField` сам связывает подпись, поле и ошибку (id и `aria-describedby` через provide), id вручную не нужен |
+| `Table` | таблица: `columns` (`sortable`), `data`, сортировка по заголовку, скелетон при `loading`, до 640px карточки (`mobile="cards"`), `maxHeight` закрепляет шапку, `caption` для скринридера |
 | `Badge` / `GradeTypeBadge` / `GradeValueBadge` | бейджи и оценки |
 | `Alert` | variant: error/success/warning/info; closable |
-| `LoadingState` / `EmptyState` / `LoadingSpinner` | состояния загрузки |
+| `LoadingState` / `EmptyState` / `LoadingSpinner` / `Skeleton` | состояния загрузки; скелетон повторяет форму контента |
+| `Icon` | иконки Lucide по имени (`<Icon name="search" />`), набор в `shared/ui/Icon/icons.ts`; эмодзи как иконки не использовать |
+| `ThemeToggle` | переключатель светлой/тёмной темы |
 | `Tabs` | табовый интерфейс |
 | `Pagination` | пагинация |
 | `Container` / `Header` / `Section` / `InfoCard` | лейаут |

@@ -257,6 +257,12 @@
   --transition-base: 0.2s ease;
   --transition-slow: 0.3s ease;
 
+  /* Split form (Modal, Table use duration and timing separately) */
+  --transition-duration-fast: 0.15s;
+  --transition-duration-base: 0.2s;
+  --transition-duration-slow: 0.3s;
+  --transition-timing-ease: ease;
+
   --transition-all: all var(--transition-base);
   --transition-colors: color var(--transition-base),
                        background-color var(--transition-base),
@@ -274,6 +280,12 @@
   --z-tooltip: 1100;
 
   /* ========== Container ========== */
+
+  --max-width-sm: 640px;
+  --max-width-md: 768px;
+  --max-width-lg: 1024px;
+  --max-width-xl: 1280px;
+  --max-width-full: 100%;
 
   --container-max-width: 1200px;
   --container-max-width-wide: 1400px;

@@ -19,11 +19,11 @@
         </div>
         <div class="subject-details">
           <div class="detail-item">
-            <span class="icon">📚</span>
+            <Icon name="book" :size="16" class="icon" />
             <span>{{ subject.credits }} кредитов</span>
           </div>
           <div class="detail-item">
-            <span class="icon">📅</span>
+            <Icon name="calendar" :size="16" class="icon" />
             <span>Семестр {{ subject.semester }}</span>
           </div>
         </div>
@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import type { Subject } from '~/entities/subject'
-import { Card, Badge, Button, EmptyState } from '~/shared/ui'
+import { Card, Badge, Button, EmptyState, Icon } from '~/shared/ui'
 
 defineProps<{ subjects: Subject[] }>()
 defineEmits<{ 'view-subject': [subject: Subject] }>()
@@ -83,7 +83,7 @@ defineEmits<{ 'view-subject': [subject: Subject] }>()
 }
 
 .detail-item .icon {
-  font-size: var(--font-size-md);
+  color: var(--color-text-tertiary);
 }
 
 .subject-description {

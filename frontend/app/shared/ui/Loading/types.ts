@@ -1,3 +1,5 @@
+import type { IconName } from '../Icon'
+
 /**
  * Loading Component Types
  */
@@ -37,4 +39,10 @@ export interface EmptyStateProps {
    * Описание
    */
   description?: string
+
+  /**
+   * Иконка над текстом
+   * @default 'inbox'
+   */
+  icon?: IconName
 }
