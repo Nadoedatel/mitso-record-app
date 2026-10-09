@@ -181,13 +181,13 @@ describe('GradesService', () => {
 
       expect(prisma.grade.upsert).toHaveBeenCalledTimes(2);
       expect(result).toMatchObject({ total: 3, succeeded: 2, failed: 1 });
-      expect(result.errors).toEqual([{ index: 1, reason: expect.stringMatching(/1 to 10/) }]);
+      expect(result.errors).toEqual([{ index: 1, reason: expect.stringMatching(/от 1 до 10/) }]);
     });
 
     it('reports a pass/fail credit with a value outside 0 and 1', async () => {
       const result = await service.batchCreate([row({ gradeType: GradeType.CREDIT, gradeValue: 7 })], admin);
 
-      expect(result.errors).toEqual([{ index: 0, reason: expect.stringMatching(/0 \(not passed\) or 1 \(passed\)/) }]);
+      expect(result.errors).toEqual([{ index: 0, reason: expect.stringMatching(/0 \(не сдано\) или 1 \(сдано\)/) }]);
     });
 
     it('reports a student that does not exist and saves the rest', async () => {
@@ -199,7 +199,7 @@ describe('GradesService', () => {
       );
 
       expect(result).toMatchObject({ total: 3, succeeded: 2, failed: 1 });
-      expect(result.errors).toEqual([{ index: 1, reason: 'Student with ID 2 not found' }]);
+      expect(result.errors).toEqual([{ index: 1, reason: 'Студент с ID 2 не найден' }]);
     });
 
     it('reports a subject that does not exist', async () => {
@@ -207,7 +207,7 @@ describe('GradesService', () => {
 
       const result = await service.batchCreate([row()], admin);
 
-      expect(result.errors).toEqual([{ index: 0, reason: 'Subject with ID 5 not found' }]);
+      expect(result.errors).toEqual([{ index: 0, reason: 'Предмет с ID 5 не найден' }]);
     });
 
     it('lists errors in row order even when they come from different checks', async () => {

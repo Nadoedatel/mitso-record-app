@@ -106,7 +106,7 @@ export class FacultiesService {
     });
 
     if (!faculty) {
-      throw new NotFoundException(`Faculty #${id} not found`);
+      throw new NotFoundException(`Факультет с ID ${id} не найден`);
     }
 
     return faculty;
@@ -136,6 +136,6 @@ export class FacultiesService {
       where: { id },
     });
 
-    return { message: 'Faculty deleted successfully' };
+    return { message: 'Факультет удалён' };
   }
 }

@@ -54,7 +54,7 @@ describe('LoginAttemptsService', () => {
 
     await fail(20);
     const error = await attempts.assertNotLocked(email).catch((e: HttpException) => e);
-    expect((error as HttpException).message).toMatch(/Try again in (9\d\d|900) s/);
+    expect((error as HttpException).message).toMatch(/Повторите через (9\d\d|900) с/);
   });
 
   it('a successful login clears failures and lock', async () => {

@@ -37,8 +37,9 @@ export const useAuthStore = defineStore('auth', () => {
    */
   async function login(credentials: LoginDto) {
     const response = await authApi.login(credentials)
-    user.value = response.user
     useHttpClient().setAccessToken(response.accessToken)
+    // The login response only has id, email and role; pages need the student/teacher profile too
+    user.value = await authApi.getMe()
     setSessionHint(true)
     return response
   }

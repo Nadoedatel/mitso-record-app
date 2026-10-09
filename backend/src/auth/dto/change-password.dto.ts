@@ -7,7 +7,7 @@ export const changePasswordSchema = z
     newPassword: z.string().min(8).max(128),
   })
   .refine((dto) => dto.currentPassword !== dto.newPassword, {
-    message: 'New password must differ from the current one',
+    message: 'Новый пароль должен отличаться от текущего',
     path: ['newPassword'],
   });
 

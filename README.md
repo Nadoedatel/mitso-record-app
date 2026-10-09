@@ -460,6 +460,17 @@ npm test           # Jest (backend) + Vitest (frontend)
 - Middleware для защиты роутов (auth, admin)
 - Seed скрипт для тестовых данных
 
+## Контракт API (OpenAPI)
+
+Источник правды: контроллеры и Zod-DTO бэкенда. `backend/openapi.json` генерируется без БД и Redis:
+
+```bash
+cd backend && npm run openapi:generate   # обновить openapi.json
+cd ../frontend && npm run api:types      # обновить app/shared/api/generated/schema.d.ts
+```
+
+CI падает, если `openapi.json` или сгенерированные типы отстали от кода (`openapi:check`, `api:types` + `git diff`). Типы тел запросов (`Create*Dto`, `Update*Dto`) на фронте берутся из `ApiSchemas`. Ответы в спеке пока не описаны (у контроллеров нет `type` в `@ApiResponse`), поэтому типы сущностей (`Faculty`, `Group` и т.д.) остаются ручными.
+
 ## Production Deployment
 
 Для деплоя на production:
@@ -469,7 +480,14 @@ npm test           # Jest (backend) + Vitest (frontend)
 3. **Миграции:** Выполнить `npx prisma migrate deploy`
 4. **Seed:** Создать начальные данные через seed или админ панель
 5. **Build:** Собрать фронтенд и бекенд
-6. **Деплой:** Настроить CI/CD (например, через GitHub Actions)
+6. **Деплой:** `.github/workflows/deploy.yml` (см. ниже)
+
+### CI и выкладка
+
+- `ci.yml` на каждый PR и пуш в `main`: lint, typecheck, unit и e2e (Postgres, Redis и без него), проверка миграций против схемы, сборка prod-образов, `npm audit` отчётом.
+- `deploy.yml` (пуш в `main` или ручной запуск с выбором окружения `production` / `staging`): сначала `prisma migrate deploy` отдельным job, потом вызов Deploy Hook Render, если он задан.
+- В Settings → Environments создать `production` (и `staging`) и добавить secret `DATABASE_URL` (External Database URL), при желании `RENDER_DEPLOY_HOOK_BACKEND` и `RENDER_DEPLOY_HOOK_FRONTEND`. Для `production` можно включить обязательное подтверждение.
+- Пока Render собирает с `autoDeploy` и сам гоняет `migrate deploy` в `buildCommand`, второй прогон безвреден (команда идемпотентна). Чтобы миграции шли только из GitHub: убрать `npx prisma migrate deploy` из `buildCommand` в `render.yaml` и поставить `autoDeploy: false` у сервисов.
 
 ## Миграции БД
 
@@ -496,6 +514,14 @@ npx prisma migrate resolve --applied 0_init
 
 # 3. Проверка
 npx prisma migrate status
+```
+
+### Production-стек в Docker
+
+`docker-compose.prod.yml` собирает prod-образы (`Dockerfile.prod`) и поднимает Postgres, Redis, backend и frontend. Миграции применяются при старте backend. Переменные (`JWT_*`, `POSTGRES_PASSWORD`, `FRONTEND_URL`, `API_PUBLIC_URL`) берутся из `.env`, шаблон в `.env.example`. TLS и обратный прокси ставятся снаружи.
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 ```
 
 Если шаг 1 показал различия, шаг 2 не делать: сначала выясните, чем прод отличается от схемы.

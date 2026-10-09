@@ -37,6 +37,27 @@ export class HttpExceptionFilter implements ExceptionFilter {
   }
 }
 
+/** Texts that Nest, Passport and the throttler produce on their own, shown to users in Russian */
+const DEFAULT_MESSAGES: Record<string, string> = {
+  Unauthorized: 'Требуется авторизация',
+  Forbidden: 'Доступ запрещён',
+  'Forbidden resource': 'Доступ запрещён',
+  'Not Found': 'Не найдено',
+  'Bad Request': 'Некорректный запрос',
+  Conflict: 'Конфликт данных',
+  'Too Many Requests': 'Слишком много запросов, повторите позже',
+  'ThrottlerException: Too Many Requests': 'Слишком много запросов, повторите позже',
+  'Internal server error': 'Внутренняя ошибка сервера',
+  'Validation failed': 'Ошибка валидации',
+  'Payload Too Large': 'Слишком большой запрос',
+};
+
+/** "Cannot GET /api/x" is Nest's text for an unknown route */
+function translateMessage(message: string): string {
+  if (/^Cannot (GET|POST|PUT|PATCH|DELETE) /.test(message)) return 'Маршрут не найден';
+  return DEFAULT_MESSAGES[message] ?? message;
+}
+
 /**
  * AllExceptionsFilter - catches all exceptions (including non-HTTP and Prisma errors)
  */
@@ -50,7 +71,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const request = ctx.getRequest<AppRequest>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message: string | string[] = 'Internal server error';
+    let message: string | string[] = 'Внутренняя ошибка сервера';
 
     if (exception instanceof ZodValidationException) {
       // Same shape as class-validator had: an array of "field: problem" strings
@@ -59,7 +80,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message =
         zodError instanceof ZodError
           ? zodError.issues.map((i) => `${i.path.join('.') || 'body'}: ${i.message}`)
-          : 'Validation failed';
+          : 'Ошибка валидации';
     } else if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
@@ -83,7 +104,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           break;
         default:
           status = HttpStatus.INTERNAL_SERVER_ERROR;
-          message = `Database error: ${exception.code}`;
+          message = `Ошибка базы данных: ${exception.code}`;
       }
     }
 
@@ -96,7 +117,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),
-      message,
+      message: Array.isArray(message) ? message.map(translateMessage) : translateMessage(message),
     });
   }
 

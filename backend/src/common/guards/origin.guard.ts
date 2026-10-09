@@ -13,7 +13,7 @@ export class OriginGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const origin = context.switchToHttp().getRequest<Request>().headers.origin;
     if (origin && !getAllowedOrigins(process.env).includes(origin)) {
-      throw new ForbiddenException('Origin not allowed');
+      throw new ForbiddenException('Запрос с этого источника запрещён');
     }
     return true;
   }

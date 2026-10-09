@@ -24,7 +24,7 @@ export class HealthService {
       // Minimal ping: the only way to check DB connectivity without touching tables
       await this.prisma.$queryRaw`SELECT 1`;
     } catch {
-      throw new ServiceUnavailableException('Database is unreachable');
+      throw new ServiceUnavailableException('База данных недоступна');
     }
 
     return {

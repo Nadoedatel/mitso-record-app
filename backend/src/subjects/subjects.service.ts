@@ -149,7 +149,7 @@ export class SubjectsService {
     });
 
     if (!subject) {
-      throw new NotFoundException(`Subject with ID ${id} not found`);
+      throw new NotFoundException(`Предмет с ID ${id} не найден`);
     }
 
     return subject;
@@ -193,7 +193,7 @@ export class SubjectsService {
       where: { id },
     });
 
-    return { message: 'Subject deleted successfully' };
+    return { message: 'Предмет удалён' };
   }
 
   /**
@@ -210,7 +210,7 @@ export class SubjectsService {
     });
 
     if (groups.length !== groupIds.length) {
-      throw new NotFoundException('One or more groups not found');
+      throw new NotFoundException('Одна или несколько групп не найдены');
     }
 
     // Create subject-group relations (ignore duplicates)
@@ -277,7 +277,7 @@ export class SubjectsService {
     });
 
     if (teachers.length !== teacherIds.length) {
-      throw new NotFoundException('One or more teachers not found');
+      throw new NotFoundException('Один или несколько преподавателей не найдены');
     }
 
     // Use transaction to replace all teachers

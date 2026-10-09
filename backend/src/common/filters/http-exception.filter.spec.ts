@@ -66,7 +66,7 @@ describe('AllExceptionsFilter logging', () => {
       filter.catch(new Error('boom'), host());
 
       expect(status).toHaveBeenCalledWith(500);
-      expect(body().message).toBe('Internal server error');
+      expect(body().message).toBe('Внутренняя ошибка сервера');
     });
   });
 
@@ -77,7 +77,7 @@ describe('AllExceptionsFilter logging', () => {
 
     expect(reqLog.error).toHaveBeenCalledWith({ err: boom }, expect.stringContaining('Unhandled exception'));
     expect(status).toHaveBeenCalledWith(500);
-    expect(body().message).toBe('Internal server error');
+    expect(body().message).toBe('Внутренняя ошибка сервера');
     expect(JSON.stringify(body())).not.toContain('postgres://');
   });
 

@@ -1,0 +1,65 @@
+name: Deploy
+
+# Миграции БД отдельным шагом до выкладки кода. Запуск вручную (Actions -> Deploy -> Run workflow)
+# или после пуша в main. Окружение выбирается при ручном запуске; для production в настройках
+# репозитория (Settings -> Environments) можно включить обязательное подтверждение.
+#
+# Нужно задать в Environments (production, staging):
+#   secret DATABASE_URL            - строка подключения к БД этого окружения (Render: External Database URL)
+#   secret RENDER_DEPLOY_HOOK_BACKEND / RENDER_DEPLOY_HOOK_FRONTEND - Deploy Hook сервисов Render (необязательно:
+#                                    без них job deploy пропускается, а Render выкладывает сам по autoDeploy)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Окружение
+        type: choice
+        options: [production, staging]
+        default: production
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Применить миграции
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          test -n "$DATABASE_URL" || { echo "::error::secret DATABASE_URL не задан в окружении"; exit 1; }
+          npx prisma migrate status || true
+          npx prisma migrate deploy
+
+  deploy:
+    needs: migrate
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Запустить выкладку на Render
+        env:
+          HOOK_BACKEND: ${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}
+          HOOK_FRONTEND: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}
+        run: |
+          if [ -z "$HOOK_BACKEND$HOOK_FRONTEND" ]; then
+            echo "Deploy Hook не заданы: выкладку делает Render по autoDeploy"
+            exit 0
+          fi
+          [ -z "$HOOK_BACKEND" ] || curl -fsS -X POST "$HOOK_BACKEND"
+          [ -z "$HOOK_FRONTEND" ] || curl -fsS -X POST "$HOOK_FRONTEND"

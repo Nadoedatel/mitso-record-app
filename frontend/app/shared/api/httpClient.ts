@@ -1,6 +1,15 @@
 import { ApiError } from './ApiError'
 import { reportError } from '~/shared/lib/errorReporter'
 
+/** Text for responses without a JSON body from our API (proxy errors, crashes before the filter) */
+function fallbackMessage(status: number): string {
+  if (status >= 500) return 'Сервер временно недоступен. Попробуйте позже.'
+  if (status === 404) return 'Не найдено'
+  if (status === 403) return 'Доступ запрещён'
+  if (status === 401) return 'Требуется авторизация'
+  return 'Не удалось выполнить запрос'
+}
+
 /** Auth endpoints that must never trigger a token refresh on 401 */
 const NO_REFRESH_ENDPOINTS = ['/auth/login', '/auth/refresh']
 
@@ -51,7 +60,14 @@ class HttpClient {
       credentials: 'include', // Include cookies for refresh token
     }
 
-    const response = await fetch(url, config)
+    let response: Response
+    try {
+      response = await fetch(url, config)
+    } catch (err: unknown) {
+      // fetch rejects with TypeError when the server is unreachable; AbortError must pass through untouched
+      if (err instanceof TypeError) throw new ApiError('Нет связи с сервером. Проверьте подключение.', 0)
+      throw err
+    }
 
     // Handle 401 - try to refresh token and retry once
     if (response.status === 401 && !NO_REFRESH_ENDPOINTS.includes(endpoint)) {
@@ -69,12 +85,12 @@ class HttpClient {
   private async handleResponse<T>(response: Response, endpoint = ''): Promise<T> {
     if (!response.ok) {
       const body: ApiErrorBody = await response.json().catch(() => ({
-        message: response.statusText,
+        message: fallbackMessage(response.status),
       }))
       // class-validator returns an array of messages
       const message = Array.isArray(body.message) ? body.message.join(', ') : body.message
       const error = new ApiError(
-        message || 'Request failed',
+        message || fallbackMessage(response.status),
         response.status,
         response.headers.get('x-request-id') ?? undefined,
       )

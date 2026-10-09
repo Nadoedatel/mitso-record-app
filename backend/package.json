@@ -24,6 +24,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix",
+    "openapi:generate": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-openapi.ts",
+    "openapi:check": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-openapi.ts --check",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "check": "npm run lint && npm run typecheck && npm run test"
   },

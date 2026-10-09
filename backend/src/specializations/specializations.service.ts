@@ -116,7 +116,7 @@ export class SpecializationsService {
     });
 
     if (!specialization) {
-      throw new NotFoundException(`Specialization #${id} not found`);
+      throw new NotFoundException(`Специальность с ID ${id} не найдена`);
     }
 
     return specialization;
@@ -149,6 +149,6 @@ export class SpecializationsService {
       where: { id },
     });
 
-    return { message: 'Specialization deleted successfully' };
+    return { message: 'Специальность удалена' };
   }
 }

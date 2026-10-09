@@ -176,7 +176,7 @@ describe('Grades (e2e)', () => {
         .expect(201);
 
       expect(res.body).toMatchObject({ total: 2, succeeded: 1, failed: 1 });
-      expect(res.body.errors).toEqual([{ index: 1, reason: 'Student with ID 999999 not found' }]);
+      expect(res.body.errors).toEqual([{ index: 1, reason: 'Студент с ID 999999 не найден' }]);
       expect(await ctx.prisma.grade.count()).toBe(1);
     });
 

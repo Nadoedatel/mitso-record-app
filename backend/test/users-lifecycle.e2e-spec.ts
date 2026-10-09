@@ -41,6 +41,20 @@ describe('Account deletion (e2e)', () => {
     expect(await ctx.prisma.refreshSession.count({ where: { userId: user.id } })).toBe(0);
   });
 
+  it('a deleted student cannot refresh a session: refresh sessions go with the account', async () => {
+    const admin = await createUser(ctx.prisma, { role: Role.ADMIN });
+    const { user, student } = await createStudent(ctx.prisma);
+    const loginRes = await login(user.email).expect(200);
+    const refreshCookie = (loginRes.headers['set-cookie'] as unknown as string[]).find((c) => c.startsWith('refreshToken='));
+    expect(refreshCookie).toBeDefined();
+    expect(await ctx.prisma.refreshSession.count({ where: { userId: user.id } })).toBe(1);
+
+    await http().delete(`/api/students/${student.id}`).set('Authorization', await bearerFor(ctx.app, admin)).expect(200);
+
+    expect(await ctx.prisma.refreshSession.count({ where: { userId: user.id } })).toBe(0);
+    await http().post('/api/auth/refresh').set('Cookie', refreshCookie as string).expect(401);
+  });
+
   it('deleting a student also removes their grades', async () => {
     const admin = await createUser(ctx.prisma, { role: Role.ADMIN });
     const { student } = await createStudent(ctx.prisma);
