@@ -21,13 +21,13 @@ export class GradesService {
       select: { id: true },
     });
     if (!teacher) {
-      throw new ForbiddenException('Teacher profile not found');
+      throw new ForbiddenException('Профиль преподавателя не найден');
     }
     const link = await this.prisma.teacherSubject.findFirst({
       where: { teacherId: teacher.id, subjectId },
     });
     if (!link) {
-      throw new ForbiddenException('You are not assigned to this subject');
+      throw new ForbiddenException('Вы не назначены на этот предмет');
     }
   }
 
@@ -42,7 +42,7 @@ export class GradesService {
       select: { id: true },
     });
     if (!teacher) {
-      throw new ForbiddenException('Teacher profile not found');
+      throw new ForbiddenException('Профиль преподавателя не найден');
     }
 
     const owned = await this.prisma.teacherSubject.findMany({
@@ -50,7 +50,7 @@ export class GradesService {
       select: { subjectId: true },
     });
     if (new Set(owned.map((link) => link.subjectId)).size !== subjectIds.length) {
-      throw new ForbiddenException('You are not assigned to this subject');
+      throw new ForbiddenException('Вы не назначены на этот предмет');
     }
 
     return teacher.id;
@@ -111,7 +111,7 @@ export class GradesService {
         select: { id: true },
       });
       if (!ownStudent) {
-        throw new ForbiddenException('Student profile not found');
+        throw new ForbiddenException('Профиль студента не найден');
       }
       where.studentId = ownStudent.id;
     } else {
@@ -161,7 +161,7 @@ export class GradesService {
         select: { id: true },
       });
       if (!ownStudent || ownStudent.id !== studentId) {
-        throw new ForbiddenException('Access denied');
+        throw new ForbiddenException('Доступ запрещён');
       }
     }
 
@@ -191,7 +191,7 @@ export class GradesService {
         select: { id: true },
       });
       if (!ownStudent || ownStudent.id !== grade.studentId) {
-        throw new ForbiddenException('Access denied');
+        throw new ForbiddenException('Доступ запрещён');
       }
     }
 
@@ -212,7 +212,7 @@ export class GradesService {
     });
 
     if (!grade) {
-      throw new NotFoundException(`Grade with ID ${id} not found`);
+      throw new NotFoundException(`Оценка с ID ${id} не найдена`);
     }
 
     return grade;
@@ -265,7 +265,7 @@ export class GradesService {
       where: { id },
     });
 
-    return { message: 'Grade deleted successfully' };
+    return { message: 'Оценка удалена' };
   }
 
   /**
@@ -280,7 +280,7 @@ export class GradesService {
     });
 
     if (!subject) {
-      throw new NotFoundException(`Subject with ID ${subjectId} not found`);
+      throw new NotFoundException(`Предмет с ID ${subjectId} не найден`);
     }
 
     // Get only groups that are assigned to this subject via SubjectGroup relation
@@ -475,9 +475,9 @@ export class GradesService {
     const valid: CreateGradeDto[] = [];
     for (const { index, dto } of candidates) {
       if (!studentIds.has(dto.studentId)) {
-        errors.push({ index, reason: `Student with ID ${dto.studentId} not found` });
+        errors.push({ index, reason: `Студент с ID ${dto.studentId} не найден` });
       } else if (!subjectIds.has(dto.subjectId)) {
-        errors.push({ index, reason: `Subject with ID ${dto.subjectId} not found` });
+        errors.push({ index, reason: `Предмет с ID ${dto.subjectId} не найден` });
       } else {
         valid.push(dto);
       }

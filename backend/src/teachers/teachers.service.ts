@@ -24,7 +24,7 @@ export class TeachersService {
 
     const existingUser = await this.prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException('Пользователь с таким email уже существует');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -147,7 +147,7 @@ export class TeachersService {
     });
 
     if (!teacher) {
-      throw new NotFoundException(`Teacher with ID ${id} not found`);
+      throw new NotFoundException(`Преподаватель с ID ${id} не найден`);
     }
 
     return teacher;
@@ -176,7 +176,7 @@ export class TeachersService {
     });
 
     if (!teacher) {
-      throw new NotFoundException(`Teacher for user ${userId} not found`);
+      throw new NotFoundException(`Преподаватель для пользователя ${userId} не найден`);
     }
 
     return teacher;
@@ -218,7 +218,7 @@ export class TeachersService {
     await this.prisma.user.delete({ where: { id: teacher.userId } });
     await this.authUsers.invalidate(teacher.userId);
 
-    return { message: 'Teacher deleted successfully' };
+    return { message: 'Преподаватель удалён' };
   }
 
   /**
@@ -267,7 +267,7 @@ export class TeachersService {
     });
 
     if (subjects.length !== subjectIds.length) {
-      throw new NotFoundException('One or more subjects not found');
+      throw new NotFoundException('Один или несколько предметов не найдены');
     }
 
     // Create teacher-subject relations (ignore duplicates)
@@ -310,11 +310,11 @@ export class TeachersService {
 
     if (deleted.count === 0) {
       throw new NotFoundException(
-        `Teacher ${teacherId} is not assigned to subject ${subjectId}`,
+        `Преподаватель ${teacherId} не назначен на предмет ${subjectId}`,
       );
     }
 
-    return { message: 'Subject removed from teacher successfully' };
+    return { message: 'Предмет снят с преподавателя' };
   }
 
   /**
@@ -331,7 +331,7 @@ export class TeachersService {
     });
 
     if (subjects.length !== subjectIds.length) {
-      throw new NotFoundException('One or more subjects not found');
+      throw new NotFoundException('Один или несколько предметов не найдены');
     }
 
     // Use transaction to replace all subjects

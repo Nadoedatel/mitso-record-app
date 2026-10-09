@@ -1,8 +1,12 @@
 import { INestApplication } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import * as cookieParser from 'cookie-parser';
+import { z } from 'zod';
 import { AllExceptionsFilter } from './common/filters';
 import { parseTrustProxy } from './common/config';
+
+// Zod's built-in Russian texts for validation errors ("Неверный ввод: ожидалось число...")
+z.config(z.locales.ru());
 
 /**
  * Applies the HTTP-level configuration that changes request/response behavior.

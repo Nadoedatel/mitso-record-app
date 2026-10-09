@@ -83,7 +83,7 @@ describe('Request logging (integration)', () => {
     expect(errorLine?.level).toBe(50); // pino: error
     expect(errorLine?.err.message).toBe('secret internal detail');
     expect(errorLine?.err.stack).toContain('ProbeController');
-    expect(res.body.message).toBe('Internal server error');
+    expect(res.body.message).toBe('Внутренняя ошибка сервера');
     expect(JSON.stringify(res.body)).not.toContain('secret internal detail');
   });
 

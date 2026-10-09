@@ -26,7 +26,7 @@ export class LoginAttemptsService {
     const until = Number(await this.cache.peek(this.lockKey(email)));
     const remaining = Math.ceil((until - Date.now()) / 1000);
     if (until && remaining > 0) {
-      throw new HttpException(`Too many failed login attempts. Try again in ${remaining} s.`, HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException(`Слишком много неудачных попыток входа. Повторите через ${remaining} с.`, HttpStatus.TOO_MANY_REQUESTS);
     }
   }
 

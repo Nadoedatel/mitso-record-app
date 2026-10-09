@@ -45,7 +45,7 @@ export class AuthService {
 
     if (!user || !isPasswordValid) {
       await this.loginAttempts.recordFailure(dto.email);
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Неверный email или пароль');
     }
 
     await this.loginAttempts.recordSuccess(dto.email);
@@ -72,7 +72,7 @@ export class AuthService {
    */
   async refresh(refreshToken: string, userAgent?: string) {
     if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token not provided');
+      throw new UnauthorizedException('Токен обновления не передан');
     }
 
     let payload: JwtPayload;
@@ -82,7 +82,7 @@ export class AuthService {
         algorithms: [JWT_ALGORITHM],
       });
     } catch {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Недействительный токен обновления');
     }
 
     const session = await this.prisma.refreshSession.findUnique({
@@ -91,14 +91,14 @@ export class AuthService {
     });
 
     if (!session || session.userId !== payload.sub || session.expiresAt.getTime() <= Date.now()) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Недействительный токен обновления');
     }
 
     if (session.usedAt) {
       if (Date.now() - session.usedAt.getTime() > REUSE_GRACE_MS) {
         await this.revokeFamilies([session.familyId]);
       }
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Недействительный токен обновления');
     }
 
     // Atomic claim: of two parallel requests with the same token only one flips usedAt
@@ -107,7 +107,7 @@ export class AuthService {
       data: { usedAt: new Date() },
     });
     if (claimed.count === 0) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Недействительный токен обновления');
     }
 
     const tokens = await this.generateTokens({
@@ -167,7 +167,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Пользователь не найден');
     }
 
     return {
@@ -193,7 +193,7 @@ export class AuthService {
       await this.revokeAllSessions(userId);
     }
 
-    return { message: 'Logged out successfully' };
+    return { message: 'Вы вышли из системы' };
   }
 
   /**
@@ -204,14 +204,14 @@ export class AuthService {
   async changePassword(userId: number, dto: ChangePasswordDto) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Пользователь не найден');
     }
 
     await this.loginAttempts.assertNotLocked(user.email);
 
     if (!(await bcrypt.compare(dto.currentPassword, user.password))) {
       await this.loginAttempts.recordFailure(user.email);
-      throw new BadRequestException('Current password is incorrect');
+      throw new BadRequestException('Текущий пароль указан неверно');
     }
 
     await this.prisma.user.update({
@@ -220,7 +220,7 @@ export class AuthService {
     });
     await this.revokeAllSessions(userId);
 
-    return { message: 'Password changed. Please log in again.' };
+    return { message: 'Пароль изменён. Войдите снова.' };
   }
 
   private async revokeAllSessions(userId: number) {

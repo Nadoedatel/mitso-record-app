@@ -149,7 +149,7 @@ export class GroupsService {
     });
 
     if (!group) {
-      throw new NotFoundException(`Group with ID ${id} not found`);
+      throw new NotFoundException(`Группа с ID ${id} не найдена`);
     }
 
     return group;
@@ -214,7 +214,7 @@ export class GroupsService {
       });
 
       if (subjects.length !== subjectIds.length) {
-        throw new Error('One or more subjects not found');
+        throw new Error('Один или несколько предметов не найдены');
       }
     }
 
@@ -243,6 +243,6 @@ export class GroupsService {
       where: { id },
     });
 
-    return { message: 'Group deleted successfully' };
+    return { message: 'Группа удалена' };
   }
 }

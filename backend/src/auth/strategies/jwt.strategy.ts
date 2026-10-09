@@ -29,13 +29,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    */
   async validate(payload: JwtPayload) {
     if (payload.sid && (await this.revocation.isRevoked(payload.sid))) {
-      throw new UnauthorizedException('Session revoked');
+      throw new UnauthorizedException('Сессия завершена');
     }
 
     const user = await this.authUsers.get(payload.sub);
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Пользователь не найден');
     }
 
     return user;

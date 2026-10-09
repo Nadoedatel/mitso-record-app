@@ -32,7 +32,7 @@ export class StudentsService {
 
     const existingUser = await this.prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException('Пользователь с таким email уже существует');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -126,7 +126,7 @@ export class StudentsService {
       where: { id },
     });
     if (!student) {
-      throw new NotFoundException(`Student with ID ${id} not found`);
+      throw new NotFoundException(`Студент с ID ${id} не найден`);
     }
     return student;
   }
@@ -142,7 +142,7 @@ export class StudentsService {
         select: { id: true },
       });
       if (!ownStudent || ownStudent.id !== id) {
-        throw new ForbiddenException('Access denied');
+        throw new ForbiddenException('Доступ запрещён');
       }
     }
 
@@ -202,7 +202,7 @@ export class StudentsService {
     });
 
     if (!student) {
-      throw new NotFoundException(`Student with ID ${id} not found`);
+      throw new NotFoundException(`Студент с ID ${id} не найден`);
     }
 
     return student;
@@ -252,7 +252,7 @@ export class StudentsService {
     });
 
     if (!student) {
-      throw new NotFoundException(`Student for user ${userId} not found`);
+      throw new NotFoundException(`Студент для пользователя ${userId} не найден`);
     }
 
     return student;
@@ -324,6 +324,6 @@ export class StudentsService {
     await this.prisma.user.delete({ where: { id: student.userId } });
     await this.authUsers.invalidate(student.userId);
 
-    return { message: 'Student deleted successfully' };
+    return { message: 'Студент удалён' };
   }
 }

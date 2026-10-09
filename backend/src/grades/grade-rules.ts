@@ -20,7 +20,7 @@ export function assertGradeValue(gradeType: GradeType, gradeValue: number): void
   if (PASS_FAIL_TYPES.includes(gradeType)) {
     if (gradeValue !== CREDIT_PASSED && gradeValue !== CREDIT_FAILED) {
       throw new BadRequestException(
-        `Grade type ${gradeType} accepts only ${CREDIT_FAILED} (not passed) or ${CREDIT_PASSED} (passed)`,
+        `Для типа оценки ${gradeType} допустимы только ${CREDIT_FAILED} (не сдано) или ${CREDIT_PASSED} (сдано)`,
       );
     }
     return;
@@ -28,7 +28,7 @@ export function assertGradeValue(gradeType: GradeType, gradeValue: number): void
 
   if (gradeValue < GRADE_MIN || gradeValue > GRADE_MAX) {
     throw new BadRequestException(
-      `Grade type ${gradeType} accepts values from ${GRADE_MIN} to ${GRADE_MAX}`,
+      `Для типа оценки ${gradeType} допустимы значения от ${GRADE_MIN} до ${GRADE_MAX}`,
     );
   }
 }
