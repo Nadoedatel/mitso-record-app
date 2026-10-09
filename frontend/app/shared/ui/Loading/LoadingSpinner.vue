@@ -19,7 +19,7 @@ const spinnerClasses = computed(() => {
 
 <style scoped>
 .spinner {
-  border: 3px solid var(--color-gray-200);
+  border: 3px solid var(--color-bg-strong);
   border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;

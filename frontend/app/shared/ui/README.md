@@ -12,13 +12,16 @@ import { Button, Input, Modal, Table } from '@/shared/ui'
 
 ## Дизайн-система
 
-Компоненты используют единую дизайн-систему на основе CSS переменных из `tokens.css`:
+Компоненты берут цвета и размеры только из CSS-переменных `shared/styles/_tokens.scss`. Цвета двухслойные:
+`--palette-*` (сырые значения, в компонентах не используются) и смысловые `--color-*`, у которых есть светлое и тёмное значение
+(`:root[data-theme='dark']`). Значит, `var(--color-surface)` вместо белого, `var(--color-on-solid)` для текста на заливке.
+Подробности и список токенов: `frontend/CLAUDE.md`, раздел Design Tokens.
 
-- **Цвета**: primary, secondary, success, danger, warning, info
+- **Цвета**: primary, success, danger, warning, info, neutral
 - **Размеры**: sm, md, lg
-- **Отступы**: spacing-1 до spacing-20
-- **Тени**: shadow-sm до shadow-2xl
-- **Border radius**: radius-sm до radius-full
+- **Отступы**: spacing-1 .. spacing-10
+- **Тени**: shadow-xs .. shadow-xl, shadow-focus
+- **Border radius**: radius-sm .. radius-full
 
 ## Компоненты
 

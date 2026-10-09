@@ -45,8 +45,29 @@ export default defineNuxtConfig({
     },
   },
 
-  // CSS
-  css: ['~/assets/styles/main.scss'],
+  // CSS. Roboto is the font of mitso.by; self-hosted, only the weights used (fontsource ships unicode-range subsets,
+  // the browser downloads the Cyrillic/Latin files it needs)
+  css: [
+    '@fontsource/roboto/400.css',
+    '@fontsource/roboto/500.css',
+    '@fontsource/roboto/700.css',
+    '~/assets/styles/main.scss',
+  ],
+
+  // The saved theme is applied before the first paint: otherwise a dark-theme user sees a white flash on every load.
+  // Keep in sync with shared/lib/useTheme.ts (same storage key and rule)
+  app: {
+    head: {
+      meta: [{ name: 'color-scheme', content: 'light dark' }],
+      script: [
+        {
+          innerHTML:
+            "(function(){try{var m=localStorage.getItem('mitso:theme');var d=m==='dark'||(m!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light')}catch(e){}})()",
+          tagPosition: 'head',
+        },
+      ],
+    },
+  },
 
   // Vite
   vite: {

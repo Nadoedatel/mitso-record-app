@@ -50,3 +50,6 @@ export * from './Toast'
 
 // Confirm
 export * from './Confirm'
+
+// ThemeToggle
+export * from './ThemeToggle'

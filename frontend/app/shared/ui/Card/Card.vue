@@ -54,7 +54,7 @@ const handleClick = (event: MouseEvent) => {
 
 <style scoped>
 .card {
-  background-color: var(--color-white);
+  background-color: var(--color-surface);
   border-radius: var(--radius-card);
   transition: var(--transition-all);
 }

@@ -139,7 +139,7 @@ const handleRowClick = (row: T, index: number) => {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-base);
-  background-color: var(--color-white);
+  background-color: var(--color-surface);
 }
 
 .table-bordered {
@@ -151,7 +151,7 @@ const handleRowClick = (row: T, index: number) => {
   padding: var(--padding-table-cell);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  background-color: var(--color-gray-50);
+  background-color: var(--color-bg-subtle);
   border-bottom: 2px solid var(--color-border);
   text-align: left;
   white-space: nowrap;
@@ -168,7 +168,7 @@ const handleRowClick = (row: T, index: number) => {
 }
 
 .table-row-striped {
-  background-color: var(--color-gray-50);
+  background-color: var(--color-bg-subtle);
 }
 
 .table-row-hoverable {

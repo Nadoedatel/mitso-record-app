@@ -281,17 +281,30 @@ NUXT_PUBLIC_API_URL=http://localhost:8080/api
 
 ## Design Tokens (shared/styles/_tokens.scss)
 
-CSS-переменные доступны глобально. Использовать ТОЛЬКО их, не хардкодить цвета/размеры.
+CSS-переменные доступны глобально. Использовать ТОЛЬКО их, не хардкодить цвета/размеры (Stylelint запрещает hex вне `_tokens.scss`).
+
+**Два слоя цвета.** `--palette-*` (blue, gray, green, red, amber) это сырые значения, в компонентах их не используют.
+Компоненты берут смысловые `--color-*`; тёмная тема это второй набор значений тех же имён под `:root[data-theme='dark']`.
+Основной синий взят с сайта mitso.by (`#30599D`, оттенок ~217°) и сделан чуть светлее и чище: `--palette-blue-600` = `#3558C8`.
 
 ```scss
-// Цвета
---color-primary: #667eea
---color-bg-page, --color-bg-section, --color-bg-hover
---color-text-primary, --color-text-secondary, --color-text-tertiary
---color-border
---color-success, --color-danger, --color-warning
+// Поверхности и текст (меняются по теме)
+--color-bg-page, --color-surface, --color-surface-raised   // страница, карточка, модалка/выпадающее
+--color-bg-subtle, --color-bg-muted, --color-bg-strong     // hover строки, вторичная кнопка, нажатие
+--color-input-bg                                           // фон поля ввода (в тёмной теме темнее карточки)
+--color-text-primary, --color-text-secondary, --color-text-tertiary, --color-text-disabled
+--color-on-solid                                           // текст на сплошной заливке (primary, success, danger...)
+--color-border, --color-border-light, --color-border-dark
 
-// Типографика
+// Акцент и статусы: заливка, -hover, -light (фон-подложка), -dark (текст на -light)
+--color-primary, --color-success, --color-danger, --color-warning, --color-info
+--color-neutral                                            // бейдж по умолчанию
+--color-grade-*-bg / --color-grade-*-text                  // типы и значения оценок
+
+// Тень фокуса у полей
+--shadow-focus, --shadow-focus-danger
+
+// Типографика: Roboto (400/500/700, @fontsource, как на mitso.by); semibold = 500, у Roboto нет 600
 --font-size-xs .. --font-size-4xl
 --font-weight-regular .. --font-weight-bold
 
@@ -299,11 +312,17 @@ CSS-переменные доступны глобально. Использов
 --spacing-1 (4px) .. --spacing-10 (40px)
 
 // Прочее
---radius-sm .. --radius-full
+--radius-sm (6) .. --radius-xl (16), --radius-full
 --shadow-xs .. --shadow-xl
 --transition-fast, --transition-base, --transition-slow
---z-modal, --z-dropdown, etc.
 ```
+
+**Тема.** `useTheme()` (`shared/lib/useTheme.ts`): `mode` (`system` | `light` | `dark`), `resolved`, `setMode()`, `toggle()`.
+Выбор лежит в `localStorage['mitso:theme']` (только предпочтение, прав не даёт); до первой отрисовки тему ставит
+inline-скрипт в `nuxt.config.ts` (иначе будет белая вспышка), плагин `plugins/theme.client.ts` синхронизирует стор.
+Переключатель `ThemeToggle` пока в углу layouts, в меню пользователя переедет вместе с каркасом.
+Новый цвет добавляется в оба набора (светлый и тёмный) и проверяется `tests/contrast.spec.ts` (WCAG AA 4.5:1).
+
 
 ---
 

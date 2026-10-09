@@ -70,10 +70,10 @@ const handleClose = () => {
 
 .modal-close:hover {
   color: var(--color-text-primary);
-  background-color: var(--color-gray-100);
+  background-color: var(--color-bg-muted);
 }
 
 .modal-close:active {
-  background-color: var(--color-gray-200);
+  background-color: var(--color-bg-strong);
 }
 </style>

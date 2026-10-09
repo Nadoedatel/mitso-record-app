@@ -109,7 +109,7 @@ onBeforeUnmount(() => {
 }
 
 .modal-content {
-  background-color: var(--color-white);
+  background-color: var(--color-surface-raised);
   border-radius: var(--radius-modal);
   box-shadow: var(--shadow-modal);
   max-height: 90vh;

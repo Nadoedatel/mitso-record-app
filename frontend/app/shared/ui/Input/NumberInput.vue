@@ -206,7 +206,7 @@ defineExpose({
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
-  background-color: var(--color-white);
+  background-color: var(--color-input-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-input);
   outline: none;
@@ -221,11 +221,11 @@ defineExpose({
 
 .number-input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: var(--shadow-focus);
 }
 
 .number-input:disabled {
-  background-color: var(--color-gray-50);
+  background-color: var(--color-bg-subtle);
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -264,7 +264,7 @@ defineExpose({
   justify-content: center;
   width: 32px;
   height: 32px;
-  background-color: var(--color-gray-100);
+  background-color: var(--color-bg-muted);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
@@ -276,7 +276,7 @@ defineExpose({
 }
 
 .number-control:hover:not(:disabled) {
-  background-color: var(--color-gray-200);
+  background-color: var(--color-bg-strong);
   border-color: var(--color-primary);
 }
 
@@ -296,7 +296,7 @@ defineExpose({
 
 .number-input-error:focus {
   border-color: var(--color-danger);
-  box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.1);
+  box-shadow: var(--shadow-focus-danger);
 }
 
 .number-error-message {
