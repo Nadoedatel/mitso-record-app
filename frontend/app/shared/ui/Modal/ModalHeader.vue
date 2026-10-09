@@ -1,15 +1,16 @@
 <template>
   <div class="modal-header">
-    <h3 v-if="title" class="modal-title">{{ title }}</h3>
+    <h3 v-if="title" :id="titleId" class="modal-title">{{ title }}</h3>
     <slot v-else />
 
-    <button v-if="showClose" class="modal-close" type="button" @click="handleClose">
-      ×
+    <button v-if="showClose" class="modal-close" type="button" aria-label="Закрыть" @click="handleClose">
+      <Icon name="x" :size="20" />
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Icon } from '../Icon'
 import type { ModalHeaderProps, ModalHeaderEmits } from './types'
 
 /**
@@ -70,10 +71,10 @@ const handleClose = () => {
 
 .modal-close:hover {
   color: var(--color-text-primary);
-  background-color: var(--color-gray-100);
+  background-color: var(--color-bg-muted);
 }
 
 .modal-close:active {
-  background-color: var(--color-gray-200);
+  background-color: var(--color-bg-strong);
 }
 </style>

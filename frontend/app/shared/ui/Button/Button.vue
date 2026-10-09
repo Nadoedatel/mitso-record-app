@@ -156,7 +156,7 @@ const handleClick = (event: MouseEvent) => {
 /* Primary Variant */
 .btn-primary {
   background-color: var(--color-primary);
-  color: var(--color-white);
+  color: var(--color-on-solid);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -170,12 +170,12 @@ const handleClick = (event: MouseEvent) => {
 
 /* Secondary Variant */
 .btn-secondary {
-  background-color: var(--color-gray-100);
+  background-color: var(--color-bg-muted);
   color: var(--color-text-primary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--color-gray-200);
+  background-color: var(--color-bg-strong);
 }
 
 .btn-secondary:active:not(:disabled) {
@@ -185,7 +185,7 @@ const handleClick = (event: MouseEvent) => {
 /* Danger Variant */
 .btn-danger {
   background-color: var(--color-danger);
-  color: var(--color-white);
+  color: var(--color-on-solid);
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -200,7 +200,7 @@ const handleClick = (event: MouseEvent) => {
 /* Success Variant */
 .btn-success {
   background-color: var(--color-success);
-  color: var(--color-white);
+  color: var(--color-on-solid);
 }
 
 .btn-success:hover:not(:disabled) {

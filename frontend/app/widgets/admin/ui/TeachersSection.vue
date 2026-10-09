@@ -167,6 +167,7 @@ onMounted(() => searchItems())
 <style scoped>
 .section-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-5);

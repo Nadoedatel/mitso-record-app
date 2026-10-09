@@ -71,6 +71,6 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .table-row-striped {
-  background-color: var(--color-gray-50);
+  background-color: var(--color-bg-subtle);
 }
 </style>

@@ -1,17 +1,22 @@
 <template>
-  <div class="pagination">
+  <nav class="pagination" aria-label="Страницы">
     <button
       class="pagination-button"
+      type="button"
+      aria-label="Предыдущая страница"
       :disabled="currentPage === 1"
       @click="handlePageChange(currentPage - 1)"
     >
-      ←
+      <Icon name="chevron-left" :size="16" />
     </button>
 
     <button
       v-for="page in visiblePages"
       :key="page"
+      type="button"
       :class="pageClasses(page)"
+      :aria-current="page === currentPage ? 'page' : undefined"
+      :aria-label="`Страница ${page}`"
       @click="handlePageChange(page)"
     >
       {{ page }}
@@ -19,20 +24,23 @@
 
     <button
       class="pagination-button"
+      type="button"
+      aria-label="Следующая страница"
       :disabled="currentPage === totalPages"
       @click="handlePageChange(currentPage + 1)"
     >
-      →
+      <Icon name="chevron-right" :size="16" />
     </button>
 
     <div v-if="total" class="pagination-info">
       Всего: {{ total }}
     </div>
-  </div>
+  </nav>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Icon } from '../Icon'
 import type { PaginationProps, PaginationEmits } from './types'
 
 const props = withDefaults(defineProps<PaginationProps>(), {
@@ -86,7 +94,7 @@ const handlePageChange = (page: number) => {
 
 .pagination-button {
   padding: var(--spacing-2) var(--spacing-3);
-  background-color: var(--color-white);
+  background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
@@ -97,7 +105,7 @@ const handlePageChange = (page: number) => {
 }
 
 .pagination-button:hover:not(:disabled):not(.pagination-button-active) {
-  background-color: var(--color-gray-50);
+  background-color: var(--color-bg-subtle);
   border-color: var(--color-primary);
 }
 
@@ -109,7 +117,7 @@ const handlePageChange = (page: number) => {
 .pagination-button-active {
   background-color: var(--color-primary);
   border-color: var(--color-primary);
-  color: var(--color-white);
+  color: var(--color-on-solid);
 }
 
 .pagination-info {

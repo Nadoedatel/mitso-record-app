@@ -3,7 +3,9 @@
     <span v-if="iconLeft" class="input-icon-left">{{ iconLeft }}</span>
 
     <input
-      :id="id"
+      :id="controlId"
+      :aria-invalid="isInvalid || undefined"
+      :aria-describedby="describedBy"
       ref="inputRef"
       :type="type"
       :name="name"
@@ -34,6 +36,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useFieldContext } from '../Form/fieldContext'
 import type { InputProps, InputEmits } from './types'
 
 /**
@@ -61,6 +64,12 @@ const props = withDefaults(defineProps<InputProps>(), {
   fullWidth: false,
 })
 
+// Inside a FormField the control takes its id, error state and description from it
+const field = useFieldContext()
+const controlId = computed(() => props.id ?? field?.id)
+const isInvalid = computed(() => props.error || !!field?.invalid.value)
+const describedBy = computed(() => field?.describedBy.value)
+
 const emit = defineEmits<InputEmits>()
 
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -72,7 +81,7 @@ const wrapperClasses = computed(() => {
     classes.push('input-full-width')
   }
 
-  if (props.error) {
+  if (isInvalid.value) {
     classes.push('input-has-error')
   }
 
@@ -92,7 +101,7 @@ const inputClasses = computed(() => {
 
   classes.push(`input-${props.size}`)
 
-  if (props.error) {
+  if (isInvalid.value) {
     classes.push('input-error')
   }
 
@@ -164,7 +173,7 @@ defineExpose({
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
-  background-color: var(--color-white);
+  background-color: var(--color-input-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-input);
   outline: none;
@@ -178,17 +187,17 @@ defineExpose({
 
 .input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: var(--shadow-focus);
 }
 
 .input:disabled {
-  background-color: var(--color-gray-50);
+  background-color: var(--color-bg-subtle);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 .input:read-only {
-  background-color: var(--color-gray-50);
+  background-color: var(--color-bg-subtle);
   cursor: default;
 }
 
@@ -242,7 +251,7 @@ defineExpose({
 
 .input-error:focus {
   border-color: var(--color-danger);
-  box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.1);
+  box-shadow: var(--shadow-focus-danger);
 }
 
 .input-error-message {

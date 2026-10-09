@@ -4,96 +4,147 @@
  */
 
 :root {
-  /* ========== Colors ========== */
+  /* ========== Palette (primitives) ==========
+   * Raw colors only. Components never use --palette-*, they use the semantic --color-* below,
+   * so a theme is just a second set of values for the same semantic names.
+   * Blue is the MITSO site blue (#30599D, hue ~217) made a little lighter and cleaner. */
 
-  /* Primary Colors */
-  --color-primary: #667eea;
-  --color-primary-hover: #5568d3;
-  --color-primary-light: #e6f0ff;
+  --palette-blue-50: #eef3fe;
+  --palette-blue-100: #dce6fc;
+  --palette-blue-200: #bdd0f9;
+  --palette-blue-300: #92b0f4;
+  --palette-blue-400: #6a8dec;
+  --palette-blue-500: #4a6fe0;
+  --palette-blue-600: #3558c8;
+  --palette-blue-700: #2b47a2;
+  --palette-blue-800: #263c82;
+  --palette-blue-900: #20325f;
 
-  --color-blue: #1890ff;
-  --color-blue-hover: #096dd9;
-  --color-blue-light: #e6f7ff;
+  /* Cool slate neutrals */
+  --palette-gray-0: #ffffff;
+  --palette-gray-25: #f7f9fc;
+  --palette-gray-50: #f1f4f9;
+  --palette-gray-100: #e9edf4;
+  --palette-gray-200: #dce2ec;
+  --palette-gray-300: #c4ccda;
+  --palette-gray-400: #94a0b4;
+  --palette-gray-500: #5d6a80;
+  --palette-gray-600: #475266;
+  --palette-gray-700: #323b4d;
+  --palette-gray-800: #1d2433;
+  --palette-gray-900: #111723;
+  --palette-gray-950: #0b1019;
 
-  /* Secondary Colors */
-  --color-success: #52c41a;
-  --color-success-hover: #3da011;
-  --color-success-light: #f6ffed;
+  --palette-green-50: #ecfdf3;
+  --palette-green-300: #86efac;
+  --palette-green-400: #4ade80;
+  --palette-green-600: #15803d;
+  --palette-green-700: #166534;
 
-  --color-danger: #ff4d4f;
-  --color-danger-hover: #cf1322;
-  --color-danger-light: #fff1f0;
+  --palette-red-50: #fef2f2;
+  --palette-red-300: #fca5a5;
+  --palette-red-400: #f87171;
+  --palette-red-600: #d12424;
+  --palette-red-700: #b91c1c;
 
-  --color-warning: #faad14;
-  --color-warning-hover: #d68910;
-  --color-warning-light: #fffbe6;
+  --palette-amber-50: #fffbeb;
+  --palette-amber-300: #fcd34d;
+  --palette-amber-400: #fbbf24;
+  --palette-amber-700: #b45309;
+  --palette-amber-800: #92400e;
 
-  --color-info: #1890ff;
-  --color-info-hover: #096dd9;
-  --color-info-light: #e6f7ff;
+  /* ========== Semantic colors: light theme (default) ========== */
 
-  /* Grayscale */
-  --color-white: #ffffff;
-  --color-gray-50: #f7fafc;
-  --color-gray-100: #f5f7fa;
-  --color-gray-200: #e2e8f0;
-  --color-gray-300: #cbd5e0;
-  --color-gray-400: #a0aec0;
-  --color-gray-500: #718096;
-  --color-gray-600: #4a5568;
-  --color-gray-700: #2d3748;
-  --color-gray-800: #1a202c;
-  --color-gray-900: #171923;
+  color-scheme: light;
 
-  /* Text Colors */
-  --color-text-primary: #2d3748;
-  --color-text-secondary: #4a5568;
-  --color-text-tertiary: #718096;
-  --color-text-disabled: #a0aec0;
+  /* Surfaces */
+  --color-bg-page: var(--palette-gray-50);
+  --color-surface: var(--palette-gray-0);
+  --color-surface-raised: var(--palette-gray-0); /* modals, dropdowns */
+  --color-bg-section: var(--color-surface);
+  --color-bg-subtle: var(--palette-gray-25); /* row hover, disabled field */
+  --color-bg-muted: var(--palette-gray-100); /* secondary button, scrollbar track */
+  --color-bg-strong: var(--palette-gray-200); /* pressed, spinner track */
+  --color-bg-hover: var(--palette-gray-25);
+  --color-input-bg: var(--palette-gray-0);
+  --color-bg-overlay: rgba(11, 16, 25, 0.5);
 
-  /* Border Colors */
-  --color-border: #e2e8f0;
-  --color-border-light: #f0f0f0;
-  --color-border-dark: #cbd5e0;
+  /* Text */
+  --color-text-primary: var(--palette-gray-800);
+  --color-text-secondary: var(--palette-gray-600);
+  --color-text-tertiary: var(--palette-gray-500);
+  --color-text-disabled: var(--palette-gray-400);
+  --color-on-solid: var(--palette-gray-0); /* text on a solid accent / status fill */
 
-  /* Background Colors */
-  --color-bg-page: #f7fafc;
-  --color-bg-section: #ffffff;
-  --color-bg-hover: #f8f9fa;
+  /* Borders */
+  --color-border: var(--palette-gray-200);
+  --color-border-light: var(--palette-gray-100);
+  --color-border-dark: var(--palette-gray-300);
 
-  /* Grade Type Colors */
-  --color-grade-exam-bg: #fef5e7;
-  --color-grade-exam-text: #d68910;
+  /* Accent */
+  --color-primary: var(--palette-blue-600);
+  --color-primary-hover: var(--palette-blue-700);
+  --color-primary-light: var(--palette-blue-50);
+  --color-focus-ring: color-mix(in srgb, var(--color-primary) 22%, transparent);
 
-  --color-grade-credit-bg: #e8f4fd;
-  --color-grade-credit-text: #1e88e5;
+  /* Status: solid fill, hover, tint for backgrounds, dark for text on the tint */
+  --color-success: var(--palette-green-600);
+  --color-success-hover: var(--palette-green-700);
+  --color-success-light: var(--palette-green-50);
+  --color-success-dark: var(--palette-green-700);
 
-  --color-grade-coursework-bg: #f3e5f5;
-  --color-grade-coursework-text: #8e24aa;
+  --color-danger: var(--palette-red-600);
+  --color-danger-hover: var(--palette-red-700);
+  --color-danger-light: var(--palette-red-50);
+  --color-danger-dark: var(--palette-red-700);
 
-  --color-grade-lab-bg: #e8f5e9;
-  --color-grade-lab-text: #43a047;
+  --color-warning: var(--palette-amber-700);
+  --color-warning-hover: var(--palette-amber-800);
+  --color-warning-light: var(--palette-amber-50);
+  --color-warning-dark: var(--palette-amber-800);
 
-  --color-grade-test-bg: #fff3e0;
-  --color-grade-test-text: #f57c00;
+  --color-info: var(--palette-blue-600);
+  --color-info-hover: var(--palette-blue-700);
+  --color-info-light: var(--palette-blue-50);
+  --color-info-dark: var(--palette-blue-800);
 
-  /* Grade Value Colors */
-  --color-grade-excellent-bg: #d1fae5;
-  --color-grade-excellent-text: #065f46;
+  --color-neutral: var(--palette-gray-500); /* default badge */
+  --color-scrollbar: var(--palette-gray-300);
+  --color-scrollbar-hover: var(--palette-gray-400);
 
-  --color-grade-good-bg: #dbeafe;
-  --color-grade-good-text: #1e40af;
+  /* Grade type (badge on a tint) */
+  --color-grade-exam-bg: #fff3dc;
+  --color-grade-exam-text: #9a5b05;
 
-  --color-grade-satisfactory-bg: #fef3c7;
-  --color-grade-satisfactory-text: #92400e;
+  --color-grade-credit-bg: var(--palette-blue-100);
+  --color-grade-credit-text: var(--palette-blue-700);
 
-  --color-grade-poor-bg: #fee2e2;
-  --color-grade-poor-text: #991b1b;
+  --color-grade-coursework-bg: #f1e6fb;
+  --color-grade-coursework-text: #7a2fa8;
+
+  --color-grade-lab-bg: #dcf5e6;
+  --color-grade-lab-text: #1c7a43;
+
+  --color-grade-test-bg: #ffe9d6;
+  --color-grade-test-text: #9c4508;
+
+  /* Grade value */
+  --color-grade-excellent-bg: #d6f5e3;
+  --color-grade-excellent-text: #0f6a3a;
+
+  --color-grade-good-bg: var(--palette-blue-100);
+  --color-grade-good-text: var(--palette-blue-800);
+
+  --color-grade-satisfactory-bg: #fdf0c4;
+  --color-grade-satisfactory-text: #8a4a07;
+
+  --color-grade-poor-bg: #fde0e0;
+  --color-grade-poor-text: #a31d1d;
 
   /* ========== Typography ========== */
 
   /* Font Family */
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+  --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI',
                  'Helvetica Neue', Arial, sans-serif;
 
   /* Font Sizes */
@@ -110,7 +161,7 @@
   /* Font Weights */
   --font-weight-regular: 400;
   --font-weight-medium: 500;
-  --font-weight-semibold: 600;
+  --font-weight-semibold: 500; /* Roboto ships 400/500/700 only */
   --font-weight-bold: 700;
 
   /* Line Heights */
@@ -163,36 +214,41 @@
 
   /* ========== Border Radius ========== */
 
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-full: 9999px;
 
   /* Component Specific Radius */
   --radius-button: var(--radius-md);
   --radius-input: var(--radius-md);
   --radius-card: var(--radius-lg);
-  --radius-modal: var(--radius-lg);
+  --radius-modal: var(--radius-xl);
   --radius-badge: var(--radius-sm);
   --radius-badge-pill: var(--radius-full);
 
   /* ========== Shadows ========== */
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --shadow-xl: 0 10px 40px rgba(0, 0, 0, 0.1);
+  --shadow-color: 17, 23, 35;
+  --shadow-xs: 0 1px 2px rgba(var(--shadow-color), 0.05);
+  --shadow-sm: 0 1px 3px rgba(var(--shadow-color), 0.08), 0 1px 2px rgba(var(--shadow-color), 0.04);
+  --shadow-md: 0 4px 12px rgba(var(--shadow-color), 0.08);
+  --shadow-lg: 0 8px 20px rgba(var(--shadow-color), 0.12);
+  --shadow-xl: 0 16px 48px rgba(var(--shadow-color), 0.16);
+
+  /* Focus rings (inputs) */
+  --shadow-focus: 0 0 0 3px var(--color-focus-ring);
+  --shadow-focus-danger: 0 0 0 3px color-mix(in srgb, var(--color-danger) 22%, transparent);
 
   /* Hover Shadows */
-  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --shadow-primary-hover: 0 4px 12px rgba(102, 126, 234, 0.3);
+  --shadow-hover: var(--shadow-lg);
+  --shadow-primary-hover: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
 
   /* Component Specific Shadows */
   --shadow-card: var(--shadow-sm);
   --shadow-card-hover: var(--shadow-lg);
-  --shadow-section: var(--shadow-md);
+  --shadow-section: var(--shadow-sm);
   --shadow-modal: var(--shadow-xl);
 
   /* ========== Transitions ========== */
@@ -200,6 +256,12 @@
   --transition-fast: 0.15s ease;
   --transition-base: 0.2s ease;
   --transition-slow: 0.3s ease;
+
+  /* Split form (Modal, Table use duration and timing separately) */
+  --transition-duration-fast: 0.15s;
+  --transition-duration-base: 0.2s;
+  --transition-duration-slow: 0.3s;
+  --transition-timing-ease: ease;
 
   --transition-all: all var(--transition-base);
   --transition-colors: color var(--transition-base),
@@ -219,6 +281,12 @@
 
   /* ========== Container ========== */
 
+  --max-width-sm: 640px;
+  --max-width-md: 768px;
+  --max-width-lg: 1024px;
+  --max-width-xl: 1280px;
+  --max-width-full: 100%;
+
   --container-max-width: 1200px;
   --container-max-width-wide: 1400px;
   --container-padding: var(--spacing-5);
@@ -230,4 +298,81 @@
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
+}
+
+/* ========== Dark theme ==========
+ * Set by the theme composable: <html data-theme="dark">. Only semantic tokens change. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg-page: var(--palette-gray-950);
+  --color-surface: var(--palette-gray-900);
+  --color-surface-raised: var(--palette-gray-800);
+  --color-bg-subtle: #161d2b;
+  --color-bg-muted: var(--palette-gray-800);
+  --color-bg-strong: #283147;
+  --color-bg-hover: #161d2b;
+  --color-input-bg: #0d1320;
+  --color-bg-overlay: rgba(0, 0, 0, 0.65);
+
+  --color-text-primary: #e8ecf4;
+  --color-text-secondary: #aeb8ca;
+  --color-text-tertiary: #8793a8;
+  --color-text-disabled: #5b677c;
+  --color-on-solid: var(--palette-gray-950);
+
+  --color-border: #2a3347;
+  --color-border-light: var(--palette-gray-800);
+  --color-border-dark: #3a455c;
+
+  --color-primary: var(--palette-blue-400);
+  --color-primary-hover: var(--palette-blue-300);
+  --color-primary-light: color-mix(in srgb, var(--palette-blue-400) 16%, transparent);
+  --color-focus-ring: color-mix(in srgb, var(--color-primary) 35%, transparent);
+
+  --color-success: var(--palette-green-400);
+  --color-success-hover: var(--palette-green-300);
+  --color-success-light: color-mix(in srgb, var(--palette-green-400) 14%, transparent);
+  --color-success-dark: var(--palette-green-300);
+
+  --color-danger: var(--palette-red-400);
+  --color-danger-hover: var(--palette-red-300);
+  --color-danger-light: color-mix(in srgb, var(--palette-red-400) 14%, transparent);
+  --color-danger-dark: var(--palette-red-300);
+
+  --color-warning: var(--palette-amber-400);
+  --color-warning-hover: var(--palette-amber-300);
+  --color-warning-light: color-mix(in srgb, var(--palette-amber-400) 14%, transparent);
+  --color-warning-dark: var(--palette-amber-300);
+
+  --color-info: var(--palette-blue-400);
+  --color-info-hover: var(--palette-blue-300);
+  --color-info-light: color-mix(in srgb, var(--palette-blue-400) 16%, transparent);
+  --color-info-dark: var(--palette-blue-300);
+
+  --color-neutral: var(--palette-gray-400);
+  --color-scrollbar: #3a455c;
+  --color-scrollbar-hover: #4b5873;
+
+  --color-grade-exam-bg: color-mix(in srgb, #f5a524 18%, transparent);
+  --color-grade-exam-text: #fbc56a;
+  --color-grade-credit-bg: color-mix(in srgb, var(--palette-blue-400) 18%, transparent);
+  --color-grade-credit-text: var(--palette-blue-300);
+  --color-grade-coursework-bg: color-mix(in srgb, #b66ee8 18%, transparent);
+  --color-grade-coursework-text: #d4a4f3;
+  --color-grade-lab-bg: color-mix(in srgb, #3fcf7c 18%, transparent);
+  --color-grade-lab-text: #7fe3a8;
+  --color-grade-test-bg: color-mix(in srgb, #f08a3c 18%, transparent);
+  --color-grade-test-text: #f6b07e;
+
+  --color-grade-excellent-bg: color-mix(in srgb, #3fcf7c 18%, transparent);
+  --color-grade-excellent-text: #7fe3a8;
+  --color-grade-good-bg: color-mix(in srgb, var(--palette-blue-400) 18%, transparent);
+  --color-grade-good-text: var(--palette-blue-300);
+  --color-grade-satisfactory-bg: color-mix(in srgb, var(--palette-amber-400) 18%, transparent);
+  --color-grade-satisfactory-text: var(--palette-amber-300);
+  --color-grade-poor-bg: color-mix(in srgb, var(--palette-red-400) 18%, transparent);
+  --color-grade-poor-text: var(--palette-red-300);
+
+  --shadow-color: 0, 0, 0;
 }

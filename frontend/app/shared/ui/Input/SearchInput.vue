@@ -1,10 +1,12 @@
 <template>
   <div class="search-input-wrapper" :class="{ 'search-full-width': fullWidth }">
     <div class="search-input-container">
-      <span class="search-icon">🔍</span>
+      <Icon name="search" :size="18" class="search-icon" />
 
       <input
-        :id="id"
+        :id="controlId"
+        :aria-invalid="isInvalid || undefined"
+        :aria-describedby="describedBy"
         ref="inputRef"
         type="search"
         :name="name"
@@ -31,7 +33,7 @@
         @click="handleClear"
         aria-label="Очистить"
       >
-        ✕
+        <Icon name="x" :size="16" />
       </button>
     </div>
 
@@ -43,6 +45,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { Icon } from '../Icon'
+import { useFieldContext } from '../Form/fieldContext'
 import type { SearchInputProps, InputEmits } from './types'
 
 /**
@@ -72,6 +76,12 @@ const props = withDefaults(defineProps<SearchInputProps>(), {
   debounce: 0,
 })
 
+// Inside a FormField the control takes its id, error state and description from it
+const field = useFieldContext()
+const controlId = computed(() => props.id ?? field?.id)
+const isInvalid = computed(() => props.error || !!field?.invalid.value)
+const describedBy = computed(() => field?.describedBy.value)
+
 const emit = defineEmits<InputEmits>()
 
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -80,7 +90,7 @@ let debounceTimeout: ReturnType<typeof setTimeout> | null = null
 const inputClasses = computed(() => {
   const classes = ['search-input']
   classes.push(`search-input-${props.size}`)
-  if (props.error) {
+  if (isInvalid.value) {
     classes.push('search-input-error')
   }
   return classes.join(' ')
@@ -167,7 +177,7 @@ defineExpose({
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
-  background-color: var(--color-white);
+  background-color: var(--color-input-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-input);
   outline: none;
@@ -183,11 +193,11 @@ defineExpose({
 
 .search-input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: var(--shadow-focus);
 }
 
 .search-input:disabled {
-  background-color: var(--color-gray-50);
+  background-color: var(--color-bg-subtle);
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -249,7 +259,7 @@ defineExpose({
 }
 
 .clear-button:hover {
-  background-color: var(--color-gray-100);
+  background-color: var(--color-bg-muted);
   color: var(--color-text-primary);
 }
 
@@ -264,7 +274,7 @@ defineExpose({
 
 .search-input-error:focus {
   border-color: var(--color-danger);
-  box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.1);
+  box-shadow: var(--shadow-focus-danger);
 }
 
 .search-error-message {

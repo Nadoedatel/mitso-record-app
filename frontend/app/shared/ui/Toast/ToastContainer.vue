@@ -1,14 +1,15 @@
 <template>
   <Teleport to="body">
-    <div class="toast-container">
+    <div class="toast-container" aria-live="polite">
       <TransitionGroup name="toast">
         <div
           v-for="toast in toasts"
           :key="toast.id"
           class="toast"
+          :role="toast.type === 'error' ? 'alert' : 'status'"
           :class="`toast--${toast.type}`"
         >
-          <span class="toast__icon">{{ toast.type === 'success' ? '✓' : '✕' }}</span>
+          <Icon :name="toast.type === 'success' ? 'circle-check' : 'circle-alert'" :size="18" class="toast__icon" />
           <span class="toast__message">{{ toast.message }}</span>
         </div>
       </TransitionGroup>
@@ -18,6 +19,7 @@
 
 <script setup lang="ts">
 import { useToast } from '~/shared/lib/useToast'
+import { Icon } from '../Icon'
 
 const { toasts } = useToast()
 </script>

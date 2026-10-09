@@ -141,11 +141,11 @@ jobs:
       # Сгенерированные типы API не должны отставать от backend/openapi.json
       - run: npm run api:types && git diff --exit-code -- app/shared/api/generated
 
-  # Уязвимости зависимостей. Пока НЕ блокирует: на старте красный (в backend есть критическая через bcrypt -> tar
-  # и мажорные обновления Nest), поэтому job только показывает отчёт. Станет обязательным, когда базу вычистим.
+  # Уязвимости зависимостей. Пока НЕ блокирует: в backend критическая через bcrypt -> tar и мажорные обновления Nest,
+  # во frontend цепочки сборочных зависимостей. Job остаётся зелёным и выводит предупреждение (жёлтая плашка в Summary),
+  # полный отчёт в логе шага. Станет обязательным (убрать `|| echo`), когда базу вычистим.
   audit:
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -159,7 +159,7 @@ jobs:
         with:
           node-version: 22
       # Только production-зависимости: dev-инструменты на пользователей не влияют
-      - run: npm audit --omit=dev --audit-level=high
+      - run: npm audit --omit=dev --audit-level=high || echo "::warning title=npm audit ${{ matrix.project }}::Есть уязвимости high/critical, отчёт выше. Не блокирует."
 
   # Prod-образы должны собираться: иначе поломку увидишь только при деплое
   docker-build:

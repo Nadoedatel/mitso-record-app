@@ -1,17 +1,21 @@
 <template>
-  <div :class="alertClasses">
+  <div :class="alertClasses" :role="variant === 'error' || variant === 'warning' ? 'alert' : 'status'">
+    <Icon :name="iconName" :size="20" class="alert-icon" />
     <div class="alert-content">
       <h4 v-if="title" class="alert-title">{{ title }}</h4>
       <div class="alert-message">
         <slot />
       </div>
     </div>
-    <button v-if="closable" class="alert-close" @click="handleClose">×</button>
+    <button v-if="closable" type="button" class="alert-close" aria-label="Закрыть" @click="handleClose">
+      <Icon name="x" :size="16" />
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Icon, type IconName } from '../Icon'
 import type { AlertProps, AlertEmits } from './types'
 
 const props = withDefaults(defineProps<AlertProps>(), {
@@ -27,6 +31,14 @@ const alertClasses = computed(() => {
   return classes.join(' ')
 })
 
+const ICONS: Record<NonNullable<AlertProps['variant']>, IconName> = {
+  success: 'circle-check',
+  error: 'circle-alert',
+  warning: 'triangle-alert',
+  info: 'info',
+}
+const iconName = computed(() => ICONS[props.variant ?? 'info'])
+
 const handleClose = () => {
   emit('close')
 }
@@ -36,10 +48,14 @@ const handleClose = () => {
 .alert {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  gap: var(--spacing-3);
   padding: var(--spacing-md);
   border-radius: var(--radius-lg);
   border: 1px solid;
+}
+
+.alert-icon {
+  margin-top: 1px;
 }
 
 .alert-content {
@@ -57,14 +73,21 @@ const handleClose = () => {
 }
 
 .alert-close {
+  display: inline-flex;
   background: none;
   border: none;
-  font-size: 20px;
+  color: inherit;
   cursor: pointer;
-  padding: 0;
-  margin-left: var(--spacing-3);
-  line-height: 1;
+  padding: var(--spacing-1);
+  margin: calc(var(--spacing-1) * -1);
+  border-radius: var(--radius-sm);
   opacity: 0.7;
+}
+
+.alert-close:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  opacity: 1;
 }
 
 .alert-close:hover {

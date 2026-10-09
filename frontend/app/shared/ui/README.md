@@ -12,13 +12,16 @@ import { Button, Input, Modal, Table } from '@/shared/ui'
 
 ## Дизайн-система
 
-Компоненты используют единую дизайн-систему на основе CSS переменных из `tokens.css`:
+Компоненты берут цвета и размеры только из CSS-переменных `shared/styles/_tokens.scss`. Цвета двухслойные:
+`--palette-*` (сырые значения, в компонентах не используются) и смысловые `--color-*`, у которых есть светлое и тёмное значение
+(`:root[data-theme='dark']`). Значит, `var(--color-surface)` вместо белого, `var(--color-on-solid)` для текста на заливке.
+Подробности и список токенов: `frontend/CLAUDE.md`, раздел Design Tokens.
 
-- **Цвета**: primary, secondary, success, danger, warning, info
+- **Цвета**: primary, success, danger, warning, info, neutral
 - **Размеры**: sm, md, lg
-- **Отступы**: spacing-1 до spacing-20
-- **Тени**: shadow-sm до shadow-2xl
-- **Border radius**: radius-sm до radius-full
+- **Отступы**: spacing-1 .. spacing-10
+- **Тени**: shadow-xs .. shadow-xl, shadow-focus
+- **Border radius**: radius-sm .. radius-full
 
 ## Компоненты
 
@@ -430,3 +433,13 @@ const componentClasses = computed(() => {
 ## Поддержка
 
 При возникновении проблем или вопросов создавайте issue в репозитории проекта.
+
+
+## Доступность и общие правила (этап 2 редизайна)
+
+- **Подписи.** `<FormField label="Email"><Input /></FormField>`: `FormField` выдаёт id полю внутри, ошибка и подсказка читаются скринридером (`aria-describedby`, `aria-invalid`). Явный `id` у поля по-прежнему приоритетнее.
+- **Модалка.** `role="dialog"`, `aria-modal`, заголовок через `aria-labelledby`; при открытии фокус уходит в первое поле, Tab не выходит за окно, при закрытии фокус возвращается на кнопку, которая открыла окно; Esc закрывает.
+- **Таблица.** Сортировка (`sortable`) состояния: нет → по возрастанию → по убыванию; пустые значения всегда в конце. Логика в `Table/sortRows.ts` (тесты: `tests/sortRows.spec.ts`). Для серверной сортировки `manual-sort` + событие `sort`. Строка кликабельна только с `clickable`.
+- **Иконки.** Только через `<Icon name="..." />`; без `label` иконка декоративная (скрыта от скринридеров), для иконки-кнопки подпись даёт `aria-label` на самой кнопке.
+- **Миксины** (`shared/styles/_mixins.scss`): `respond-up`, `respond-down`, `focus-ring`, `truncate`, `visually-hidden`, `scroll-x`, `reduced-motion`. Подключать в `<style scoped lang="scss">` через `@use 'shared/styles/mixins' as *;`.
+- **Витрина** `/dev/ui` (только `nuxt dev`): все компоненты и состояния на одной странице; в production-сборку не попадает.

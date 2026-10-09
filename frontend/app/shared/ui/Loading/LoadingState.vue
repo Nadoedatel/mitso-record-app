@@ -1,5 +1,5 @@
 <template>
-  <div class="loading-state">
+  <div class="loading-state" role="status" aria-live="polite">
     <LoadingSpinner :size="size" />
     <p class="loading-message">{{ message }}</p>
   </div>

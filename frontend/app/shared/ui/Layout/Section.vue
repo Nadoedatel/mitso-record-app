@@ -22,7 +22,7 @@ const sectionClasses = computed(() => {
 
 <style scoped>
 .section {
-  background-color: var(--color-white);
+  background-color: var(--color-surface);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
 }

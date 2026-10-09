@@ -77,32 +77,32 @@ const badgeClasses = computed(() => {
 /* Variants - Solid */
 .badge-primary {
   background-color: var(--color-primary);
-  color: var(--color-white);
+  color: var(--color-on-solid);
 }
 
 .badge-secondary {
-  background-color: var(--color-gray-500);
-  color: var(--color-white);
+  background-color: var(--color-neutral);
+  color: var(--color-on-solid);
 }
 
 .badge-success {
   background-color: var(--color-success);
-  color: var(--color-white);
+  color: var(--color-on-solid);
 }
 
 .badge-danger {
   background-color: var(--color-danger);
-  color: var(--color-white);
+  color: var(--color-on-solid);
 }
 
 .badge-warning {
   background-color: var(--color-warning);
-  color: var(--color-white);
+  color: var(--color-on-solid);
 }
 
 .badge-info {
   background-color: var(--color-info);
-  color: var(--color-white);
+  color: var(--color-on-solid);
 }
 
 /* Outlined */
@@ -116,7 +116,7 @@ const badgeClasses = computed(() => {
 }
 
 .badge-secondary.badge-outlined {
-  color: var(--color-gray-600);
+  color: var(--color-text-secondary);
 }
 
 .badge-success.badge-outlined {

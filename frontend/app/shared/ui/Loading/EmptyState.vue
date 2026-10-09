@@ -1,5 +1,6 @@
 <template>
   <div class="empty-state">
+    <Icon :name="icon" :size="32" class="empty-icon" />
     <p class="empty-message">{{ message }}</p>
     <p v-if="description" class="empty-description">{{ description }}</p>
     <slot />
@@ -7,11 +8,13 @@
 </template>
 
 <script setup lang="ts">
+import { Icon } from '../Icon'
 import type { EmptyStateProps } from './types'
 
 // @ts-ignore - props used in template
 const props = withDefaults(defineProps<EmptyStateProps>(), {
   message: 'Нет данных',
+  icon: 'inbox',
 })
 </script>
 
@@ -23,6 +26,11 @@ const props = withDefaults(defineProps<EmptyStateProps>(), {
   justify-content: center;
   padding: var(--spacing-8);
   text-align: center;
+}
+
+.empty-icon {
+  margin-bottom: var(--spacing-2);
+  color: var(--color-text-tertiary);
 }
 
 .empty-message {

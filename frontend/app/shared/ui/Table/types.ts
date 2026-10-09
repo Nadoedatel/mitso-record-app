@@ -28,6 +28,12 @@ export interface TableColumn<T = Record<string, unknown>> {
    * Функция для форматирования значения
    */
   formatter?: (value: T[keyof T], row: T) => string
+
+  /**
+   * Сортировка по клику на заголовок (по значению поля `key`, не по отформатированному тексту)
+   * @default false
+   */
+  sortable?: boolean
 }
 
 export interface TableProps<T = Record<string, unknown>> {
@@ -74,10 +80,40 @@ export interface TableProps<T = Record<string, unknown>> {
    * Пустое состояние
    */
   emptyText?: string
+
+  /**
+   * Строка кликабельна: курсор, фокус с клавиатуры и Enter вызывают rowClick
+   * @default false
+   */
+  clickable?: boolean
+
+  /**
+   * На узком экране (до 640px): карточки вместо таблицы ('cards') или прокрутка вбок ('scroll')
+   * @default 'cards'
+   */
+  mobile?: 'cards' | 'scroll'
+
+  /**
+   * Высота, после которой таблица прокручивается внутри себя, а шапка остаётся на месте (например '420px')
+   */
+  maxHeight?: string
+
+  /**
+   * Сортировку делает сервер: таблица только показывает стрелки и вызывает sort, данные не переставляет
+   * @default false
+   */
+  manualSort?: boolean
+
+  /**
+   * Подпись таблицы для скринридеров (на экране не видна)
+   */
+  caption?: string
 }
 
 export interface TableEmits<T = Record<string, unknown>> {
   (e: 'rowClick', row: T, index: number): void
+  /** null = сортировка снята */
+  (e: 'sort', state: { key: string; direction: 'asc' | 'desc' } | null): void
 }
 
 export interface TableRowProps {

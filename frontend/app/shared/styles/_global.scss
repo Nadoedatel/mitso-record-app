@@ -86,7 +86,7 @@ textarea {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
-  background: var(--color-white);
+  background: var(--color-input-bg);
   border: 1px solid var(--color-border);
   outline: none;
 
@@ -94,12 +94,16 @@ textarea {
     border-color: var(--color-primary);
   }
 
+  &:focus-visible {
+    box-shadow: var(--shadow-focus);
+  }
+
   &::placeholder {
     color: var(--color-text-disabled);
   }
 
   &:disabled {
-    background-color: var(--color-gray-50);
+    background-color: var(--color-bg-subtle);
     cursor: not-allowed;
     opacity: 0.6;
   }
@@ -135,15 +139,15 @@ table {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-gray-100);
+  background: var(--color-bg-muted);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-gray-300);
+  background: var(--color-scrollbar);
   border-radius: var(--radius-sm);
 
   &:hover {
-    background: var(--color-gray-400);
+    background: var(--color-scrollbar-hover);
   }
 }
 

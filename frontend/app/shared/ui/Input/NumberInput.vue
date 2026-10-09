@@ -13,7 +13,9 @@
       </button>
 
       <input
-        :id="id"
+        :id="controlId"
+        :aria-invalid="isInvalid || undefined"
+        :aria-describedby="describedBy"
         ref="inputRef"
         type="number"
         :name="name"
@@ -55,6 +57,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useFieldContext } from '../Form/fieldContext'
 import type { NumberInputProps, InputEmits } from './types'
 
 /**
@@ -84,6 +87,12 @@ const props = withDefaults(defineProps<NumberInputProps>(), {
   showControls: false,
 })
 
+// Inside a FormField the control takes its id, error state and description from it
+const field = useFieldContext()
+const controlId = computed(() => props.id ?? field?.id)
+const isInvalid = computed(() => props.error || !!field?.invalid.value)
+const describedBy = computed(() => field?.describedBy.value)
+
 const emit = defineEmits<InputEmits>()
 
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -91,7 +100,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const inputClasses = computed(() => {
   const classes = ['number-input']
   classes.push(`number-input-${props.size}`)
-  if (props.error) {
+  if (isInvalid.value) {
     classes.push('number-input-error')
   }
   return classes.join(' ')
@@ -206,7 +215,7 @@ defineExpose({
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
-  background-color: var(--color-white);
+  background-color: var(--color-input-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-input);
   outline: none;
@@ -221,11 +230,11 @@ defineExpose({
 
 .number-input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: var(--shadow-focus);
 }
 
 .number-input:disabled {
-  background-color: var(--color-gray-50);
+  background-color: var(--color-bg-subtle);
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -264,7 +273,7 @@ defineExpose({
   justify-content: center;
   width: 32px;
   height: 32px;
-  background-color: var(--color-gray-100);
+  background-color: var(--color-bg-muted);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
@@ -276,7 +285,7 @@ defineExpose({
 }
 
 .number-control:hover:not(:disabled) {
-  background-color: var(--color-gray-200);
+  background-color: var(--color-bg-strong);
   border-color: var(--color-primary);
 }
 
@@ -296,7 +305,7 @@ defineExpose({
 
 .number-input-error:focus {
   border-color: var(--color-danger);
-  box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.1);
+  box-shadow: var(--shadow-focus-danger);
 }
 
 .number-error-message {
