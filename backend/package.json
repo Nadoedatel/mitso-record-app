@@ -39,7 +39,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.3.0",
     "@nestjs/throttler": "^6.5.0",
-    "@prisma/client": "^5.10.0",
+    "@prisma/client": "^7.10.0",
     "@sentry/nestjs": "^11.1.0",
     "@types/cookie-parser": "^1.4.10",
     "bcrypt": "^5.1.1",
