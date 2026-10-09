@@ -16,8 +16,8 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -73,8 +73,8 @@ jobs:
       # Пусто = память; для redis-прогона адрес сервиса (контейнер доступен на localhost)
       REDIS_URL: ${{ matrix.cache == 'redis' && 'redis://localhost:6379' || '' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -111,8 +111,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5434/mitso_shadow
       SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5434/mitso_shadow
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -126,8 +126,8 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version-file: frontend/.nvmrc
           cache: npm
@@ -154,8 +154,8 @@ jobs:
       run:
         working-directory: ${{ matrix.project }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
       # Только production-зависимости: dev-инструменты на пользователей не влияют
@@ -170,5 +170,5 @@ jobs:
       matrix:
         project: [backend, frontend]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: docker build -f ${{ matrix.project }}/Dockerfile.prod -t mitso-${{ matrix.project }}:ci ${{ matrix.project }}
