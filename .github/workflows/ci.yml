@@ -141,6 +141,53 @@ jobs:
       # Сгенерированные типы API не должны отставать от backend/openapi.json
       - run: npm run api:types && git diff --exit-code -- app/shared/api/generated
 
+  # Браузерные e2e (Playwright): настоящие фронт и бэк на пустой Postgres; playwright.config.ts сам поднимает серверы,
+  # накатывает миграции и seed. Трейсы и скриншоты падений лежат в артефакте playwright-report.
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mitso_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mitso_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      - run: npx prisma generate
+        working-directory: backend
+      - run: npm ci
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run e2e
+        working-directory: frontend
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7
+
   # Уязвимости зависимостей. Пока НЕ блокирует: в backend критическая через bcrypt -> tar и мажорные обновления Nest,
   # во frontend цепочки сборочных зависимостей. Job остаётся зелёным и выводит предупреждение (жёлтая плашка в Summary),
   # полный отчёт в логе шага. Станет обязательным (убрать `|| echo`), когда базу вычистим.
