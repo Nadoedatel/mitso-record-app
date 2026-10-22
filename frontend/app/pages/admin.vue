@@ -3,9 +3,14 @@
     <Container maxWidth="full">
       <Header title="Панель администратора">
         <template #actions>
+          <Button variant="secondary" @click="showTwoFactor = true">
+            {{ authStore.user?.twoFactorEnabled ? 'Двухфакторная защита: вкл' : 'Двухфакторная защита' }}
+          </Button>
           <Button variant="danger" @click="logout">Выйти</Button>
         </template>
       </Header>
+
+      <TwoFactorModal v-model="showTwoFactor" />
 
       <Tabs :tabs="tabs" v-model="activeTab" />
 
@@ -16,6 +21,7 @@
         <GroupsSection v-if="activeTab === 'groups'" />
         <FacultiesSection v-if="activeTab === 'faculties'" />
         <SpecializationsSection v-if="activeTab === 'specializations'" />
+        <AuditSection v-if="activeTab === 'audit'" />
       </div>
     </Container>
   </div>
@@ -33,6 +39,8 @@ import {
   GroupsSection,
   FacultiesSection,
   SpecializationsSection,
+  AuditSection,
+  TwoFactorModal,
 } from '~/widgets/admin'
 
 definePageMeta({
@@ -49,9 +57,11 @@ const tabs = [
   { key: 'groups', label: 'Группы' },
   { key: 'faculties', label: 'Факультеты' },
   { key: 'specializations', label: 'Специализации' },
+  { key: 'audit', label: 'Журнал' },
 ]
 
 const activeTab = ref('students')
+const showTwoFactor = ref(false)
 
 async function logout() {
   await authStore.logout()

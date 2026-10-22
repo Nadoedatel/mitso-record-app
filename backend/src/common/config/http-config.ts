@@ -17,6 +17,24 @@ export function parseTrustProxy(raw: string | undefined): boolean | number | str
   return value;
 }
 
+/** Requests per minute per client for endpoints without their own limit */
+export const DEFAULT_RATE_LIMIT_PER_MINUTE = 60;
+
+/**
+ * Reads RATE_LIMIT_PER_MINUTE: the general rate limit, 60 unless set.
+ * It exists for load tests (k6 from one IP would hit 429 at once) and must not be raised in production.
+ * Login, refresh and the like keep their own stricter limits, this value does not touch them.
+ * A value that is not a positive whole number is an error, so a typo cannot silently switch the limit off.
+ */
+export function parseRateLimit(raw: string | undefined): number {
+  const value = raw?.trim();
+  if (!value) return DEFAULT_RATE_LIMIT_PER_MINUTE;
+  if (!/^[1-9]\d*$/.test(value)) {
+    throw new Error(`RATE_LIMIT_PER_MINUTE must be a positive whole number, got "${raw}"`);
+  }
+  return Number(value);
+}
+
 /** Origins allowed to call the API from a browser (FRONTEND_URL, comma separated). */
 export function getAllowedOrigins(env: NodeJS.ProcessEnv): string[] {
   return (env.FRONTEND_URL || 'http://localhost:3000')

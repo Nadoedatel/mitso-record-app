@@ -10,6 +10,14 @@
             {{ authStore.user.student.group?.name || 'Без группы' }} •
             {{ authStore.user.student.specialization?.name || 'Специализация не указана' }}
           </p>
+          <Button
+            variant="primary"
+            :loading="exporting || downloading"
+            :disabled="!studentProfileId || exporting || downloading"
+            @click="studentProfileId && exportRecordBook(studentProfileId)"
+          >
+            Скачать зачётку (Excel)
+          </Button>
           <Button variant="danger" @click="logout">Выйти</Button>
         </template>
       </Header>
@@ -54,6 +62,7 @@
 import { computed } from 'vue'
 import { useAuthStore } from '~/features/auth/model/useAuth'
 import { gradesApi } from '~/features/grades/api/gradesApi'
+import { useRecordBookExport } from '~/features/jobs/model/useRecordBookExport'
 
 definePageMeta({ middleware: 'auth' })
 import type { Grade } from '~/entities/grade'
@@ -75,6 +84,7 @@ import { formatShortName } from '~/shared/lib/formatName'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const { exportRecordBook, exporting, downloading } = useRecordBookExport()
 
 const gradeColumns = [
   { key: 'subject', label: 'Предмет', formatter: (_: unknown, row: Grade) => row.subject?.name || 'Не указан' },

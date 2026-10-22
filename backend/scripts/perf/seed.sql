@@ -1,4 +1,6 @@
--- Realistic data volume for query-plan measurements. Run ONLY against the e2e database:
+-- Realistic data volume for query-plan measurements. Student names are Cyrillic on purpose: trigram search
+-- and case-insensitive matching depend on the database locale, and Latin test data would hide a locale problem.
+-- Run ONLY against the e2e database:
 --   docker exec -i mitso-postgres-test psql -U postgres -d mitso_test < scripts/perf/seed.sql
 -- (the e2e tests truncate every table before each test, so this data is temporary by design)
 DO $$
@@ -33,8 +35,8 @@ SELECT g, 'Teacher', 'Prof' || g, 'IT', 'Lecturer', now(), now() FROM generate_s
 
 INSERT INTO students (user_id, first_name, last_name, student_id, group_id, course, specialization_id, enrollment_year, created_at, updated_at)
 SELECT 100 + g,
-       (ARRAY['Ivan','Petr','Anna','Olga','Sergey','Maria'])[1 + (g % 6)],
-       (ARRAY['Ivanov','Petrov','Sidorov','Kozlov','Smirnov','Volkov','Popov','Sokolov'])[1 + (g % 8)] || g,
+       (ARRAY['Иван','Пётр','Анна','Ольга','Сергей','Мария'])[1 + (g % 6)],
+       (ARRAY['Иванов','Петров','Сидоров','Козлов','Смирнов','Волков','Попов','Соколов'])[1 + (g % 8)] || g,
        'ST-' || g, 1 + (g % 400), 1 + (g % 6), 1 + (g % 50), 2020 + (g % 6), now(), now()
 FROM generate_series(1, 20000) g;
 

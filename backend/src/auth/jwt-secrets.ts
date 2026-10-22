@@ -28,6 +28,17 @@ export function findJwtSecretProblems(env: NodeJS.ProcessEnv): string[] {
   return problems;
 }
 
+/**
+ * The secret that signs and verifies access tokens. Startup refuses to run without it (assertJwtSecrets);
+ * this is the same rule at the point of use, so a missing secret can never become `undefined` passed to a library
+ * (which would verify nothing or throw something obscure).
+ */
+export function requireAccessSecret(env: NodeJS.ProcessEnv = process.env): string {
+  const secret = env.JWT_ACCESS_SECRET;
+  if (!secret) throw new Error('JWT_ACCESS_SECRET is not set');
+  return secret;
+}
+
 /** Throws one error listing every problem. Hint shows how to generate a good secret. */
 export function assertJwtSecrets(env: NodeJS.ProcessEnv): void {
   const problems = findJwtSecretProblems(env);

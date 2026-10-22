@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthUserCache } from '../../cache';
-import { JWT_ALGORITHM } from '../jwt-secrets';
+import { JWT_ALGORITHM, requireAccessSecret } from '../jwt-secrets';
 import { SessionRevocationService } from '../session-revocation.service';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       algorithms: [JWT_ALGORITHM],
-      secretOrKey: process.env.JWT_ACCESS_SECRET,
+      secretOrKey: requireAccessSecret(),
     });
   }
 

@@ -1,4 +1,5 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { UnavailableError } from '../common/errors';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface HealthStatus {
@@ -17,14 +18,14 @@ export class HealthService {
 
   /**
    * Ping database and return current health status
-   * @throws ServiceUnavailableException if database is unreachable
+   * @throws UnavailableError if database is unreachable
    */
   async check(): Promise<HealthStatus> {
     try {
       // Minimal ping: the only way to check DB connectivity without touching tables
       await this.prisma.$queryRaw`SELECT 1`;
     } catch {
-      throw new ServiceUnavailableException('База данных недоступна');
+      throw new UnavailableError('База данных недоступна');
     }
 
     return {

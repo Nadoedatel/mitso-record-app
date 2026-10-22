@@ -5,8 +5,8 @@ export interface Group {
   id: number;
   name: string;
   course: number;
-  facultyId?: number;
-  faculty?: Faculty;
+  facultyId?: number | null;
+  faculty?: Faculty | null;
   studentCount?: number;
   createdAt?: string;
   updatedAt?: string;

@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundError } from '../common/errors';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CacheService, InvalidatesCache, DIRECTORY_NAMESPACE, DIRECTORY_TTL_SECONDS, stableKey } from '../cache';
@@ -46,9 +47,13 @@ export class GroupsService {
    * @param query - pagination and filter parameters
    */
   private async loadAll(query: QueryGroupDto) {
-    const { subjectId, page = 1, limit = 20 } = query;
+    const { subjectId, search, page = 1, limit = 20 } = query;
 
     const where: Prisma.GroupWhereInput = {};
+
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
 
     if (subjectId) {
       where.subjectGroups = {
@@ -149,7 +154,7 @@ export class GroupsService {
     });
 
     if (!group) {
-      throw new NotFoundException(`Группа с ID ${id} не найдена`);
+      throw new NotFoundError(`Группа с ID ${id} не найдена`);
     }
 
     return group;

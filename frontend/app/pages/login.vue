@@ -8,7 +8,30 @@
 
       <Alert v-if="error" variant="error" :title="error" closable @close="error = ''" />
 
-      <Form class="login-form" @submit="handleLogin">
+      <Form v-if="challengeToken" class="login-form" @submit="handleTwoFactor">
+        <p class="two-factor-hint">
+          Введите 6-значный код из приложения-аутентификатора или резервный код.
+        </p>
+        <FormField label="Код подтверждения" required>
+          <Input
+            v-model="code"
+            type="text"
+            inputmode="text"
+            placeholder="123456"
+            autocomplete="one-time-code"
+            required
+          />
+        </FormField>
+
+        <Button type="submit" variant="primary" fullWidth :loading="loading" :disabled="loading">
+          {{ loading ? 'Проверка...' : 'Подтвердить' }}
+        </Button>
+        <Button type="button" variant="ghost" fullWidth :disabled="loading" @click="backToPassword">
+          Назад
+        </Button>
+      </Form>
+
+      <Form v-else class="login-form" @submit="handleLogin">
         <FormField label="Email" required>
           <Input
             v-model="email"
@@ -67,6 +90,9 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
+// Set after the password step when the account has the second factor on
+const challengeToken = ref('')
+const code = ref('')
 
 const handleLogin = async () => {
   loading.value = true
@@ -78,12 +104,38 @@ const handleLogin = async () => {
       password: password.value,
     })
 
+    if ('twoFactorRequired' in response) {
+      challengeToken.value = response.challengeToken
+      password.value = ''
+      return
+    }
+
     router.push(getHomeRoute(response.user.role))
   } catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Неверный email или пароль'
   } finally {
     loading.value = false
   }
+}
+
+const handleTwoFactor = async () => {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const response = await authStore.completeTwoFactor(challengeToken.value, code.value.trim())
+    router.push(getHomeRoute(response.user.role))
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Не удалось подтвердить код'
+  } finally {
+    loading.value = false
+  }
+}
+
+const backToPassword = () => {
+  challengeToken.value = ''
+  code.value = ''
+  error.value = ''
 }
 
 // Already logged in (session hint present): restore the session and skip the form
@@ -125,5 +177,12 @@ onMounted(async () => {
 .login-form {
   align-items: center;
   margin-top: var(--spacing-6);
+}
+
+.two-factor-hint {
+  margin: 0 0 var(--spacing-4);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-align: center;
 }
 </style>

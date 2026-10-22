@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { GradeBatchResultResponseDto, GradeListResponseDto, GradeResponseDto, GroupResponseDto, MessageResponseDto, StudentResponseDto } from '../common/dto';
 import { GradesService } from './grades.service';
 import { CreateGradeDto, UpdateGradeDto, QueryGradeDto, BatchCreateGradeDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
@@ -37,7 +38,7 @@ export class GradesController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Create new grade (ADMIN/TEACHER only)' })
-  @ApiResponse({ status: 201, description: 'Grade created successfully' })
+  @ApiResponse({ status: 201, type: GradeResponseDto, description: 'Grade created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   create(@Body() dto: CreateGradeDto, @CurrentUser() user: AuthUser) {
     return this.gradesService.create(dto, user);
@@ -51,7 +52,7 @@ export class GradesController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Batch create or update grades (ADMIN/TEACHER only)' })
-  @ApiResponse({ status: 201, description: 'Grades processed successfully' })
+  @ApiResponse({ status: 201, type: GradeBatchResultResponseDto, description: 'Grades processed successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   batchCreate(@Body() dto: BatchCreateGradeDto, @CurrentUser() user: AuthUser) {
     return this.gradesService.batchCreate(dto.grades, user);
@@ -63,7 +64,7 @@ export class GradesController {
    */
   @Get()
   @ApiOperation({ summary: 'Get all grades with filters and pagination' })
-  @ApiResponse({ status: 200, description: 'Grades retrieved successfully' })
+  @ApiResponse({ status: 200, type: GradeListResponseDto, description: 'Grades retrieved successfully' })
   findAll(@Query() query: QueryGradeDto, @CurrentUser() user: AuthUser) {
     return this.gradesService.findAll(query, user);
   }
@@ -75,7 +76,7 @@ export class GradesController {
    */
   @Get('student/:id')
   @ApiOperation({ summary: 'Get all grades for a specific student' })
-  @ApiResponse({ status: 200, description: 'Student grades retrieved successfully' })
+  @ApiResponse({ status: 200, type: GradeResponseDto, isArray: true, description: 'Student grades retrieved successfully' })
   findByStudent(
     @Param('id', ParseIntPipe) studentId: number,
     @CurrentUser() user: AuthUser,
@@ -89,7 +90,7 @@ export class GradesController {
    */
   @Get('subject/:subjectId/groups')
   @ApiOperation({ summary: 'Get groups assigned to a specific subject' })
-  @ApiResponse({ status: 200, description: 'Subject groups retrieved successfully' })
+  @ApiResponse({ status: 200, type: GroupResponseDto, isArray: true, description: 'Subject groups retrieved successfully' })
   findGroupsBySubject(@Param('subjectId', ParseIntPipe) subjectId: number) {
     return this.gradesService.findGroupsBySubject(subjectId);
   }
@@ -102,7 +103,7 @@ export class GradesController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get students for a specific group and subject with their grades' })
-  @ApiResponse({ status: 200, description: 'Students retrieved successfully' })
+  @ApiResponse({ status: 200, type: StudentResponseDto, isArray: true, description: 'Students retrieved successfully' })
   findStudentsByGroupAndSubject(
     @Param('subjectId', ParseIntPipe) subjectId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
@@ -117,7 +118,7 @@ export class GradesController {
    */
   @Get(':id')
   @ApiOperation({ summary: 'Get grade by ID' })
-  @ApiResponse({ status: 200, description: 'Grade found' })
+  @ApiResponse({ status: 200, type: GradeResponseDto, description: 'Grade found' })
   @ApiResponse({ status: 404, description: 'Grade not found' })
   findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.gradesService.findOne(id, user);
@@ -130,6 +131,7 @@ export class GradesController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @ApiResponse({ status: 200, type: GradeResponseDto })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateGradeDto,
@@ -145,7 +147,8 @@ export class GradesController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.gradesService.remove(id);
+  @ApiResponse({ status: 200, type: MessageResponseDto })
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
+    return this.gradesService.remove(id, user);
   }
 }

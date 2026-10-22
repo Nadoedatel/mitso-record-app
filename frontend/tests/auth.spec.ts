@@ -7,7 +7,7 @@ const httpClient = vi.hoisted(() => ({
   clearAuth: vi.fn(),
   refresh: vi.fn<() => Promise<boolean>>(),
 }))
-const authApi = vi.hoisted(() => ({ login: vi.fn(), getMe: vi.fn(), logout: vi.fn() }))
+const authApi = vi.hoisted(() => ({ login: vi.fn(), verifyTwoFactor: vi.fn(), getMe: vi.fn(), logout: vi.fn() }))
 
 vi.mock('~/shared/api/httpClient', () => ({ useHttpClient: () => httpClient }))
 vi.mock('~/features/auth/api/authApi', () => ({ authApi }))
@@ -78,5 +78,57 @@ describe('auth store', () => {
 
     expect(store.user).toBeNull()
     expect(httpClient.clearAuth).toHaveBeenCalled()
+  })
+
+  describe('two-factor login', () => {
+    const session = { user: { id: 1, email: 'admin@mitso.by', role: 'ADMIN' }, accessToken: 'token-1' }
+
+    it('the password step alone stores nothing: no token, no user, no session hint', async () => {
+      authApi.login.mockResolvedValue({ twoFactorRequired: true, challengeToken: 'challenge-1' })
+
+      const store = useAuthStore()
+      const result = await store.login({ email: 'admin@mitso.by', password: 'password123' })
+
+      expect(result).toEqual({ twoFactorRequired: true, challengeToken: 'challenge-1' })
+      expect(httpClient.setAccessToken).not.toHaveBeenCalled()
+      expect(authApi.getMe).not.toHaveBeenCalled()
+      expect(store.user).toBeNull()
+      expect(storage.has('mitso:session')).toBe(false)
+    })
+
+    it('the code step starts the session like a normal login', async () => {
+      authApi.verifyTwoFactor.mockResolvedValue(session)
+      authApi.getMe.mockResolvedValue(admin)
+
+      const store = useAuthStore()
+      const result = await store.completeTwoFactor('challenge-1', '123456')
+
+      expect(authApi.verifyTwoFactor).toHaveBeenCalledWith('challenge-1', '123456')
+      expect(result).toEqual(session)
+      expect(httpClient.setAccessToken).toHaveBeenCalledWith('token-1')
+      expect(store.user).toEqual(admin)
+      expect(storage.get('mitso:session')).toBe('1')
+    })
+
+    it('a wrong code leaves the user logged out', async () => {
+      authApi.verifyTwoFactor.mockRejectedValue(new Error('Неверный или уже использованный код'))
+
+      const store = useAuthStore()
+      await expect(store.completeTwoFactor('challenge-1', '000000')).rejects.toThrow('Неверный')
+
+      expect(httpClient.setAccessToken).not.toHaveBeenCalled()
+      expect(store.user).toBeNull()
+    })
+
+    it('a normal login still starts the session at once', async () => {
+      authApi.login.mockResolvedValue(session)
+      authApi.getMe.mockResolvedValue(admin)
+
+      const store = useAuthStore()
+      await store.login({ email: 'admin@mitso.by', password: 'password123' })
+
+      expect(httpClient.setAccessToken).toHaveBeenCalledWith('token-1')
+      expect(store.user).toEqual(admin)
+    })
   })
 })

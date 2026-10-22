@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConflictError, NotFoundError } from '../common/errors';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUserCache, CacheService, InvalidatesCache } from '../cache';
 import { CreateTeacherDto, UpdateTeacherDto, QueryTeacherDto } from './dto';
+import { buildNameSearch } from '../common/search';
 
 /**
  * TeachersService - business logic for teacher management
@@ -24,7 +26,7 @@ export class TeachersService {
 
     const existingUser = await this.prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      throw new ConflictException('Пользователь с таким email уже существует');
+      throw new ConflictError('Пользователь с таким email уже существует');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -52,15 +54,8 @@ export class TeachersService {
   async findAll(query: QueryTeacherDto) {
     const { search, page = 1, limit = 20 } = query;
 
-    const where = search
-      ? {
-          OR: [
-            { firstName: { contains: search, mode: 'insensitive' as const } },
-            { lastName: { contains: search, mode: 'insensitive' as const } },
-            { department: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+    // Every word must be found in the name, patronymic or department ("Козлов Дмитрий" finds Дмитрий Козлов)
+    const where = buildNameSearch(search, ['firstName', 'lastName', 'middleName', 'department']);
 
     const [data, total] = await Promise.all([
       this.prisma.teacher.findMany({
@@ -147,7 +142,7 @@ export class TeachersService {
     });
 
     if (!teacher) {
-      throw new NotFoundException(`Преподаватель с ID ${id} не найден`);
+      throw new NotFoundError(`Преподаватель с ID ${id} не найден`);
     }
 
     return teacher;
@@ -176,7 +171,7 @@ export class TeachersService {
     });
 
     if (!teacher) {
-      throw new NotFoundException(`Преподаватель для пользователя ${userId} не найден`);
+      throw new NotFoundError(`Преподаватель для пользователя ${userId} не найден`);
     }
 
     return teacher;
@@ -267,7 +262,7 @@ export class TeachersService {
     });
 
     if (subjects.length !== subjectIds.length) {
-      throw new NotFoundException('Один или несколько предметов не найдены');
+      throw new NotFoundError('Один или несколько предметов не найдены');
     }
 
     // Create teacher-subject relations (ignore duplicates)
@@ -309,7 +304,7 @@ export class TeachersService {
     });
 
     if (deleted.count === 0) {
-      throw new NotFoundException(
+      throw new NotFoundError(
         `Преподаватель ${teacherId} не назначен на предмет ${subjectId}`,
       );
     }
@@ -331,7 +326,7 @@ export class TeachersService {
     });
 
     if (subjects.length !== subjectIds.length) {
-      throw new NotFoundException('Один или несколько предметов не найдены');
+      throw new NotFoundError('Один или несколько предметов не найдены');
     }
 
     // Use transaction to replace all subjects

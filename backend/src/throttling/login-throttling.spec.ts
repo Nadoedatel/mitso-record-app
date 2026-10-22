@@ -6,6 +6,7 @@ import * as request from 'supertest';
 import { configureApp } from '../app.setup';
 import { AuthController } from '../auth/auth.controller';
 import { AuthService } from '../auth/auth.service';
+import { TwoFactorService } from '../auth/two-factor/two-factor.service';
 import { ResilientThrottlerStorage } from './resilient-throttler.storage';
 
 /**
@@ -22,6 +23,7 @@ describe('Login rate limiting', () => {
       imports: [ThrottlerModule.forRoot({ throttlers: [{ ttl: 60_000, limit: 60 }], storage })],
       controllers: [AuthController],
       providers: [
+        { provide: TwoFactorService, useValue: {} },
         { provide: AuthService, useValue: { login: async () => ({ user: { id: 1, email: 'a@mitso.by', role: 'STUDENT' }, accessToken: 'a', refreshToken: 'r' }) } },
         { provide: APP_GUARD, useClass: ThrottlerGuard },
       ],

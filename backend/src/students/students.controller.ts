@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { MessageResponseDto, StudentListResponseDto, StudentResponseDto } from '../common/dto';
 import { StudentsService } from './students.service';
 import { CreateStudentDto, UpdateStudentDto, QueryStudentDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
@@ -36,6 +37,7 @@ export class StudentsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
+  @ApiResponse({ status: 201, type: StudentResponseDto })
   create(@Body() dto: CreateStudentDto) {
     return this.studentsService.create(dto);
   }
@@ -48,7 +50,7 @@ export class StudentsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get all students with search and pagination' })
-  @ApiResponse({ status: 200, description: 'Students retrieved successfully' })
+  @ApiResponse({ status: 200, type: StudentListResponseDto, description: 'Students retrieved successfully' })
   findAll(@Query() query: QueryStudentDto) {
     return this.studentsService.findAll(query);
   }
@@ -59,7 +61,7 @@ export class StudentsController {
    */
   @Get(':id')
   @ApiOperation({ summary: 'Get student by ID' })
-  @ApiResponse({ status: 200, description: 'Student found' })
+  @ApiResponse({ status: 200, type: StudentResponseDto, description: 'Student found' })
   @ApiResponse({ status: 404, description: 'Student not found' })
   findOne(
     @Param('id', ParseIntPipe) id: number,
@@ -75,6 +77,7 @@ export class StudentsController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
+  @ApiResponse({ status: 200, type: StudentResponseDto })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateStudentDto,
@@ -89,6 +92,7 @@ export class StudentsController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
+  @ApiResponse({ status: 200, type: MessageResponseDto })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.studentsService.remove(id);
   }

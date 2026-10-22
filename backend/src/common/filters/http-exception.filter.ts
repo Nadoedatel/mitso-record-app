@@ -11,6 +11,7 @@ import { Prisma } from '@prisma/client';
 import { ZodValidationException } from 'nestjs-zod';
 import { ZodError } from 'zod';
 import { reportError } from '../monitoring/error-reporter';
+import { DomainError, statusOf } from '../errors';
 
 /**
  * HttpExceptionFilter - global exception filter
@@ -81,6 +82,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         zodError instanceof ZodError
           ? zodError.issues.map((i) => `${i.path.join('.') || 'body'}: ${i.message}`)
           : 'Ошибка валидации';
+    } else if (exception instanceof DomainError) {
+      // Business-logic errors carry a user-facing message and no HTTP knowledge: the mapping lives in errors/
+      status = statusOf(exception);
+      message = exception.message;
     } else if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();

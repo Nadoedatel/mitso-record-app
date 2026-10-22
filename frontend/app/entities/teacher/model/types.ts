@@ -5,12 +5,12 @@ export interface Teacher {
   userId: number
   firstName: string
   lastName: string
-  middleName?: string
+  middleName?: string | null
   department: string
   position: string
-  academicDegree?: string
-  phone?: string
-  officeNumber?: string
+  academicDegree?: string | null
+  phone?: string | null
+  officeNumber?: string | null
   createdAt: string
   updatedAt: string
   user?: User

@@ -12,10 +12,14 @@ import { GroupsModule } from './groups/groups.module';
 import { FacultiesModule } from './faculties/faculties.module';
 import { SpecializationsModule } from './specializations/specializations.module';
 import { HealthModule } from './health/health.module';
+import { JobsModule } from './jobs/jobs.module';
+import { AuditModule } from './audit/audit.module';
+import { MetricsModule } from './metrics/metrics.module';
 import { CacheModule } from './cache';
 import { THROTTLER_STORAGE, ThrottlingModule } from './throttling';
 import { LoggerModule } from 'nestjs-pino';
 import { buildLoggerParams } from './common/logger/logger.config';
+import { parseRateLimit } from './common/config';
 
 /**
  * AppModule - root application module
@@ -37,7 +41,7 @@ import { buildLoggerParams } from './common/logger/logger.config';
         throttlers: [
           {
             ttl: 60000, // Time window in milliseconds (60 seconds)
-            limit: 60, // Maximum number of requests per ttl window (default for all endpoints)
+            limit: parseRateLimit(process.env.RATE_LIMIT_PER_MINUTE), // Maximum requests per ttl window (default for all endpoints, 60)
           },
         ],
         // Shared counters in Redis when REDIS_URL is set, per-process memory otherwise
@@ -58,6 +62,9 @@ import { buildLoggerParams } from './common/logger/logger.config';
     FacultiesModule,
     SpecializationsModule,
     HealthModule,
+    JobsModule,
+    AuditModule,
+    MetricsModule,
   ],
   providers: [
     // Global throttler guard for rate limiting

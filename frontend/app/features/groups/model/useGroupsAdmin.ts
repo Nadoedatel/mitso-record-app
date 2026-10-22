@@ -60,7 +60,7 @@ export function useGroupsAdmin() {
   function openModal(group?: Group) {
     if (group) {
       editingItem.value = group
-      form.value = { name: group.name, course: group.course, facultyId: group.facultyId }
+      form.value = { name: group.name, course: group.course, facultyId: group.facultyId ?? undefined }
     } else {
       editingItem.value = null
       form.value = { name: '', course: 1, facultyId: undefined }

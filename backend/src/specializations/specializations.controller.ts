@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { MessageResponseDto, SpecializationListResponseDto, SpecializationResponseDto } from '../common/dto';
 import { SpecializationsService } from './specializations.service';
 import {
   CreateSpecializationDto,
@@ -40,7 +41,7 @@ export class SpecializationsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Create new specialization (ADMIN only)' })
-  @ApiResponse({ status: 201, description: 'Specialization created successfully' })
+  @ApiResponse({ status: 201, type: SpecializationResponseDto, description: 'Specialization created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   create(@Body() dto: CreateSpecializationDto) {
     return this.specializationsService.create(dto);
@@ -52,7 +53,7 @@ export class SpecializationsController {
    */
   @Get()
   @ApiOperation({ summary: 'Get all specializations with filters and pagination' })
-  @ApiResponse({ status: 200, description: 'Specializations retrieved successfully' })
+  @ApiResponse({ status: 200, type: SpecializationListResponseDto, description: 'Specializations retrieved successfully' })
   findAll(@Query() query: QuerySpecializationDto) {
     return this.specializationsService.findAll(query);
   }
@@ -63,7 +64,7 @@ export class SpecializationsController {
    */
   @Get(':id')
   @ApiOperation({ summary: 'Get specialization by ID' })
-  @ApiResponse({ status: 200, description: 'Specialization found' })
+  @ApiResponse({ status: 200, type: SpecializationResponseDto, description: 'Specialization found' })
   @ApiResponse({ status: 404, description: 'Specialization not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.specializationsService.findOne(id);
@@ -77,7 +78,7 @@ export class SpecializationsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update specialization (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Specialization updated successfully' })
+  @ApiResponse({ status: 200, type: SpecializationResponseDto, description: 'Specialization updated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Specialization not found' })
   update(
@@ -95,7 +96,7 @@ export class SpecializationsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Delete specialization (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Specialization deleted successfully' })
+  @ApiResponse({ status: 200, type: MessageResponseDto, description: 'Specialization deleted successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Specialization not found' })
   remove(@Param('id', ParseIntPipe) id: number) {

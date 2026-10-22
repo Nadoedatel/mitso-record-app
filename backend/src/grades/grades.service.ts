@@ -1,33 +1,33 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
+import { ForbiddenError, NotFoundError } from '../common/errors';
 import { CreateGradeDto, UpdateGradeDto, QueryGradeDto } from './dto';
 import { AuthUser } from '../auth/interfaces/auth-user.interface';
-import { Prisma, Role } from '@prisma/client';
 import { assertGradeValue } from './grade-rules';
+import { AuditEntry, AuditService, gradeChanged, GradeSnapshot, snapshotGrade } from '../audit';
+import { GradeData, GradesRepository } from './grades.repository';
 
 /**
- * GradesService - business logic for grade management
+ * GradesService - the rules of grades: who may read and write which grade, which values are valid,
+ * what is written to the audit log. Database access is in GradesRepository.
  */
 @Injectable()
 export class GradesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private grades: GradesRepository,
+    private audit: AuditService,
+  ) {}
 
   /**
    * Assert that a teacher owns the subject they are grading
    */
   private async assertTeacherOwnsSubject(userId: number, subjectId: number) {
-    const teacher = await this.prisma.teacher.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-    if (!teacher) {
-      throw new ForbiddenException('Профиль преподавателя не найден');
+    const teacherId = await this.grades.findTeacherIdByUserId(userId);
+    if (teacherId === null) {
+      throw new ForbiddenError('Профиль преподавателя не найден');
     }
-    const link = await this.prisma.teacherSubject.findFirst({
-      where: { teacherId: teacher.id, subjectId },
-    });
-    if (!link) {
-      throw new ForbiddenException('Вы не назначены на этот предмет');
+    if (!(await this.grades.isTeacherAssignedToSubject(teacherId, subjectId))) {
+      throw new ForbiddenError('Вы не назначены на этот предмет');
     }
   }
 
@@ -37,34 +37,17 @@ export class GradesService {
    * @returns the teacher's profile ID, so the caller does not need another lookup
    */
   private async assertTeacherOwnsSubjects(userId: number, subjectIds: number[]): Promise<number> {
-    const teacher = await this.prisma.teacher.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-    if (!teacher) {
-      throw new ForbiddenException('Профиль преподавателя не найден');
+    const teacherId = await this.grades.findTeacherIdByUserId(userId);
+    if (teacherId === null) {
+      throw new ForbiddenError('Профиль преподавателя не найден');
     }
 
-    const owned = await this.prisma.teacherSubject.findMany({
-      where: { teacherId: teacher.id, subjectId: { in: subjectIds } },
-      select: { subjectId: true },
-    });
-    if (new Set(owned.map((link) => link.subjectId)).size !== subjectIds.length) {
-      throw new ForbiddenException('Вы не назначены на этот предмет');
+    const owned = await this.grades.findAssignedSubjectIds(teacherId, subjectIds);
+    if (new Set(owned).size !== subjectIds.length) {
+      throw new ForbiddenError('Вы не назначены на этот предмет');
     }
 
-    return teacher.id;
-  }
-
-  /**
-   * Resolve teacher ID from user ID
-   */
-  private async getTeacherId(userId: number): Promise<number | null> {
-    const teacher = await this.prisma.teacher.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-    return teacher?.id ?? null;
+    return teacherId;
   }
 
   /**
@@ -78,20 +61,13 @@ export class GradesService {
       await this.assertTeacherOwnsSubject(user.id, dto.subjectId);
     }
 
-    const teacherId =
-      user.role === Role.TEACHER ? await this.getTeacherId(user.id) : null;
+    const teacherId = user.role === Role.TEACHER ? await this.grades.findTeacherIdByUserId(user.id) : null;
 
-    return this.prisma.grade.create({
-      data: {
-        ...dto,
-        teacherId,
-        examDate: dto.examDate ? new Date(dto.examDate) : null,
-      },
-      include: {
-        student: true,
-        teacher: true,
-        subject: true,
-      },
+    // The grade and its audit record are saved in one transaction
+    return this.grades.transaction(async (tx) => {
+      const grade = await this.grades.create(toGradeData(dto, teacherId), tx);
+      await this.audit.record(tx, user, [auditEntry('GRADE_CREATE', grade.id, null, snapshotGrade(grade))]);
+      return grade;
     });
   }
 
@@ -102,44 +78,17 @@ export class GradesService {
   async findAll(query: QueryGradeDto, user: AuthUser) {
     const { studentId, subjectId, page = 1, limit = 20 } = query;
 
-    const where: Prisma.GradeWhereInput = {};
-
+    let filterStudentId = studentId;
     if (user.role === Role.STUDENT) {
       // Force-filter to current student's records only
-      const ownStudent = await this.prisma.student.findUnique({
-        where: { userId: user.id },
-        select: { id: true },
-      });
-      if (!ownStudent) {
-        throw new ForbiddenException('Профиль студента не найден');
+      const ownStudentId = await this.grades.findStudentIdByUserId(user.id);
+      if (ownStudentId === null) {
+        throw new ForbiddenError('Профиль студента не найден');
       }
-      where.studentId = ownStudent.id;
-    } else {
-      if (studentId) {
-        where.studentId = studentId;
-      }
+      filterStudentId = ownStudentId;
     }
 
-    if (subjectId) {
-      where.subjectId = subjectId;
-    }
-
-    const [data, total] = await Promise.all([
-      this.prisma.grade.findMany({
-        where,
-        include: {
-          student: true,
-          teacher: true,
-          subject: true,
-        },
-        orderBy: {
-          examDate: 'desc',
-        },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.grade.count({ where }),
-    ]);
+    const { data, total } = await this.grades.findPage({ studentId: filterStudentId, subjectId }, page, limit);
 
     return {
       data,
@@ -156,26 +105,13 @@ export class GradesService {
    */
   async findByStudent(studentId: number, user: AuthUser) {
     if (user.role === Role.STUDENT) {
-      const ownStudent = await this.prisma.student.findUnique({
-        where: { userId: user.id },
-        select: { id: true },
-      });
-      if (!ownStudent || ownStudent.id !== studentId) {
-        throw new ForbiddenException('Доступ запрещён');
+      const ownStudentId = await this.grades.findStudentIdByUserId(user.id);
+      if (ownStudentId !== studentId) {
+        throw new ForbiddenError('Доступ запрещён');
       }
     }
 
-    return this.prisma.grade.findMany({
-      where: { studentId },
-      include: {
-        teacher: true,
-        subject: true,
-      },
-      orderBy: [
-        { subject: { semester: 'asc' } },
-        { examDate: 'desc' },
-      ],
-    });
+    return this.grades.findByStudent(studentId);
   }
 
   /**
@@ -186,12 +122,9 @@ export class GradesService {
     const grade = await this.getOrThrow(id);
 
     if (user.role === Role.STUDENT) {
-      const ownStudent = await this.prisma.student.findUnique({
-        where: { userId: user.id },
-        select: { id: true },
-      });
-      if (!ownStudent || ownStudent.id !== grade.studentId) {
-        throw new ForbiddenException('Доступ запрещён');
+      const ownStudentId = await this.grades.findStudentIdByUserId(user.id);
+      if (ownStudentId !== grade.studentId) {
+        throw new ForbiddenError('Доступ запрещён');
       }
     }
 
@@ -202,17 +135,10 @@ export class GradesService {
    * Load a grade with relations or throw 404 (no access checks, for internal use)
    */
   private async getOrThrow(id: number) {
-    const grade = await this.prisma.grade.findUnique({
-      where: { id },
-      include: {
-        student: true,
-        teacher: true,
-        subject: true,
-      },
-    });
+    const grade = await this.grades.findById(id);
 
     if (!grade) {
-      throw new NotFoundException(`Оценка с ID ${id} не найдена`);
+      throw new NotFoundError(`Оценка с ID ${id} не найдена`);
     }
 
     return grade;
@@ -240,29 +166,36 @@ export class GradesService {
       );
     }
 
-    return this.prisma.grade.update({
-      where: { id },
-      data: {
-        ...dto,
-        examDate: dto.examDate ? new Date(dto.examDate) : undefined,
-      },
-      include: {
-        student: true,
-        teacher: true,
-        subject: true,
-      },
+    return this.grades.transaction(async (tx) => {
+      // Read inside the transaction: the "before" snapshot must be what the update really replaced
+      const before = await this.grades.findById(id, tx);
+      if (!before) throw new NotFoundError(`Оценка с ID ${id} не найдена`);
+
+      const updated = await this.grades.update(
+        id,
+        { ...dto, examDate: dto.examDate ? new Date(dto.examDate) : undefined },
+        tx,
+      );
+
+      const beforeSnapshot = snapshotGrade(before);
+      const afterSnapshot = snapshotGrade(updated);
+      if (gradeChanged(beforeSnapshot, afterSnapshot)) {
+        await this.audit.record(tx, user, [auditEntry('GRADE_UPDATE', id, beforeSnapshot, afterSnapshot)]);
+      }
+      return updated;
     });
   }
 
   /**
-   * Delete grade
+   * Delete grade (the deleted values stay in the audit log)
    */
-  async remove(id: number) {
-    // Check if grade exists
-    await this.getOrThrow(id);
+  async remove(id: number, user: AuthUser) {
+    await this.grades.transaction(async (tx) => {
+      const before = await this.grades.findById(id, tx);
+      if (!before) throw new NotFoundError(`Оценка с ID ${id} не найдена`);
 
-    await this.prisma.grade.delete({
-      where: { id },
+      await this.grades.delete(id, tx);
+      await this.audit.record(tx, user, [auditEntry('GRADE_DELETE', id, snapshotGrade(before), null)]);
     });
 
     return { message: 'Оценка удалена' };
@@ -275,36 +208,12 @@ export class GradesService {
    */
   async findGroupsBySubject(subjectId: number) {
     // Verify subject exists
-    const subject = await this.prisma.subject.findUnique({
-      where: { id: subjectId },
-    });
-
-    if (!subject) {
-      throw new NotFoundException(`Предмет с ID ${subjectId} не найден`);
+    if (!(await this.grades.subjectExists(subjectId))) {
+      throw new NotFoundError(`Предмет с ID ${subjectId} не найден`);
     }
 
     // Get only groups that are assigned to this subject via SubjectGroup relation
-    const subjectGroups = await this.prisma.subjectGroup.findMany({
-      where: { subjectId },
-      include: {
-        group: {
-          include: {
-            faculty: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            _count: { select: { students: true } },
-          },
-        },
-      },
-      orderBy: {
-        group: {
-          name: 'asc',
-        },
-      },
-    });
+    const subjectGroups = await this.grades.findGroupsOfSubject(subjectId);
 
     return subjectGroups.map((sg) => ({
       id: sg.group.id,
@@ -326,45 +235,7 @@ export class GradesService {
       await this.assertTeacherOwnsSubject(user.id, subjectId);
     }
 
-    // Get all students in the group
-    const students = await this.prisma.student.findMany({
-      where: { groupId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-          },
-        },
-        group: {
-          select: {
-            id: true,
-            name: true,
-            course: true,
-          },
-        },
-        grades: {
-          where: { subjectId },
-          include: {
-            subject: {
-              select: {
-                id: true,
-                name: true,
-                code: true,
-              },
-            },
-          },
-          orderBy: {
-            examDate: 'desc',
-          },
-        },
-      },
-      orderBy: {
-        lastName: 'asc',
-      },
-    });
-
-    return students;
+    return this.grades.findStudentsOfGroupWithGrades(groupId, subjectId);
   }
 
   /**
@@ -390,45 +261,28 @@ export class GradesService {
     const saved =
       valid.length === 0
         ? []
-        : await this.prisma.$transaction(
-            valid.map((gradeDto) =>
-              this.prisma.grade.upsert({
-                where: {
-                  studentId_subjectId_gradeType: {
-                    studentId: gradeDto.studentId,
-                    subjectId: gradeDto.subjectId,
-                    gradeType: gradeDto.gradeType,
-                  },
-                },
-                create: {
-                  ...gradeDto,
-                  teacherId,
-                  examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
-                },
-                update: {
-                  gradeValue: gradeDto.gradeValue,
-                  examDate: gradeDto.examDate ? new Date(gradeDto.examDate) : null,
-                  notes: gradeDto.notes,
-                },
-                include: {
-                  student: {
-                    select: {
-                      id: true,
-                      firstName: true,
-                      lastName: true,
-                      studentId: true,
-                    },
-                  },
-                  subject: {
-                    select: {
-                      id: true,
-                      name: true,
-                      code: true,
-                    },
-                  },
-                },
-              }),
-            ),
+        : await this.grades.transaction(
+            async (tx) => {
+              // Current rows of the batch, to tell a create from an update and to keep the "before" values
+              const existing = await this.grades.findByKeys(valid, tx);
+              const before = new Map(existing.map((grade) => [gradeKey(grade), snapshotGrade(grade)]));
+
+              const rows = [];
+              const entries: AuditEntry[] = [];
+              for (const gradeDto of valid) {
+                const row = await this.grades.upsert(toGradeData(gradeDto, teacherId), tx);
+                rows.push(row);
+
+                const previous = before.get(gradeKey(row));
+                const current = snapshotGrade(row);
+                if (!previous) entries.push(auditEntry('GRADE_CREATE', row.id, null, current));
+                else if (gradeChanged(previous, current)) entries.push(auditEntry('GRADE_UPDATE', row.id, previous, current));
+              }
+
+              await this.audit.record(tx, user, entries);
+              return rows;
+            },
+            { timeoutMs: BATCH_TRANSACTION_TIMEOUT_MS },
           );
 
     return {
@@ -459,18 +313,12 @@ export class GradesService {
       }
     });
 
-    const [students, subjects] = await Promise.all([
-      this.prisma.student.findMany({
-        where: { id: { in: [...new Set(candidates.map((c) => c.dto.studentId))] } },
-        select: { id: true },
-      }),
-      this.prisma.subject.findMany({
-        where: { id: { in: [...new Set(candidates.map((c) => c.dto.subjectId))] } },
-        select: { id: true },
-      }),
+    const [studentIdList, subjectIdList] = await Promise.all([
+      this.grades.findExistingStudentIds([...new Set(candidates.map((c) => c.dto.studentId))]),
+      this.grades.findExistingSubjectIds([...new Set(candidates.map((c) => c.dto.subjectId))]),
     ]);
-    const studentIds = new Set(students.map((s) => s.id));
-    const subjectIds = new Set(subjects.map((s) => s.id));
+    const studentIds = new Set(studentIdList);
+    const subjectIds = new Set(subjectIdList);
 
     const valid: CreateGradeDto[] = [];
     for (const { index, dto } of candidates) {
@@ -485,4 +333,26 @@ export class GradesService {
 
     return { valid, errors: errors.sort((a, b) => a.index - b.index) };
   }
+}
+
+/** A batch is written row by row inside one transaction; the default 5 s is too short for a few hundred rows */
+const BATCH_TRANSACTION_TIMEOUT_MS = 30_000;
+
+const gradeKey = (grade: { studentId: number; subjectId: number; gradeType: string }) =>
+  `${grade.studentId}:${grade.subjectId}:${grade.gradeType}`;
+
+/** Request body to row data: the date arrives as text, the teacher is decided by the service */
+function toGradeData(dto: CreateGradeDto, teacherId: number | null): GradeData {
+  return { ...dto, teacherId, examDate: dto.examDate ? new Date(dto.examDate) : null };
+}
+
+function auditEntry(
+  action: AuditEntry['action'],
+  entityId: number,
+  before: GradeSnapshot | null,
+  after: GradeSnapshot | null,
+): AuditEntry {
+  const reference = after ?? before;
+  if (!reference) throw new Error('An audit entry needs a snapshot');
+  return { action, entityId, studentId: reference.studentId, subjectId: reference.subjectId, before, after };
 }

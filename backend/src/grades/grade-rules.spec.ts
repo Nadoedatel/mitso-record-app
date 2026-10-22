@@ -1,5 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
 import { GradeType } from '@prisma/client';
+import { InvalidInputError } from '../common/errors';
 import { assertGradeValue } from './grade-rules';
 
 describe('assertGradeValue', () => {
@@ -12,13 +12,13 @@ describe('assertGradeValue', () => {
   );
 
   it.each([0, 11, 100])('rejects %d for an exam', (value) => {
-    expect(() => assertGradeValue(GradeType.EXAM, value)).toThrow(BadRequestException);
+    expect(() => assertGradeValue(GradeType.EXAM, value)).toThrow(InvalidInputError);
   });
 
   it('accepts only 0 (not passed) and 1 (passed) for CREDIT', () => {
     expect(() => assertGradeValue(GradeType.CREDIT, 0)).not.toThrow();
     expect(() => assertGradeValue(GradeType.CREDIT, 1)).not.toThrow();
-    expect(() => assertGradeValue(GradeType.CREDIT, 2)).toThrow(BadRequestException);
-    expect(() => assertGradeValue(GradeType.CREDIT, 10)).toThrow(BadRequestException);
+    expect(() => assertGradeValue(GradeType.CREDIT, 2)).toThrow(InvalidInputError);
+    expect(() => assertGradeValue(GradeType.CREDIT, 10)).toThrow(InvalidInputError);
   });
 });

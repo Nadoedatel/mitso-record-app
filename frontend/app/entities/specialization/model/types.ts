@@ -4,7 +4,7 @@ import type { Faculty } from '../../faculty'
 export interface Specialization {
   id: number
   name: string
-  code?: string
+  code?: string | null
   facultyId: number
   faculty?: Faculty
   createdAt: string

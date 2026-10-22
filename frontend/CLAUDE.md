@@ -193,6 +193,8 @@ interface Subject {
 - Разворачивает обёртку `{ data, message }` из API-ответов
 - Методы: `get<T>()`, `post<T>()`, `patch<T>()`, `delete<T>()`
 
+**Типизированный клиент:** `shared/api/apiClient.ts` (`useApiClient()`, `openapi-fetch` поверх спеки `backend/openapi.json`) вызывает `api.GET('/api/faculties/{id}', ...)` с проверкой путей, параметров и ответов; транспорт тот же (`HttpClient.authorizedFetch`: токен, refresh на 401, `ApiError`). Новые вызовы API писать через него, типы берутся из `shared/api/generated` (`npm run api:types`).
+
 **Важно:** токен хранится внутри экземпляра HttpClient. Pinia store (`useAuthStore`) также хранит его и синхронизирует через `setAccessToken()` / `clearAuth()`.
 
 ```typescript

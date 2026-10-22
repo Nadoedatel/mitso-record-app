@@ -8,17 +8,17 @@ export interface Student {
   userId: number
   firstName: string
   lastName: string
-  middleName?: string
+  middleName?: string | null
   studentId: string // Номер зачетной книжки
-  groupId?: number
-  group?: Group
+  groupId?: number | null
+  group?: Group | null
   course: number
-  specializationId?: number
-  specialization?: Specialization
+  specializationId?: number | null
+  specialization?: Specialization | null
   enrollmentYear: number
-  phone?: string
-  address?: string
-  birthDate?: string
+  phone?: string | null
+  address?: string | null
+  birthDate?: string | null
   createdAt: string
   updatedAt: string
   user?: User

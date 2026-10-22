@@ -3,6 +3,14 @@
     <Container maxWidth="xl">
       <Header title="Карточка студента">
         <template #actions>
+          <Button
+            variant="primary"
+            :loading="exporting || downloading"
+            :disabled="exporting || downloading"
+            @click="exportRecordBook(studentId)"
+          >
+            Скачать зачётку (Excel)
+          </Button>
           <Button variant="secondary" @click="$router.push('/students')">К списку</Button>
         </template>
       </Header>
@@ -48,6 +56,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useRecordBookExport } from '~/features/jobs/model/useRecordBookExport'
 import { studentsApi } from '~/features/students/api/studentsApi'
 import { gradesApi } from '~/features/grades/api/gradesApi'
 import type { Student } from '~/entities/student'
@@ -71,6 +80,7 @@ import { formatShortName } from '~/shared/lib/formatName'
 definePageMeta({ middleware: 'auth' })
 
 const route = useRoute()
+const { exportRecordBook, exporting, downloading } = useRecordBookExport()
 const studentId = Number(route.params.id)
 if (!Number.isInteger(studentId)) {
   throw createError({ statusCode: 404, statusMessage: 'Студент не найден', fatal: true })

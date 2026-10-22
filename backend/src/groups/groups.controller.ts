@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { GroupListResponseDto, GroupResponseDto, MessageResponseDto, SubjectResponseDto } from '../common/dto';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto, UpdateGroupDto, QueryGroupDto, SetGroupSubjectsDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
@@ -36,7 +37,7 @@ export class GroupsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Create new group (ADMIN only)' })
-  @ApiResponse({ status: 201, description: 'Group created successfully' })
+  @ApiResponse({ status: 201, type: GroupResponseDto, description: 'Group created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   create(@Body() dto: CreateGroupDto) {
     return this.groupsService.create(dto);
@@ -48,7 +49,7 @@ export class GroupsController {
    */
   @Get()
   @ApiOperation({ summary: 'Get all groups with filters and pagination' })
-  @ApiResponse({ status: 200, description: 'Groups retrieved successfully' })
+  @ApiResponse({ status: 200, type: GroupListResponseDto, description: 'Groups retrieved successfully' })
   findAll(@Query() query: QueryGroupDto) {
     return this.groupsService.findAll(query);
   }
@@ -61,7 +62,7 @@ export class GroupsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get group by ID' })
-  @ApiResponse({ status: 200, description: 'Group found' })
+  @ApiResponse({ status: 200, type: GroupResponseDto, description: 'Group found' })
   @ApiResponse({ status: 404, description: 'Group not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.groupsService.findOne(id);
@@ -75,7 +76,7 @@ export class GroupsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update group (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Group updated successfully' })
+  @ApiResponse({ status: 200, type: GroupResponseDto, description: 'Group updated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Group not found' })
   update(
@@ -93,7 +94,7 @@ export class GroupsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Delete group (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Group deleted successfully' })
+  @ApiResponse({ status: 200, type: MessageResponseDto, description: 'Group deleted successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Group not found' })
   remove(@Param('id', ParseIntPipe) id: number) {
@@ -106,7 +107,7 @@ export class GroupsController {
    */
   @Get(':id/subjects')
   @ApiOperation({ summary: 'Get subjects assigned to a group' })
-  @ApiResponse({ status: 200, description: 'Group subjects retrieved successfully' })
+  @ApiResponse({ status: 200, type: SubjectResponseDto, isArray: true, description: 'Group subjects retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Group not found' })
   getSubjects(@Param('id', ParseIntPipe) id: number) {
     return this.groupsService.getSubjects(id);
@@ -120,7 +121,7 @@ export class GroupsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Set subjects for a group - replaces all existing (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Subjects set successfully' })
+  @ApiResponse({ status: 200, type: SubjectResponseDto, isArray: true, description: 'Subjects set successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Group or subject not found' })
   setSubjects(

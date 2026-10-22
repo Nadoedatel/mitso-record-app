@@ -21,6 +21,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/2fa/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finish a login that needs the second factor */
+        post: operations["AuthController_verifyTwoFactor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/2fa/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start enabling two-factor login (ADMIN only) */
+        post: operations["AuthController_setupTwoFactor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/2fa/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm the setup with a code and get recovery codes (ADMIN only) */
+        post: operations["AuthController_enableTwoFactor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/2fa/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn two-factor login off (ADMIN only) */
+        post: operations["AuthController_disableTwoFactor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/refresh": {
         parameters: {
             query?: never;
@@ -367,6 +435,23 @@ export interface paths {
         patch: operations["GradesController_update"];
         trace?: never;
     };
+    "/api/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Audit log of grade changes (ADMIN only) */
+        get: operations["AuditController_findAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/groups": {
         parameters: {
             query?: never;
@@ -513,6 +598,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/exports/students/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start the export of a student's record book to Excel */
+        post: operations["JobsController_exportStudent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/imports/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start the import of students from a CSV file (ADMIN only) */
+        post: operations["JobsController_importStudents"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** State, progress and result of a job */
+        get: operations["JobsController_getStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download the file of a finished export job */
+        get: operations["JobsController_getFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -524,6 +677,259 @@ export interface components {
              */
             email: string;
             password: string;
+        };
+        LoginResponseDto: {
+            user?: {
+                id: number;
+                email: string;
+                /** @enum {string} */
+                role: "STUDENT" | "TEACHER" | "ADMIN";
+            };
+            accessToken?: string;
+            twoFactorRequired?: boolean;
+            /** @description Send it with the code to POST /auth/2fa/verify; valid for 5 minutes */
+            challengeToken?: string;
+        };
+        VerifyTwoFactorDto: {
+            challengeToken: string;
+            /** @description 6-digit code from the app, or a recovery code */
+            code: string;
+        };
+        TwoFactorSetupResponseDto: {
+            /** @description The secret as text, for typing into the app by hand */
+            secret: string;
+            otpauthUri: string;
+            /** @description PNG data URL of the QR code */
+            qrCode: string;
+        };
+        EnableTwoFactorDto: {
+            code: string;
+        };
+        RecoveryCodesResponseDto: {
+            recoveryCodes: string[];
+        };
+        DisableTwoFactorDto: {
+            password: string;
+            /** @description 6-digit code from the app, or a recovery code */
+            code: string;
+        };
+        MessageResponseDto: {
+            message: string;
+        };
+        RefreshResponseDto: {
+            accessToken: string;
+        };
+        MeResponseDto: {
+            id: number;
+            email: string;
+            /** @enum {string} */
+            role: "STUDENT" | "TEACHER" | "ADMIN";
+            student: {
+                id: number;
+                userId: number;
+                firstName: string;
+                lastName: string;
+                middleName: string | null;
+                /** @description Номер зачётной книжки */
+                studentId: string;
+                groupId: number | null;
+                course: number;
+                specializationId: number | null;
+                enrollmentYear: number;
+                phone: string | null;
+                address: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                birthDate: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                user?: {
+                    id: number;
+                    email: string;
+                    /** @enum {string} */
+                    role: "STUDENT" | "TEACHER" | "ADMIN";
+                };
+                group?: {
+                    id: number;
+                    name: string;
+                    course: number;
+                    facultyId: number | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                    faculty?: {
+                        id: number;
+                        name: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    } | null;
+                    studentCount?: number;
+                    students?: {
+                        id: number;
+                        userId: number;
+                        firstName: string;
+                        lastName: string;
+                        middleName: string | null;
+                        /** @description Номер зачётной книжки */
+                        studentId: string;
+                        groupId: number | null;
+                        course: number;
+                        specializationId: number | null;
+                        enrollmentYear: number;
+                        phone: string | null;
+                        address: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        birthDate: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    }[];
+                    subjectGroups?: {
+                        subject: {
+                            id: number;
+                            name: string;
+                            code: string;
+                            credits: number;
+                            semester: number;
+                            description: string | null;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            createdAt: string;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            updatedAt: string;
+                        };
+                    }[];
+                } | null;
+                specialization?: {
+                    id: number;
+                    name: string;
+                    code: string | null;
+                    facultyId: number;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                    faculty?: {
+                        id: number;
+                        name: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    };
+                    _count?: {
+                        students: number;
+                    };
+                } | null;
+                grades?: {
+                    id: number;
+                    studentId: number;
+                    subjectId: number;
+                    teacherId: number | null;
+                    /** @description 1-10; для CREDIT: 1 = зачёт, 0 = не зачёт */
+                    gradeValue: number;
+                    /** @enum {string} */
+                    gradeType: "EXAM" | "CREDIT" | "COURSEWORK" | "TEST" | "LAB";
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    examDate: string | null;
+                    notes: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                    student?: {
+                        id: number;
+                        userId: number;
+                        firstName: string;
+                        lastName: string;
+                        middleName: string | null;
+                        /** @description Номер зачётной книжки */
+                        studentId: string;
+                        groupId: number | null;
+                        course: number;
+                        specializationId: number | null;
+                        enrollmentYear: number;
+                        phone: string | null;
+                        address: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        birthDate: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    };
+                    subject?: {
+                        id: number;
+                        name: string;
+                        code: string;
+                        credits: number;
+                        semester: number;
+                        description: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    };
+                    teacher?: {
+                        id: number;
+                        userId: number;
+                        firstName: string;
+                        lastName: string;
+                        middleName: string | null;
+                        department: string;
+                        position: string;
+                        academicDegree: string | null;
+                        phone: string | null;
+                        officeNumber: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    } | null;
+                }[];
+            } | null;
+            teacher: {
+                id: number;
+                userId: number;
+                firstName: string;
+                lastName: string;
+                middleName: string | null;
+                department: string;
+                position: string;
+                academicDegree: string | null;
+                phone: string | null;
+                officeNumber: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                user?: {
+                    id: number;
+                    email: string;
+                    /** @enum {string} */
+                    role: "STUDENT" | "TEACHER" | "ADMIN";
+                };
+                teacherSubjects?: {
+                    subject: {
+                        id: number;
+                        name: string;
+                        code: string;
+                        credits: number;
+                        semester: number;
+                        description: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    };
+                }[];
+            } | null;
+            /** @description Whether the second login factor (authenticator app) is on */
+            twoFactorEnabled: boolean;
         };
         ChangePasswordDto: {
             currentPassword: string;
@@ -548,6 +954,348 @@ export interface components {
             phone?: string | null;
             address?: string | null;
             birthDate?: (string) | null;
+        };
+        StudentResponseDto: {
+            id: number;
+            userId: number;
+            firstName: string;
+            lastName: string;
+            middleName: string | null;
+            /** @description Номер зачётной книжки */
+            studentId: string;
+            groupId: number | null;
+            course: number;
+            specializationId: number | null;
+            enrollmentYear: number;
+            phone: string | null;
+            address: string | null;
+            /** @example 2026-01-15T10:00:00.000Z */
+            birthDate: string | null;
+            /** @example 2026-01-15T10:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-01-15T10:00:00.000Z */
+            updatedAt: string;
+            user?: {
+                id: number;
+                email: string;
+                /** @enum {string} */
+                role: "STUDENT" | "TEACHER" | "ADMIN";
+            };
+            group?: {
+                id: number;
+                name: string;
+                course: number;
+                facultyId: number | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                faculty?: {
+                    id: number;
+                    name: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                } | null;
+                studentCount?: number;
+                students?: {
+                    id: number;
+                    userId: number;
+                    firstName: string;
+                    lastName: string;
+                    middleName: string | null;
+                    /** @description Номер зачётной книжки */
+                    studentId: string;
+                    groupId: number | null;
+                    course: number;
+                    specializationId: number | null;
+                    enrollmentYear: number;
+                    phone: string | null;
+                    address: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    birthDate: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                }[];
+                subjectGroups?: {
+                    subject: {
+                        id: number;
+                        name: string;
+                        code: string;
+                        credits: number;
+                        semester: number;
+                        description: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    };
+                }[];
+            } | null;
+            specialization?: {
+                id: number;
+                name: string;
+                code: string | null;
+                facultyId: number;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                faculty?: {
+                    id: number;
+                    name: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                };
+                _count?: {
+                    students: number;
+                };
+            } | null;
+            grades?: {
+                id: number;
+                studentId: number;
+                subjectId: number;
+                teacherId: number | null;
+                /** @description 1-10; для CREDIT: 1 = зачёт, 0 = не зачёт */
+                gradeValue: number;
+                /** @enum {string} */
+                gradeType: "EXAM" | "CREDIT" | "COURSEWORK" | "TEST" | "LAB";
+                /** @example 2026-01-15T10:00:00.000Z */
+                examDate: string | null;
+                notes: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                student?: {
+                    id: number;
+                    userId: number;
+                    firstName: string;
+                    lastName: string;
+                    middleName: string | null;
+                    /** @description Номер зачётной книжки */
+                    studentId: string;
+                    groupId: number | null;
+                    course: number;
+                    specializationId: number | null;
+                    enrollmentYear: number;
+                    phone: string | null;
+                    address: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    birthDate: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                };
+                subject?: {
+                    id: number;
+                    name: string;
+                    code: string;
+                    credits: number;
+                    semester: number;
+                    description: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                };
+                teacher?: {
+                    id: number;
+                    userId: number;
+                    firstName: string;
+                    lastName: string;
+                    middleName: string | null;
+                    department: string;
+                    position: string;
+                    academicDegree: string | null;
+                    phone: string | null;
+                    officeNumber: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                } | null;
+            }[];
+        };
+        StudentListResponseDto: {
+            data: {
+                id: number;
+                userId: number;
+                firstName: string;
+                lastName: string;
+                middleName: string | null;
+                /** @description Номер зачётной книжки */
+                studentId: string;
+                groupId: number | null;
+                course: number;
+                specializationId: number | null;
+                enrollmentYear: number;
+                phone: string | null;
+                address: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                birthDate: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                user?: {
+                    id: number;
+                    email: string;
+                    /** @enum {string} */
+                    role: "STUDENT" | "TEACHER" | "ADMIN";
+                };
+                group?: {
+                    id: number;
+                    name: string;
+                    course: number;
+                    facultyId: number | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                    faculty?: {
+                        id: number;
+                        name: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    } | null;
+                    studentCount?: number;
+                    students?: {
+                        id: number;
+                        userId: number;
+                        firstName: string;
+                        lastName: string;
+                        middleName: string | null;
+                        /** @description Номер зачётной книжки */
+                        studentId: string;
+                        groupId: number | null;
+                        course: number;
+                        specializationId: number | null;
+                        enrollmentYear: number;
+                        phone: string | null;
+                        address: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        birthDate: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    }[];
+                    subjectGroups?: {
+                        subject: {
+                            id: number;
+                            name: string;
+                            code: string;
+                            credits: number;
+                            semester: number;
+                            description: string | null;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            createdAt: string;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            updatedAt: string;
+                        };
+                    }[];
+                } | null;
+                specialization?: {
+                    id: number;
+                    name: string;
+                    code: string | null;
+                    facultyId: number;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                    faculty?: {
+                        id: number;
+                        name: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    };
+                    _count?: {
+                        students: number;
+                    };
+                } | null;
+                grades?: {
+                    id: number;
+                    studentId: number;
+                    subjectId: number;
+                    teacherId: number | null;
+                    /** @description 1-10; для CREDIT: 1 = зачёт, 0 = не зачёт */
+                    gradeValue: number;
+                    /** @enum {string} */
+                    gradeType: "EXAM" | "CREDIT" | "COURSEWORK" | "TEST" | "LAB";
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    examDate: string | null;
+                    notes: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                    student?: {
+                        id: number;
+                        userId: number;
+                        firstName: string;
+                        lastName: string;
+                        middleName: string | null;
+                        /** @description Номер зачётной книжки */
+                        studentId: string;
+                        groupId: number | null;
+                        course: number;
+                        specializationId: number | null;
+                        enrollmentYear: number;
+                        phone: string | null;
+                        address: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        birthDate: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    };
+                    subject?: {
+                        id: number;
+                        name: string;
+                        code: string;
+                        credits: number;
+                        semester: number;
+                        description: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    };
+                    teacher?: {
+                        id: number;
+                        userId: number;
+                        firstName: string;
+                        lastName: string;
+                        middleName: string | null;
+                        department: string;
+                        position: string;
+                        academicDegree: string | null;
+                        phone: string | null;
+                        officeNumber: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    } | null;
+                }[];
+            }[];
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
         };
         UpdateStudentDto: {
             firstName?: string;
@@ -579,6 +1327,84 @@ export interface components {
             phone?: string | null;
             officeNumber?: string | null;
         };
+        TeacherResponseDto: {
+            id: number;
+            userId: number;
+            firstName: string;
+            lastName: string;
+            middleName: string | null;
+            department: string;
+            position: string;
+            academicDegree: string | null;
+            phone: string | null;
+            officeNumber: string | null;
+            /** @example 2026-01-15T10:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-01-15T10:00:00.000Z */
+            updatedAt: string;
+            user?: {
+                id: number;
+                email: string;
+                /** @enum {string} */
+                role: "STUDENT" | "TEACHER" | "ADMIN";
+            };
+            teacherSubjects?: {
+                subject: {
+                    id: number;
+                    name: string;
+                    code: string;
+                    credits: number;
+                    semester: number;
+                    description: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                };
+            }[];
+        };
+        TeacherListResponseDto: {
+            data: {
+                id: number;
+                userId: number;
+                firstName: string;
+                lastName: string;
+                middleName: string | null;
+                department: string;
+                position: string;
+                academicDegree: string | null;
+                phone: string | null;
+                officeNumber: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                user?: {
+                    id: number;
+                    email: string;
+                    /** @enum {string} */
+                    role: "STUDENT" | "TEACHER" | "ADMIN";
+                };
+                teacherSubjects?: {
+                    subject: {
+                        id: number;
+                        name: string;
+                        code: string;
+                        credits: number;
+                        semester: number;
+                        description: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    };
+                }[];
+            }[];
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
         UpdateTeacherDto: {
             /**
              * Format: email
@@ -594,6 +1420,119 @@ export interface components {
             academicDegree?: string | null;
             phone?: string | null;
             officeNumber?: string | null;
+        };
+        SubjectResponseDto: {
+            id: number;
+            name: string;
+            code: string;
+            credits: number;
+            semester: number;
+            description: string | null;
+            /** @example 2026-01-15T10:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-01-15T10:00:00.000Z */
+            updatedAt: string;
+            teacherSubjects?: {
+                teacher: {
+                    id: number;
+                    userId: number;
+                    firstName: string;
+                    lastName: string;
+                    middleName: string | null;
+                    department: string;
+                    position: string;
+                    academicDegree: string | null;
+                    phone: string | null;
+                    officeNumber: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                    user?: {
+                        id: number;
+                        email: string;
+                        /** @enum {string} */
+                        role: "STUDENT" | "TEACHER" | "ADMIN";
+                    };
+                    teacherSubjects?: {
+                        subject: {
+                            id: number;
+                            name: string;
+                            code: string;
+                            credits: number;
+                            semester: number;
+                            description: string | null;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            createdAt: string;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            updatedAt: string;
+                        };
+                    }[];
+                };
+            }[];
+            subjectGroups?: {
+                group: {
+                    id: number;
+                    name: string;
+                    course: number;
+                    facultyId: number | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                    faculty?: {
+                        id: number;
+                        name: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    } | null;
+                    studentCount?: number;
+                    students?: {
+                        id: number;
+                        userId: number;
+                        firstName: string;
+                        lastName: string;
+                        middleName: string | null;
+                        /** @description Номер зачётной книжки */
+                        studentId: string;
+                        groupId: number | null;
+                        course: number;
+                        specializationId: number | null;
+                        enrollmentYear: number;
+                        phone: string | null;
+                        address: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        birthDate: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    }[];
+                    subjectGroups?: {
+                        subject: {
+                            id: number;
+                            name: string;
+                            code: string;
+                            credits: number;
+                            semester: number;
+                            description: string | null;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            createdAt: string;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            updatedAt: string;
+                        };
+                    }[];
+                };
+            }[];
+            grades?: {
+                id: number;
+                /** @description 1-10; для CREDIT: 1 = зачёт, 0 = не зачёт */
+                gradeValue: number;
+                /** @enum {string} */
+                gradeType: "EXAM" | "CREDIT" | "COURSEWORK" | "TEST" | "LAB";
+            }[];
         };
         AssignSubjectsDto: {
             /**
@@ -629,6 +1568,125 @@ export interface components {
             semester: number;
             /** @description Subject description */
             description?: string | null;
+        };
+        SubjectListResponseDto: {
+            data: {
+                id: number;
+                name: string;
+                code: string;
+                credits: number;
+                semester: number;
+                description: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                teacherSubjects?: {
+                    teacher: {
+                        id: number;
+                        userId: number;
+                        firstName: string;
+                        lastName: string;
+                        middleName: string | null;
+                        department: string;
+                        position: string;
+                        academicDegree: string | null;
+                        phone: string | null;
+                        officeNumber: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                        user?: {
+                            id: number;
+                            email: string;
+                            /** @enum {string} */
+                            role: "STUDENT" | "TEACHER" | "ADMIN";
+                        };
+                        teacherSubjects?: {
+                            subject: {
+                                id: number;
+                                name: string;
+                                code: string;
+                                credits: number;
+                                semester: number;
+                                description: string | null;
+                                /** @example 2026-01-15T10:00:00.000Z */
+                                createdAt: string;
+                                /** @example 2026-01-15T10:00:00.000Z */
+                                updatedAt: string;
+                            };
+                        }[];
+                    };
+                }[];
+                subjectGroups?: {
+                    group: {
+                        id: number;
+                        name: string;
+                        course: number;
+                        facultyId: number | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                        faculty?: {
+                            id: number;
+                            name: string;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            createdAt: string;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            updatedAt: string;
+                        } | null;
+                        studentCount?: number;
+                        students?: {
+                            id: number;
+                            userId: number;
+                            firstName: string;
+                            lastName: string;
+                            middleName: string | null;
+                            /** @description Номер зачётной книжки */
+                            studentId: string;
+                            groupId: number | null;
+                            course: number;
+                            specializationId: number | null;
+                            enrollmentYear: number;
+                            phone: string | null;
+                            address: string | null;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            birthDate: string | null;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            createdAt: string;
+                            /** @example 2026-01-15T10:00:00.000Z */
+                            updatedAt: string;
+                        }[];
+                        subjectGroups?: {
+                            subject: {
+                                id: number;
+                                name: string;
+                                code: string;
+                                credits: number;
+                                semester: number;
+                                description: string | null;
+                                /** @example 2026-01-15T10:00:00.000Z */
+                                createdAt: string;
+                                /** @example 2026-01-15T10:00:00.000Z */
+                                updatedAt: string;
+                            };
+                        }[];
+                    };
+                }[];
+                grades?: {
+                    id: number;
+                    /** @description 1-10; для CREDIT: 1 = зачёт, 0 = не зачёт */
+                    gradeValue: number;
+                    /** @enum {string} */
+                    gradeType: "EXAM" | "CREDIT" | "COURSEWORK" | "TEST" | "LAB";
+                }[];
+            }[];
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
         };
         UpdateSubjectDto: {
             /**
@@ -686,6 +1744,72 @@ export interface components {
             examDate?: (string) | null;
             notes?: string | null;
         };
+        GradeResponseDto: {
+            id: number;
+            studentId: number;
+            subjectId: number;
+            teacherId: number | null;
+            /** @description 1-10; для CREDIT: 1 = зачёт, 0 = не зачёт */
+            gradeValue: number;
+            /** @enum {string} */
+            gradeType: "EXAM" | "CREDIT" | "COURSEWORK" | "TEST" | "LAB";
+            /** @example 2026-01-15T10:00:00.000Z */
+            examDate: string | null;
+            notes: string | null;
+            /** @example 2026-01-15T10:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-01-15T10:00:00.000Z */
+            updatedAt: string;
+            student?: {
+                id: number;
+                userId: number;
+                firstName: string;
+                lastName: string;
+                middleName: string | null;
+                /** @description Номер зачётной книжки */
+                studentId: string;
+                groupId: number | null;
+                course: number;
+                specializationId: number | null;
+                enrollmentYear: number;
+                phone: string | null;
+                address: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                birthDate: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+            };
+            subject?: {
+                id: number;
+                name: string;
+                code: string;
+                credits: number;
+                semester: number;
+                description: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+            };
+            teacher?: {
+                id: number;
+                userId: number;
+                firstName: string;
+                lastName: string;
+                middleName: string | null;
+                department: string;
+                position: string;
+                academicDegree: string | null;
+                phone: string | null;
+                officeNumber: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+            } | null;
+        };
         BatchCreateGradeDto: {
             /** @description Grades to create or update */
             grades: {
@@ -699,6 +1823,207 @@ export interface components {
                 notes?: string | null;
             }[];
         };
+        GradeBatchResultResponseDto: {
+            total: number;
+            succeeded: number;
+            failed: number;
+            errors: {
+                index: number;
+                reason: string;
+            }[];
+            data: {
+                id: number;
+                studentId: number;
+                subjectId: number;
+                teacherId: number | null;
+                /** @description 1-10; для CREDIT: 1 = зачёт, 0 = не зачёт */
+                gradeValue: number;
+                /** @enum {string} */
+                gradeType: "EXAM" | "CREDIT" | "COURSEWORK" | "TEST" | "LAB";
+                /** @example 2026-01-15T10:00:00.000Z */
+                examDate: string | null;
+                notes: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                student?: {
+                    id: number;
+                    userId: number;
+                    firstName: string;
+                    lastName: string;
+                    middleName: string | null;
+                    /** @description Номер зачётной книжки */
+                    studentId: string;
+                    groupId: number | null;
+                    course: number;
+                    specializationId: number | null;
+                    enrollmentYear: number;
+                    phone: string | null;
+                    address: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    birthDate: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                };
+                subject?: {
+                    id: number;
+                    name: string;
+                    code: string;
+                    credits: number;
+                    semester: number;
+                    description: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                };
+                teacher?: {
+                    id: number;
+                    userId: number;
+                    firstName: string;
+                    lastName: string;
+                    middleName: string | null;
+                    department: string;
+                    position: string;
+                    academicDegree: string | null;
+                    phone: string | null;
+                    officeNumber: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                } | null;
+            }[];
+        };
+        GradeListResponseDto: {
+            data: {
+                id: number;
+                studentId: number;
+                subjectId: number;
+                teacherId: number | null;
+                /** @description 1-10; для CREDIT: 1 = зачёт, 0 = не зачёт */
+                gradeValue: number;
+                /** @enum {string} */
+                gradeType: "EXAM" | "CREDIT" | "COURSEWORK" | "TEST" | "LAB";
+                /** @example 2026-01-15T10:00:00.000Z */
+                examDate: string | null;
+                notes: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                student?: {
+                    id: number;
+                    userId: number;
+                    firstName: string;
+                    lastName: string;
+                    middleName: string | null;
+                    /** @description Номер зачётной книжки */
+                    studentId: string;
+                    groupId: number | null;
+                    course: number;
+                    specializationId: number | null;
+                    enrollmentYear: number;
+                    phone: string | null;
+                    address: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    birthDate: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                };
+                subject?: {
+                    id: number;
+                    name: string;
+                    code: string;
+                    credits: number;
+                    semester: number;
+                    description: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                };
+                teacher?: {
+                    id: number;
+                    userId: number;
+                    firstName: string;
+                    lastName: string;
+                    middleName: string | null;
+                    department: string;
+                    position: string;
+                    academicDegree: string | null;
+                    phone: string | null;
+                    officeNumber: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                } | null;
+            }[];
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+        GroupResponseDto: {
+            id: number;
+            name: string;
+            course: number;
+            facultyId: number | null;
+            /** @example 2026-01-15T10:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-01-15T10:00:00.000Z */
+            updatedAt: string;
+            faculty?: {
+                id: number;
+                name: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+            } | null;
+            studentCount?: number;
+            students?: {
+                id: number;
+                userId: number;
+                firstName: string;
+                lastName: string;
+                middleName: string | null;
+                /** @description Номер зачётной книжки */
+                studentId: string;
+                groupId: number | null;
+                course: number;
+                specializationId: number | null;
+                enrollmentYear: number;
+                phone: string | null;
+                address: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                birthDate: string | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+            }[];
+            subjectGroups?: {
+                subject: {
+                    id: number;
+                    name: string;
+                    code: string;
+                    credits: number;
+                    semester: number;
+                    description: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                };
+            }[];
+        };
         UpdateGradeDto: {
             studentId?: number;
             subjectId?: number;
@@ -708,6 +2033,52 @@ export interface components {
             gradeType?: "EXAM" | "CREDIT" | "COURSEWORK" | "TEST" | "LAB";
             examDate?: (string) | null;
             notes?: string | null;
+        };
+        AuditLogListResponseDto: {
+            data: {
+                id: number;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @description Null after the user was deleted; actorEmail stays */
+                actorId: number | null;
+                actorEmail: string;
+                /** @enum {string} */
+                actorRole: "STUDENT" | "TEACHER" | "ADMIN";
+                /** @enum {string} */
+                action: "GRADE_CREATE" | "GRADE_UPDATE" | "GRADE_DELETE";
+                entityId: number | null;
+                studentId: number | null;
+                subjectId: number | null;
+                /** @description Current name; null if the student was deleted */
+                studentName: string | null;
+                /** @description Current name; null if the subject was deleted */
+                subjectName: string | null;
+                before: {
+                    studentId: number;
+                    subjectId: number;
+                    /** @enum {string} */
+                    gradeType: "EXAM" | "CREDIT" | "COURSEWORK" | "TEST" | "LAB";
+                    gradeValue: number;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    examDate: string | null;
+                    notes: string | null;
+                    teacherId: number | null;
+                } | null;
+                after: {
+                    studentId: number;
+                    subjectId: number;
+                    /** @enum {string} */
+                    gradeType: "EXAM" | "CREDIT" | "COURSEWORK" | "TEST" | "LAB";
+                    gradeValue: number;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    examDate: string | null;
+                    notes: string | null;
+                    teacherId: number | null;
+                } | null;
+            }[];
+            /** @description Pass it as `cursor` to get the next page; null on the last page */
+            nextCursor: string | null;
+            limit: number;
         };
         CreateGroupDto: {
             /**
@@ -725,6 +2096,66 @@ export interface components {
              * @example 1
              */
             facultyId?: number | null;
+        };
+        GroupListResponseDto: {
+            data: {
+                id: number;
+                name: string;
+                course: number;
+                facultyId: number | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                faculty?: {
+                    id: number;
+                    name: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                } | null;
+                studentCount?: number;
+                students?: {
+                    id: number;
+                    userId: number;
+                    firstName: string;
+                    lastName: string;
+                    middleName: string | null;
+                    /** @description Номер зачётной книжки */
+                    studentId: string;
+                    groupId: number | null;
+                    course: number;
+                    specializationId: number | null;
+                    enrollmentYear: number;
+                    phone: string | null;
+                    address: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    birthDate: string | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                }[];
+                subjectGroups?: {
+                    subject: {
+                        id: number;
+                        name: string;
+                        code: string;
+                        credits: number;
+                        semester: number;
+                        description: string | null;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        createdAt: string;
+                        /** @example 2026-01-15T10:00:00.000Z */
+                        updatedAt: string;
+                    };
+                }[];
+            }[];
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
         };
         UpdateGroupDto: {
             /**
@@ -754,6 +2185,76 @@ export interface components {
              */
             name: string;
         };
+        FacultyResponseDto: {
+            id: number;
+            name: string;
+            /** @example 2026-01-15T10:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-01-15T10:00:00.000Z */
+            updatedAt: string;
+            _count?: {
+                specializations: number;
+                groups: number;
+            };
+            specializations?: {
+                id: number;
+                name: string;
+                code: string | null;
+                facultyId: number;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+            }[];
+            groups?: {
+                id: number;
+                name: string;
+                course: number;
+                facultyId: number | null;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+            }[];
+        };
+        FacultyListResponseDto: {
+            data: {
+                id: number;
+                name: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                _count?: {
+                    specializations: number;
+                    groups: number;
+                };
+                specializations?: {
+                    id: number;
+                    name: string;
+                    code: string | null;
+                    facultyId: number;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                }[];
+                groups?: {
+                    id: number;
+                    name: string;
+                    course: number;
+                    facultyId: number | null;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                }[];
+            }[];
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
         UpdateFacultyDto: {
             /**
              * @description Faculty name
@@ -778,6 +2279,54 @@ export interface components {
              */
             facultyId: number;
         };
+        SpecializationResponseDto: {
+            id: number;
+            name: string;
+            code: string | null;
+            facultyId: number;
+            /** @example 2026-01-15T10:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-01-15T10:00:00.000Z */
+            updatedAt: string;
+            faculty?: {
+                id: number;
+                name: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+            };
+            _count?: {
+                students: number;
+            };
+        };
+        SpecializationListResponseDto: {
+            data: {
+                id: number;
+                name: string;
+                code: string | null;
+                facultyId: number;
+                /** @example 2026-01-15T10:00:00.000Z */
+                createdAt: string;
+                /** @example 2026-01-15T10:00:00.000Z */
+                updatedAt: string;
+                faculty?: {
+                    id: number;
+                    name: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    createdAt: string;
+                    /** @example 2026-01-15T10:00:00.000Z */
+                    updatedAt: string;
+                };
+                _count?: {
+                    students: number;
+                };
+            }[];
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
         UpdateSpecializationDto: {
             /**
              * @description Specialization name
@@ -794,6 +2343,35 @@ export interface components {
              * @example 1
              */
             facultyId?: number;
+        };
+        JobStatusResponseDto: {
+            id: string;
+            /** @enum {string} */
+            kind: "export-student" | "import-students";
+            /** @enum {string} */
+            state: "waiting" | "active" | "completed" | "failed" | "delayed";
+            progress: number;
+            attemptsMade: number;
+            failedReason: string | null;
+            result: {
+                /** @description Export: name of the generated file */
+                fileName?: string;
+                /** @description Export: file size in bytes */
+                size?: number;
+                /** @description Import: rows in the file */
+                total?: number;
+                /** @description Import: students created */
+                created?: number;
+                /** @description Import: rows skipped because the email is already registered */
+                skipped?: number;
+                /** @description Import: rows with errors */
+                failed?: number;
+                errors?: {
+                    /** @description Line in the file */
+                    row: number;
+                    reason: string;
+                }[];
+            } | null;
         };
     };
     responses: never;
@@ -822,7 +2400,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["LoginResponseDto"];
+                };
             };
             /** @description Invalid credentials */
             401: {
@@ -833,6 +2413,147 @@ export interface operations {
             };
             /** @description Too many requests */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_verifyTwoFactor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyTwoFactorDto"];
+            };
+        };
+        responses: {
+            /** @description Logged in. Refresh token set in httpOnly cookie. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponseDto"];
+                };
+            };
+            /** @description Wrong or reused code, or the challenge expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Too many wrong codes */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_setupTwoFactor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Secret and QR code; the factor is not on yet */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TwoFactorSetupResponseDto"];
+                };
+            };
+            /** @description Already enabled */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The server has no TOTP_ENCRYPTION_KEY */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_enableTwoFactor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnableTwoFactorDto"];
+            };
+        };
+        responses: {
+            /** @description Enabled. The recovery codes are shown only now. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryCodesResponseDto"];
+                };
+            };
+            /** @description No setup started, or a wrong code */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_disableTwoFactor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisableTwoFactorDto"];
+            };
+        };
+        responses: {
+            /** @description Disabled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+            /** @description Wrong password, or the factor is not on */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Wrong code */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -854,7 +2575,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RefreshResponseDto"];
+                };
             };
             /** @description Invalid or expired refresh token */
             401: {
@@ -879,7 +2602,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MeResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -904,7 +2629,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -933,7 +2660,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
             };
             /** @description Wrong current password or invalid new password */
             400: {
@@ -974,7 +2703,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudentListResponseDto"];
+                };
             };
         };
     };
@@ -995,7 +2726,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudentResponseDto"];
+                };
             };
         };
     };
@@ -1015,7 +2748,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudentResponseDto"];
+                };
             };
             /** @description Student not found */
             404: {
@@ -1041,7 +2776,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
             };
         };
     };
@@ -1064,7 +2801,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudentResponseDto"];
+                };
             };
         };
     };
@@ -1089,7 +2828,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeacherListResponseDto"];
+                };
             };
         };
     };
@@ -1110,7 +2851,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeacherResponseDto"];
+                };
             };
         };
     };
@@ -1130,7 +2873,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeacherResponseDto"];
+                };
             };
             /** @description Teacher not found */
             404: {
@@ -1156,7 +2901,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
             };
         };
     };
@@ -1179,7 +2926,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeacherResponseDto"];
+                };
             };
         };
     };
@@ -1199,7 +2948,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SubjectResponseDto"][];
+                };
             };
             /** @description Teacher not found */
             404: {
@@ -1230,7 +2981,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SubjectResponseDto"][];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1265,7 +3018,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1306,7 +3061,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SubjectListResponseDto"];
+                };
             };
         };
     };
@@ -1328,7 +3085,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SubjectResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1355,7 +3114,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SubjectResponseDto"];
+                };
             };
             /** @description Subject not found */
             404: {
@@ -1382,7 +3143,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1420,7 +3183,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SubjectResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1458,7 +3223,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SubjectResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1492,7 +3259,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeacherResponseDto"][];
+                };
             };
             /** @description Subject not found */
             404: {
@@ -1523,7 +3292,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeacherResponseDto"][];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1562,7 +3333,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GradeListResponseDto"];
+                };
             };
         };
     };
@@ -1584,7 +3357,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GradeResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1613,7 +3388,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GradeBatchResultResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1640,7 +3417,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GradeResponseDto"][];
+                };
             };
         };
     };
@@ -1660,7 +3439,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GroupResponseDto"][];
+                };
             };
         };
     };
@@ -1681,7 +3462,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudentResponseDto"][];
+                };
             };
         };
     };
@@ -1701,7 +3484,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GradeResponseDto"];
+                };
             };
             /** @description Grade not found */
             404: {
@@ -1727,7 +3512,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
             };
         };
     };
@@ -1750,6 +3537,52 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
+                content: {
+                    "application/json": components["schemas"]["GradeResponseDto"];
+                };
+            };
+        };
+    };
+    AuditController_findAll: {
+        parameters: {
+            query?: {
+                /** @description Items per page (max 500) */
+                limit?: number;
+                /** @description `nextCursor` of the previous page; leave out for the first page */
+                cursor?: string;
+                /** @description Only changes of this student’s grades */
+                studentId?: number;
+                /** @description Only changes in this subject */
+                subjectId?: number;
+                /** @description Only changes made by this user */
+                actorId?: number;
+                /** @description Only this kind of change */
+                action?: "GRADE_CREATE" | "GRADE_UPDATE" | "GRADE_DELETE";
+                /** @description Not earlier than (date or timestamp) */
+                from?: string;
+                /** @description Not later than (a plain date includes that whole day) */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Records retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLogListResponseDto"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
                 content?: never;
             };
         };
@@ -1763,6 +3596,8 @@ export interface operations {
                 limit?: number;
                 /** @description Filter by subject ID */
                 subjectId?: number;
+                /** @description Search by group name */
+                search?: string;
             };
             header?: never;
             path?: never;
@@ -1775,7 +3610,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GroupListResponseDto"];
+                };
             };
         };
     };
@@ -1797,7 +3634,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GroupResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1824,7 +3663,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GroupResponseDto"];
+                };
             };
             /** @description Group not found */
             404: {
@@ -1851,7 +3692,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1889,7 +3732,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GroupResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1923,7 +3768,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SubjectResponseDto"][];
+                };
             };
             /** @description Group not found */
             404: {
@@ -1954,7 +3801,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SubjectResponseDto"][];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -1993,7 +3842,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["FacultyListResponseDto"];
+                };
             };
         };
     };
@@ -2015,7 +3866,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["FacultyResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -2042,7 +3895,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["FacultyResponseDto"];
+                };
             };
             /** @description Faculty not found */
             404: {
@@ -2069,7 +3924,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -2107,7 +3964,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["FacultyResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -2148,7 +4007,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SpecializationListResponseDto"];
+                };
             };
         };
     };
@@ -2170,7 +4031,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SpecializationResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -2197,7 +4060,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SpecializationResponseDto"];
+                };
             };
             /** @description Specialization not found */
             404: {
@@ -2224,7 +4089,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -2262,7 +4129,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SpecializationResponseDto"];
+                };
             };
             /** @description Forbidden */
             403: {
@@ -2298,6 +4167,140 @@ export interface operations {
             };
             /** @description Database is unreachable */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    JobsController_exportStudent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Job accepted; poll GET /jobs/{id} */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobStatusResponseDto"];
+                };
+            };
+            /** @description A student asked for someone else's record book */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Background jobs are not available (no Redis) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    JobsController_importStudents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Job accepted; poll GET /jobs/{id} */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobStatusResponseDto"];
+                };
+            };
+            /** @description The file is empty, has wrong columns or too many rows */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Background jobs are not available (no Redis) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    JobsController_getStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobStatusResponseDto"];
+                };
+            };
+            /** @description No such job (or it belongs to another user) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    JobsController_getFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The .xlsx file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description No such job, not finished, or the file has expired */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

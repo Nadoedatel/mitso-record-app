@@ -1,5 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
 import { GradeType } from '@prisma/client';
+import { InvalidInputError } from '../common/errors';
 
 export const GRADE_MIN = 1;
 export const GRADE_MAX = 10;
@@ -14,12 +14,12 @@ export const PASS_FAIL_TYPES: GradeType[] = [GradeType.CREDIT];
 /**
  * Assert that a grade value is valid for its type:
  * pass/fail types accept 0 (not passed) or 1 (passed), all others an integer 1-10
- * @throws BadRequestException if the value is not allowed for the type
+ * @throws InvalidInputError if the value is not allowed for the type
  */
 export function assertGradeValue(gradeType: GradeType, gradeValue: number): void {
   if (PASS_FAIL_TYPES.includes(gradeType)) {
     if (gradeValue !== CREDIT_PASSED && gradeValue !== CREDIT_FAILED) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `Для типа оценки ${gradeType} допустимы только ${CREDIT_FAILED} (не сдано) или ${CREDIT_PASSED} (сдано)`,
       );
     }
@@ -27,7 +27,7 @@ export function assertGradeValue(gradeType: GradeType, gradeValue: number): void
   }
 
   if (gradeValue < GRADE_MIN || gradeValue > GRADE_MAX) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       `Для типа оценки ${gradeType} допустимы значения от ${GRADE_MIN} до ${GRADE_MAX}`,
     );
   }

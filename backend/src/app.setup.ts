@@ -4,6 +4,7 @@ import * as cookieParser from 'cookie-parser';
 import { z } from 'zod';
 import { AllExceptionsFilter } from './common/filters';
 import { parseTrustProxy } from './common/config';
+import { metricsMiddleware } from './metrics';
 
 // Zod's built-in Russian texts for validation errors ("Неверный ввод: ожидалось число...")
 z.config(z.locales.ru());
@@ -15,6 +16,9 @@ z.config(z.locales.ru());
 export function configureApp(app: INestApplication): void {
   // Real client IP behind a proxy (for the rate limiter and logs); off unless TRUST_PROXY is set
   app.getHttpAdapter().getInstance().set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
+
+  // Count every request (also those a guard rejects) for GET /api/metrics
+  app.use(metricsMiddleware);
 
   // Set global prefix for all routes
   app.setGlobalPrefix('api');

@@ -43,6 +43,11 @@ export function useSubjectsAdmin() {
     allTeachers.value = result.data
   }
 
+  /** The form has one teacher select: it shows the first teacher of the subject */
+  function currentTeacherId(subject: Subject): number | undefined {
+    return subject.teacherSubjects?.[0]?.teacher.id
+  }
+
   function openModal(subject?: Subject) {
     if (subject) {
       editingItem.value = subject
@@ -52,7 +57,7 @@ export function useSubjectsAdmin() {
         credits: subject.credits,
         semester: subject.semester,
         description: subject.description || '',
-        teacherId: subject.teacherId,
+        teacherId: currentTeacherId(subject),
       }
     } else {
       editingItem.value = null
@@ -75,25 +80,31 @@ export function useSubjectsAdmin() {
 
   async function save() {
     try {
+      // <select> emits strings, the API wants a number
+      const teacherId = form.value.teacherId ? Number(form.value.teacherId) : undefined
       if (editingItem.value) {
-        await subjectsApi.updateSubject(editingItem.value.id, {
+        const subject = editingItem.value
+        await subjectsApi.updateSubject(subject.id, {
           name: form.value.name,
           code: form.value.code,
           credits: form.value.credits,
           semester: form.value.semester,
           description: form.value.description,
-          teacherId: form.value.teacherId,
         })
+        // Teachers are set by a separate call and it replaces them all: only when the select was changed
+        if (teacherId && teacherId !== currentTeacherId(subject)) {
+          await subjectsApi.assignTeachers(subject.id, [teacherId])
+        }
         toast.success('Дисциплина обновлена')
       } else {
-        await subjectsApi.createSubject({
+        const created = await subjectsApi.createSubject({
           name: form.value.name,
           code: form.value.code,
           credits: form.value.credits,
           semester: form.value.semester,
           description: form.value.description,
-          teacherId: form.value.teacherId,
         })
+        if (teacherId) await subjectsApi.assignTeachers(created.id, [teacherId])
         toast.success('Дисциплина создана')
       }
       closeModal()

@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { MessageResponseDto, SubjectResponseDto, TeacherListResponseDto, TeacherResponseDto } from '../common/dto';
 import { TeachersService } from './teachers.service';
 import { CreateTeacherDto, UpdateTeacherDto, QueryTeacherDto, AssignSubjectsDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
@@ -35,6 +36,7 @@ export class TeachersController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
+  @ApiResponse({ status: 201, type: TeacherResponseDto })
   create(@Body() dto: CreateTeacherDto) {
     return this.teachersService.create(dto);
   }
@@ -47,7 +49,7 @@ export class TeachersController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get all teachers with search and pagination' })
-  @ApiResponse({ status: 200, description: 'Teachers retrieved successfully' })
+  @ApiResponse({ status: 200, type: TeacherListResponseDto, description: 'Teachers retrieved successfully' })
   findAll(@Query() query: QueryTeacherDto) {
     return this.teachersService.findAll(query);
   }
@@ -60,7 +62,7 @@ export class TeachersController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get teacher by ID' })
-  @ApiResponse({ status: 200, description: 'Teacher found' })
+  @ApiResponse({ status: 200, type: TeacherResponseDto, description: 'Teacher found' })
   @ApiResponse({ status: 404, description: 'Teacher not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.teachersService.findOne(id);
@@ -73,6 +75,7 @@ export class TeachersController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
+  @ApiResponse({ status: 200, type: TeacherResponseDto })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateTeacherDto,
@@ -87,6 +90,7 @@ export class TeachersController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
+  @ApiResponse({ status: 200, type: MessageResponseDto })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.teachersService.remove(id);
   }
@@ -99,7 +103,7 @@ export class TeachersController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get subjects for a teacher' })
-  @ApiResponse({ status: 200, description: 'Teacher subjects retrieved successfully' })
+  @ApiResponse({ status: 200, type: SubjectResponseDto, isArray: true, description: 'Teacher subjects retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Teacher not found' })
   getSubjects(@Param('id', ParseIntPipe) id: number) {
     return this.teachersService.getSubjects(id);
@@ -113,7 +117,7 @@ export class TeachersController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Set subjects for a teacher - replaces all existing (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Subjects set successfully' })
+  @ApiResponse({ status: 200, type: SubjectResponseDto, isArray: true, description: 'Subjects set successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Teacher or subject not found' })
   setSubjects(
@@ -131,7 +135,7 @@ export class TeachersController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Remove subject from teacher (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Subject removed successfully' })
+  @ApiResponse({ status: 200, type: MessageResponseDto, description: 'Subject removed successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Teacher or assignment not found' })
   removeSubject(

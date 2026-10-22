@@ -82,23 +82,60 @@ class HttpClient {
     return this.handleResponse<T>(response, endpoint)
   }
 
+  /**
+   * Builds the ApiError for a non-2xx response: reads the message from the body, reports 5xx.
+   * Shared by the legacy `get/post/...` methods and the typed client (`useApiClient`).
+   */
+  async toApiError(response: Response, endpoint = ''): Promise<ApiError> {
+    const body: ApiErrorBody = await response.json().catch(() => ({
+      message: fallbackMessage(response.status),
+    }))
+    // Zod validation returns an array of messages
+    const message = Array.isArray(body.message) ? body.message.join(', ') : body.message
+    const error = new ApiError(
+      message || fallbackMessage(response.status),
+      response.status,
+      response.headers.get('x-request-id') ?? undefined,
+    )
+    // 4xx is the user's mistake and already shown in the UI; 5xx is our bug
+    if (response.status >= 500) {
+      reportError(error, { requestId: error.requestId, status: error.status, endpoint })
+    }
+    return error
+  }
+
+  /**
+   * fetch for the typed client: adds the bearer token, on 401 refreshes once and replays the request.
+   * Returns the raw Response (errors are turned into ApiError by the client's middleware).
+   */
+  async authorizedFetch(request: Request): Promise<Response> {
+    const replay = request.clone()
+    this.applyToken(request)
+
+    let response: Response
+    try {
+      response = await fetch(request)
+    } catch (err: unknown) {
+      if (err instanceof TypeError) throw new ApiError('Нет связи с сервером. Проверьте подключение.', 0)
+      throw err
+    }
+
+    const path = new URL(request.url).pathname
+    const skipRefresh = NO_REFRESH_ENDPOINTS.some((endpoint) => path.endsWith(endpoint))
+    if (response.status === 401 && !skipRefresh && (await this.refresh())) {
+      this.applyToken(replay)
+      return fetch(replay)
+    }
+    return response
+  }
+
+  private applyToken(request: Request) {
+    if (this.accessToken) request.headers.set('Authorization', `Bearer ${this.accessToken}`)
+  }
+
   private async handleResponse<T>(response: Response, endpoint = ''): Promise<T> {
     if (!response.ok) {
-      const body: ApiErrorBody = await response.json().catch(() => ({
-        message: fallbackMessage(response.status),
-      }))
-      // class-validator returns an array of messages
-      const message = Array.isArray(body.message) ? body.message.join(', ') : body.message
-      const error = new ApiError(
-        message || fallbackMessage(response.status),
-        response.status,
-        response.headers.get('x-request-id') ?? undefined,
-      )
-      // 4xx is the user's mistake and already shown in the UI; 5xx is our bug
-      if (response.status >= 500) {
-        reportError(error, { requestId: error.requestId, status: error.status, endpoint })
-      }
-      throw error
+      throw await this.toApiError(response, endpoint)
     }
 
     // 204 / empty body (e.g. delete)

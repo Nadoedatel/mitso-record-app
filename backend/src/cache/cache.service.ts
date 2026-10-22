@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CACHE_STORE, CacheStore } from './cache-store';
+import { cacheRequestsTotal, namespaceLabel } from '../metrics';
 
 /**
  * Cache-aside with namespace versioning.
@@ -30,12 +31,18 @@ export class CacheService {
     const fullKey = `${namespace}:v${version}:${key}`;
 
     const hit = await this.safely(() => this.store.get(fullKey));
+    const label = namespaceLabel(namespace);
     if (hit !== null && hit !== undefined) {
+      cacheRequestsTotal.inc({ namespace: label, result: 'hit' });
       return JSON.parse(hit) as T;
     }
 
     const pending = this.inflight.get(fullKey);
-    if (pending) return pending as Promise<T>;
+    if (pending) {
+      cacheRequestsTotal.inc({ namespace: label, result: 'shared' });
+      return pending as Promise<T>;
+    }
+    cacheRequestsTotal.inc({ namespace: label, result: 'miss' });
 
     const load = (async () => {
       try {

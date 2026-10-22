@@ -16,9 +16,10 @@ export interface Grade {
   subjectId: number
   teacherId?: number | null
   gradeValue: number // 1-10; CREDIT: 1 = зачёт, 0 = не зачёт
-  gradeType: GradeType
-  examDate?: string
-  notes?: string
+  /** As the API sends it (plain string; `GradeType.EXAM` etc. are assignable) */
+  gradeType: `${GradeType}`
+  examDate?: string | null
+  notes?: string | null
   createdAt: string
   updatedAt: string
   student?: Student

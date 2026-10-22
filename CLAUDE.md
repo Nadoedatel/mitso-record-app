@@ -14,6 +14,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 └── docker-compose.yml
 ```
 
+`mobile/` (Flutter) заморожен с 2026-10-14: не поддерживать и не менять. Проект не выкатывается, только локальный показ: деплой (Render, `deploy.yml`) не развивать.
+
 ---
 
 ## Tech Stack
@@ -66,6 +68,14 @@ npx prisma migrate dev       # создать и применить миграц
 npx prisma migrate deploy    # применить миграции на проде
 npx prisma generate          # сгенерировать Prisma Client
 npx prisma studio            # GUI для базы данных
+```
+
+### Нагрузочный тест (k6)
+```bash
+npm run load:seed      # 20 000 студентов, 500 000 оценок и три аккаунта в БД postgres-test (порт 5433)
+npm run load:backend   # бэк на этой БД: лимит запросов поднят, METRICS_TOKEN=load-metrics, логи warn
+npm run load:smoke     # один проход по эндпоинтам, сначала он
+npm run load           # 20 читателей + 3 преподавателя, пороги p95 по эндпоинтам (k6 локально или grafana/k6 в docker)
 ```
 
 ### Docker
@@ -131,10 +141,8 @@ backend/src/
 
 - Базовый URL: `/api`
 - Аутентификация: `Bearer <access_token>` в заголовке `Authorization`
-- Все ответы оборачиваются в единый формат:
-  ```json
-  { "data": ..., "message": "ok" }
-  ```
+- Обёртки `{ data, message }` нет: ответ это сам объект/массив, списки приходят как `{ data, total, page, limit, totalPages }`, удаление возвращает `{ message }`
+- Контракт описан в `backend/openapi.json` (запросы и ответы, схемы в `backend/src/common/dto/responses.ts`); после правки DTO или контроллера: `npm run openapi:generate` в backend и `npm run api:types` во frontend
 - Ошибки возвращаются через глобальный exception filter в формате:
   ```json
   { "statusCode": 400, "message": "...", "error": "Bad Request" }
@@ -143,9 +151,12 @@ backend/src/
 ### Ключевые эндпоинты
 | Метод | URL | Описание |
 |---|---|---|
-| POST | `/api/auth/login` | Логин → `{ user, accessToken }` + `refreshToken` в cookie |
+| POST | `/api/auth/login` | Логин → `{ user, accessToken }` + `refreshToken` в cookie; если у пользователя включена 2FA: `{ twoFactorRequired, challengeToken }` без cookie |
 | POST | `/api/auth/refresh` | Обновление access токена (cookie → новый accessToken) |
+| GET | `/api/metrics` | Метрики Prometheus (процесс, HTTP, кэш, фоновые задачи); `Authorization: Bearer <METRICS_TOKEN>`, без токена в окружении 404 |
 | GET | `/api/auth/me` | Текущий пользователь с вложенными `student`/`teacher` |
+| POST | `/api/auth/2fa/verify` | Второй шаг входа: `challengeToken` + код из приложения или резервный код → как login |
+| POST | `/api/auth/2fa/setup`, `/enable`, `/disable` | Включение и отключение TOTP-защиты (ADMIN); нужен `TOTP_ENCRYPTION_KEY`, иначе 503 |
 | POST | `/api/auth/logout` | Выход, инвалидация refresh токена |
 | GET | `/api/students` | Список студентов (`?search=&page=&limit=`) |
 | GET | `/api/students/:id` | Студент по ID |
@@ -158,6 +169,10 @@ backend/src/
 | GET/POST/PATCH/DELETE | `/api/subjects` | CRUD предметов |
 | GET/POST/PATCH/DELETE | `/api/groups` | CRUD групп |
 | GET/POST/PATCH/DELETE | `/api/faculties` | CRUD факультетов |
+| POST | `/api/jobs/exports/students/:id` | Фоновый экспорт зачётки в Excel (202 + статус задачи), нужен Redis |
+| POST | `/api/jobs/imports/students` | Фоновый импорт студентов из CSV (ADMIN, multipart, поле `file`), нужен Redis |
+| GET | `/api/jobs/:id`, `/api/jobs/:id/file` | Статус задачи (polling) и файл готового экспорта |
+| GET | `/api/audit-log` | Журнал изменений оценок: кто, когда, было и стало (ADMIN; фильтры `studentId`, `subjectId`, `actorId`, `action`, `from`, `to`) |
 | GET/POST/PATCH/DELETE | `/api/specializations` | CRUD специализаций |
 
 ---
@@ -200,6 +215,10 @@ backend/src/
 - Сервисы не зависят от HTTP-слоя (не используют `Request`/`Response`)
 - Все публичные методы сервисов покрыты JSDoc
 - Никаких `any` — строгая типизация
+- Сервисы бросают доменные ошибки из `common/errors` (`NotFoundError`, `ConflictError`, `ForbiddenError`, `InvalidInputError`, `UnauthenticatedError`, `TooManyAttemptsError`, `UnavailableError`), а не `HttpException`: в HTTP их превращает глобальный фильтр. HTTP-исключения Nest только в контроллерах, guard'ах и стратегиях
+- Запросы к БД живут в `*.repository.ts` (сейчас grades и students; остальные сервисы переводятся по мере правок, список в `src/architecture.spec.ts`). Сервис держит правила, репозиторий знает форму запросов; транзакцию репозиторий принимает как `tx`
+- Модули импортируют друг друга только через `index.ts`, зависимости объявлены в таблице `src/architecture.spec.ts` (он же ловит циклы и HTTP-типы в сервисах); новая связь между модулями это решение, его фиксируют в этой таблице
+- Журналы и ленты, которые только растут (аудит), читаются курсором (`common/pagination`), а не `OFFSET`
 
 ---
 
