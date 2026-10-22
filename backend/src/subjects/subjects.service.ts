@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundError } from '../common/errors';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CacheService, InvalidatesCache, DIRECTORY_NAMESPACE, DIRECTORY_TTL_SECONDS, stableKey } from '../cache';
@@ -149,7 +150,7 @@ export class SubjectsService {
     });
 
     if (!subject) {
-      throw new NotFoundException(`Предмет с ID ${id} не найден`);
+      throw new NotFoundError(`Предмет с ID ${id} не найден`);
     }
 
     return subject;
@@ -210,7 +211,7 @@ export class SubjectsService {
     });
 
     if (groups.length !== groupIds.length) {
-      throw new NotFoundException('Одна или несколько групп не найдены');
+      throw new NotFoundError('Одна или несколько групп не найдены');
     }
 
     // Create subject-group relations (ignore duplicates)
@@ -277,7 +278,7 @@ export class SubjectsService {
     });
 
     if (teachers.length !== teacherIds.length) {
-      throw new NotFoundException('Один или несколько преподавателей не найдены');
+      throw new NotFoundError('Один или несколько преподавателей не найдены');
     }
 
     // Use transaction to replace all teachers

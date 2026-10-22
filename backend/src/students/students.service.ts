@@ -1,60 +1,44 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from '../prisma/prisma.service';
+import { ConflictError, ForbiddenError, NotFoundError } from '../common/errors';
 import { AuthUserCache, CacheService, InvalidatesCache } from '../cache';
 import { CreateStudentDto, UpdateStudentDto, QueryStudentDto } from './dto';
 import { AuthUser } from '../auth/interfaces/auth-user.interface';
-import { Prisma, Role } from '@prisma/client';
+import { StudentsRepository } from './students.repository';
 
 /**
- * StudentsService - business logic for student management
+ * StudentsService - the rules of student management: who may see which record, hashing of the password,
+ * cache invalidation, what happens to the login account. Database access is in StudentsRepository.
  */
 @Injectable()
 export class StudentsService {
+  // `cache` is read by the @InvalidatesCache decorator (it expects this property name)
   constructor(
-    private prisma: PrismaService,
+    private students: StudentsRepository,
     private cache: CacheService,
     private authUsers: AuthUserCache,
   ) {}
 
   /**
    * Create a new student with a linked user account in a single transaction
-   * @throws ConflictException if the email is already taken
+   * @throws ConflictError if the email is already taken
    */
   @InvalidatesCache()
   async create(dto: CreateStudentDto) {
     const { email, password, birthDate, ...profileData } = dto;
 
-    const existingUser = await this.prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      throw new ConflictException('Пользователь с таким email уже существует');
+    if (await this.students.emailTaken(email)) {
+      throw new ConflictError('Пользователь с таким email уже существует');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
 
-    return this.prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: { email, password: hashedPassword, role: Role.STUDENT },
-      });
-
-      return tx.student.create({
-        data: {
-          ...profileData,
-          userId: user.id,
-          birthDate: birthDate ? new Date(birthDate) : null,
-        },
-        include: {
-          user: {
-            select: { id: true, email: true, role: true },
-          },
-        },
-      });
-    });
+    return this.students.createWithAccount(
+      { email, passwordHash },
+      profileData,
+      birthDate ? new Date(birthDate) : null,
+    );
   }
 
   /**
@@ -64,50 +48,7 @@ export class StudentsService {
   async findAll(query: QueryStudentDto) {
     const { search, groupId, page = 1, limit = 20 } = query;
 
-    const where: Prisma.StudentWhereInput = {};
-
-    // Add search filter
-    if (search) {
-      where.OR = [
-        { firstName: { contains: search, mode: 'insensitive' as const } },
-        { lastName: { contains: search, mode: 'insensitive' as const } },
-        { studentId: { contains: search, mode: 'insensitive' as const } },
-      ];
-    }
-
-    // Add group filter
-    if (groupId) {
-      where.groupId = groupId;
-    }
-
-    const [data, total] = await Promise.all([
-      this.prisma.student.findMany({
-        where,
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              role: true,
-            },
-          },
-          group: {
-            select: {
-              id: true,
-              name: true,
-              course: true,
-              faculty: true,
-            },
-          },
-        },
-        orderBy: {
-          lastName: 'asc',
-        },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.student.count({ where }),
-    ]);
+    const { data, total } = await this.students.findPage({ search, groupId }, page, limit);
 
     return {
       data,
@@ -122,11 +63,9 @@ export class StudentsService {
    * Find student by ID (internal, no auth check)
    */
   private async findById(id: number) {
-    const student = await this.prisma.student.findUnique({
-      where: { id },
-    });
+    const student = await this.students.findById(id);
     if (!student) {
-      throw new NotFoundException(`Студент с ID ${id} не найден`);
+      throw new NotFoundError(`Студент с ID ${id} не найден`);
     }
     return student;
   }
@@ -136,73 +75,13 @@ export class StudentsService {
    * Students can only access their own record
    */
   async findOne(id: number, user: AuthUser) {
-    if (user.role === Role.STUDENT) {
-      const ownStudent = await this.prisma.student.findUnique({
-        where: { userId: user.id },
-        select: { id: true },
-      });
-      if (!ownStudent || ownStudent.id !== id) {
-        throw new ForbiddenException('Доступ запрещён');
-      }
+    if (user.role === Role.STUDENT && (await this.students.findIdByUserId(user.id)) !== id) {
+      throw new ForbiddenError('Доступ запрещён');
     }
 
-    const student = await this.prisma.student.findUnique({
-      where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-          },
-        },
-        group: {
-          select: {
-            id: true,
-            name: true,
-            course: true,
-            faculty: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        specialization: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-            faculty: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        grades: {
-          include: {
-            subject: {
-              include: {
-                teacherSubjects: {
-                  include: {
-                    teacher: true,
-                  },
-                },
-              },
-            },
-          },
-          orderBy: {
-            examDate: 'desc',
-          },
-        },
-      },
-    });
-
+    const student = await this.students.findCard(id);
     if (!student) {
-      throw new NotFoundException(`Студент с ID ${id} не найден`);
+      throw new NotFoundError(`Студент с ID ${id} не найден`);
     }
 
     return student;
@@ -212,47 +91,10 @@ export class StudentsService {
    * Find student by user ID
    */
   async findByUserId(userId: number) {
-    const student = await this.prisma.student.findUnique({
-      where: { userId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-          },
-        },
-        group: {
-          select: {
-            id: true,
-            name: true,
-            course: true,
-            faculty: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        specialization: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-            faculty: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const student = await this.students.findByUserId(userId);
 
     if (!student) {
-      throw new NotFoundException(`Студент для пользователя ${userId} не найден`);
+      throw new NotFoundError(`Студент для пользователя ${userId} не найден`);
     }
 
     return student;
@@ -266,47 +108,9 @@ export class StudentsService {
     // Check if student exists
     await this.findById(id);
 
-    return this.prisma.student.update({
-      where: { id },
-      data: {
-        ...dto,
-        birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-          },
-        },
-        group: {
-          select: {
-            id: true,
-            name: true,
-            course: true,
-            faculty: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        specialization: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-            faculty: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
+    return this.students.update(id, {
+      ...dto,
+      birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
     });
   }
 
@@ -321,7 +125,7 @@ export class StudentsService {
     // Check if student exists
     const student = await this.findById(id);
 
-    await this.prisma.user.delete({ where: { id: student.userId } });
+    await this.students.deleteAccount(student.userId);
     await this.authUsers.invalidate(student.userId);
 
     return { message: 'Студент удалён' };

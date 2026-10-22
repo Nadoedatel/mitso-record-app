@@ -2,6 +2,15 @@ import { ArgumentsHost, BadRequestException, Logger, NotFoundException } from '@
 import { Prisma } from '@prisma/client';
 import { AllExceptionsFilter } from './http-exception.filter';
 import { resetErrorReporter, setErrorReporter } from '../monitoring/error-reporter';
+import {
+  ConflictError,
+  ForbiddenError,
+  InvalidInputError,
+  NotFoundError,
+  TooManyAttemptsError,
+  UnauthenticatedError,
+  UnavailableError,
+} from '../errors';
 
 describe('AllExceptionsFilter logging', () => {
   const filter = new AllExceptionsFilter();
@@ -104,6 +113,31 @@ describe('AllExceptionsFilter logging', () => {
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(reqLog.error).not.toHaveBeenCalled();
     expect(Logger.prototype.error).not.toHaveBeenCalled();
+  });
+
+  describe('domain errors', () => {
+    it.each([
+      [new NotFoundError('Студент не найден'), 404],
+      [new ConflictError('Email занят'), 409],
+      [new ForbiddenError('Доступ запрещён'), 403],
+      [new InvalidInputError('Плохое значение'), 400],
+      [new UnauthenticatedError('Неверный пароль'), 401],
+      [new TooManyAttemptsError('Подождите', 30), 429],
+      [new UnavailableError('Redis недоступен'), 503],
+    ])('turns %p into status %i with its own message', (error, expectedStatus) => {
+      filter.catch(error, host());
+
+      expect(status).toHaveBeenCalledWith(expectedStatus);
+      expect(body().message).toBe(error.message);
+    });
+
+    it('logs only the failures that are the server’s fault (5xx), like any other exception', () => {
+      filter.catch(new NotFoundError('нет'), host());
+      expect(reqLog.error).not.toHaveBeenCalled();
+
+      filter.catch(new UnavailableError('нет Redis'), host());
+      expect(reqLog.error).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('falls back to the Nest logger when the request has no pino logger', () => {

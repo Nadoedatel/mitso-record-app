@@ -557,7 +557,3 @@ npm install
 ## Лицензия
 
 MIT
-
-## Автор
-
-Created with Claude Code

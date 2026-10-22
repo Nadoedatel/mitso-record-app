@@ -55,6 +55,8 @@ describe('Access matrix (e2e)', () => {
     ['GET /teachers/:id/subjects', (i) => `/api/teachers/${i.teacher}/subjects`, ['teacher', 'admin']],
     ['GET /groups/:id', (i) => `/api/groups/${i.group}`, ['teacher', 'admin']],
     ['GET /subjects/:id/teachers', (i) => `/api/subjects/${i.subject}/teachers`, ['teacher', 'admin']],
+    // audit log: administrators only
+    ['GET /audit-log', () => '/api/audit-log', ['admin']],
     // reference data: any logged-in user
     ['GET /groups', () => '/api/groups', ['student', 'teacher', 'admin']],
     ['GET /subjects', () => '/api/subjects', ['student', 'teacher', 'admin']],

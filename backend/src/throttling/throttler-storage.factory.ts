@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { ThrottlerStorage, ThrottlerStorageService } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
-import { createRedisClient } from '../cache/redis-client';
+import { createRedisClient } from '../cache';
 import { ResilientThrottlerStorage } from './resilient-throttler.storage';
 
 /**

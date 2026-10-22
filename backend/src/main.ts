@@ -9,6 +9,7 @@ import { buildOpenApiDocument } from './openapi';
 import { configureApp } from './app.setup';
 import { getAllowedOrigins } from './common/config';
 import { assertJwtSecrets } from './auth/jwt-secrets';
+import { loadEncryptionKey } from './auth/two-factor/totp-crypto';
 
 /**
  * Bootstrap function - initializes and starts the application
@@ -16,6 +17,8 @@ import { assertJwtSecrets } from './auth/jwt-secrets';
 async function bootstrap() {
   // Refuse to start with missing, short, placeholder or shared JWT secrets
   assertJwtSecrets(process.env);
+  // A malformed TOTP key fails here, not at the first admin who enables two-factor; a missing one only turns the feature off
+  const twoFactorAvailable = loadEncryptionKey() !== null;
 
   // bufferLogs: hold early Nest logs until pino is attached, so every line has the same format
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -49,6 +52,7 @@ async function bootstrap() {
   await app.listen(port);
 
   logger.log(`🚀 Application is running on: http://localhost:${port}`);
+  if (!twoFactorAvailable) logger.warn('Two-factor login is off: TOTP_ENCRYPTION_KEY is not set');
   logger.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }
 

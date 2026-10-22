@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundError } from '../common/errors';
 import { PrismaService } from '../prisma/prisma.service';
 import { CacheService, InvalidatesCache, DIRECTORY_NAMESPACE, DIRECTORY_TTL_SECONDS, stableKey } from '../cache';
 import { CreateFacultyDto, UpdateFacultyDto, QueryFacultyDto } from './dto';
@@ -106,7 +107,7 @@ export class FacultiesService {
     });
 
     if (!faculty) {
-      throw new NotFoundException(`Факультет с ID ${id} не найден`);
+      throw new NotFoundError(`Факультет с ID ${id} не найден`);
     }
 
     return faculty;

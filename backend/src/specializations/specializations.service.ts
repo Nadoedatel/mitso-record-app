@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundError } from '../common/errors';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CacheService, InvalidatesCache, DIRECTORY_NAMESPACE, DIRECTORY_TTL_SECONDS, stableKey } from '../cache';
@@ -116,7 +117,7 @@ export class SpecializationsService {
     });
 
     if (!specialization) {
-      throw new NotFoundException(`Специальность с ID ${id} не найдена`);
+      throw new NotFoundError(`Специальность с ID ${id} не найдена`);
     }
 
     return specialization;

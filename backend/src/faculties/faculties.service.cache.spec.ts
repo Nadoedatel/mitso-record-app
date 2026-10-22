@@ -1,5 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
 import { CacheService } from '../cache';
+import { NotFoundError } from '../common/errors';
 import { MemoryCacheStore } from '../cache/memory-cache.store';
 import { PrismaService } from '../prisma/prisma.service';
 import { FacultiesService } from './faculties.service';
@@ -57,7 +57,7 @@ describe('FacultiesService caching', () => {
   it('does not cache a missing faculty', async () => {
     prisma.faculty.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 9, name: 'Новый' });
 
-    await expect(service.findOne(9)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.findOne(9)).rejects.toBeInstanceOf(NotFoundError);
 
     expect(await service.findOne(9)).toMatchObject({ id: 9 });
   });
@@ -86,7 +86,7 @@ describe('FacultiesService caching', () => {
     await service.findOne(1); // cached as existing
     prisma.faculty.findUnique.mockResolvedValue(null); // deleted behind the cache's back
 
-    await expect(service.update(1, { name: 'X' })).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.update(1, { name: 'X' })).rejects.toBeInstanceOf(NotFoundError);
     expect(prisma.faculty.update).not.toHaveBeenCalled();
   });
 });
