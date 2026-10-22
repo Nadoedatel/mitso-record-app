@@ -43,13 +43,20 @@ app/
 │   ├── login.vue                    # форма входа
 │   ├── student.vue                  # профиль студента + мои оценки
 │   ├── teacher.vue                  # профиль преподавателя + выставление оценок
-│   ├── admin.vue                    # панель администратора (табы)
+│   ├── admin.vue                    # панель администратора: раздел из ?tab= (пункты боковой панели)
 │   ├── students/
 │   │   ├── index.vue                # поиск и список студентов
 │   │   └── [id].vue                 # карточка студента с оценками
 │   └── subjects/[id]/
 │       └── grades.vue               # управление оценками по предмету
+├── layouts/
+│   ├── default.vue                  # каркас AppShell (страницы с пользователем, витрина)
+│   └── centered.vue                 # по центру: вход и страница ошибки, переключатель темы в углу
 ├── widgets/
+│   ├── app-shell/                   # каркас: боковая панель по роли, меню пользователя
+│   │   ├── index.ts
+│   │   ├── model/navigation.ts      # пункты меню по роли, разделы админки (?tab=), активный пункт
+│   │   └── ui/                      # AppShell, AppShellBrand, SideNav, UserMenu, ChangePasswordModal, TwoFactorModal
 │   ├── admin/
 │   │   ├── index.ts
 │   │   └── ui/
@@ -64,7 +71,8 @@ app/
 │       └── ui/SubjectsGrid.vue
 ├── features/
 │   ├── auth/
-│   │   ├── api/authApi.ts           # login, logout, getMe
+│   │   ├── api/authApi.ts           # login, logout, getMe, changePassword, 2FA
+│   │   ├── model/passwordChange.ts  # проверка формы смены пароля
 │   │   └── model/useAuth.ts        # Pinia store авторизации
 │   ├── students/
 │   │   ├── api/studentsApi.ts
@@ -93,7 +101,7 @@ app/
 │   └── specialization/model/types.ts # Specialization + DTO
 ├── shared/
 │   ├── api/httpClient.ts            # HTTP клиент с refresh interceptor
-│   ├── lib/                         # useToast, useConfirm, useAbortable, usePagedList, formatDate, formatName
+│   ├── lib/                         # useToast, useConfirm, useAbortable, usePagedList, formatDate, formatName (formatFullName, formatShortName)
 │   ├── styles/
 │   │   ├── _tokens.scss             # CSS-переменные / design tokens
 │   │   ├── _mixins.scss             # SCSS миксины
@@ -219,6 +227,7 @@ const httpClient = useHttpClient()   // всегда на верхнем уро�
 login(credentials)    // логин, синхронизирует токен с httpClient
 restoreSession()      // после F5: refresh токена + GET /auth/me, false если сессии нет
 logout()              // вызывает /auth/logout, чистит store + httpClient + cookie
+changePassword(cur, next) // POST /auth/change-password; бэк отзывает все сессии, store чистится, дальше /login
 fetchProfile()        // GET /auth/me, обновляет user в store
 
 // Состояние (accessToken живёт только в httpClient):
@@ -227,6 +236,15 @@ isAuthenticated: ComputedRef<boolean>  // !!user
 ```
 
 ---
+
+## Каркас и навигация
+
+`layouts/default.vue` оборачивает страницы в `AppShell` (`widgets/app-shell`). От 1024px слева постоянная боковая панель: бренд, пункты роли (`getNavItems(role)`), внизу меню пользователя. Уже 1024px панель выезжает по кнопке в верхней полосе, остальная страница получает `inert` (ни клика, ни Tab), Esc, клик по подложке и клик по любой ссылке в ней (даже на текущую страницу) её закрывают. Смена раздела админки прокручивает страницу наверх: путь тот же, и Nuxt сам позицию не сбрасывает.
+
+- Пункты: студент «Зачётка»; преподаватель «Мои предметы» (подсвечен и на `/subjects/:id/grades`) и «Студенты»; админ семь разделов `/admin?tab=…` (раздел по умолчанию это просто `/admin`).
+- Меню пользователя: имя и роль, «Сменить пароль», «Двухфакторная защита» (ADMIN), тема, «Выйти». Кнопок «Выйти» на страницах нет.
+- Вложенные страницы (`/students/:id`, `/subjects/:id/grades`) показывают `Breadcrumbs` вместо кнопок «Назад».
+- Без пользователя (витрина `/dev/ui`) каркас рисует только содержимое.
 
 ## Роутинг и middleware
 
@@ -238,7 +256,7 @@ isAuthenticated: ComputedRef<boolean>  // !!user
 | `pages/index.vue` | `/` | `auth` | Главная, навигация по роли |
 | `pages/student.vue` | `/student` | `auth` | Профиль студента + оценки |
 | `pages/teacher.vue` | `/teacher` | `auth` | Профиль преподавателя + выставление оценок |
-| `pages/admin.vue` | `/admin` | `auth`, `admin` | Панель администратора |
+| `pages/admin.vue` | `/admin`, `/admin?tab=<раздел>` | `auth`, `admin` | Панель администратора, раздел по `?tab=` |
 | `pages/students/index.vue` | `/students` | `auth` | Поиск студентов |
 | `pages/students/[id].vue` | `/students/:id` | `auth` | Карточка студента |
 | `pages/subjects/[id]/grades.vue` | `/subjects/:id/grades` | `auth` | Оценки по предмету |
@@ -322,7 +340,7 @@ CSS-переменные доступны глобально. Использов
 **Тема.** `useTheme()` (`shared/lib/useTheme.ts`): `mode` (`system` | `light` | `dark`), `resolved`, `setMode()`, `toggle()`.
 Выбор лежит в `localStorage['mitso:theme']` (только предпочтение, прав не даёт); до первой отрисовки тему ставит
 inline-скрипт в `nuxt.config.ts` (иначе будет белая вспышка), плагин `plugins/theme.client.ts` синхронизирует стор.
-Переключатель `ThemeToggle` пока в углу layouts, в меню пользователя переедет вместе с каркасом.
+На страницах с пользователем тема выбирается в меню пользователя (как в системе / светлая / тёмная), `ThemeToggle` остался в углу layout `centered` (вход, ошибка) и в витрине.
 Новый цвет добавляется в оба набора (светлый и тёмный) и проверяется `tests/contrast.spec.ts` (WCAG AA 4.5:1).
 
 
@@ -345,7 +363,9 @@ inline-скрипт в `nuxt.config.ts` (иначе будет белая всп
 | `Alert` | variant: error/success/warning/info; closable |
 | `LoadingState` / `EmptyState` / `LoadingSpinner` / `Skeleton` | состояния загрузки; скелетон повторяет форму контента |
 | `Icon` | иконки Lucide по имени (`<Icon name="search" />`), набор в `shared/ui/Icon/icons.ts`; эмодзи как иконки не использовать |
-| `ThemeToggle` | переключатель светлой/тёмной темы |
+| `ThemeToggle` | переключатель светлой/тёмной темы (вход, ошибка, витрина) |
+| `Breadcrumbs` | хлебные крошки `[{ label, to? }]`, последний пункт текущая страница |
+| `Dropdown` + `DropdownItem` + `DropdownGroup` + `DropdownSeparator` | меню по кнопке (WAI-ARIA menu button): стрелки, Esc, клик снаружи; `checked` у пункта делает его переключателем |
 | `Tabs` | табовый интерфейс |
 | `Pagination` | пагинация |
 | `Container` / `Header` / `Section` / `InfoCard` | лейаут |

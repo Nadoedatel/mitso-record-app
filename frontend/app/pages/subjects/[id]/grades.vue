@@ -1,16 +1,12 @@
 <template>
   <div class="grades-management-page">
     <Container maxWidth="xl">
-      <div class="header-wrapper">
-        <Button variant="ghost" @click="$router.push('/teacher')">
-          ← Назад к предметам
-        </Button>
-        <Header v-if="subject" :title="subject.name">
-          <template #actions>
-            <p class="subtitle">Управление оценками • Семестр {{ subject.semester }}</p>
-          </template>
-        </Header>
-      </div>
+      <Breadcrumbs :items="breadcrumbs" />
+      <Header v-if="subject" :title="subject.name" class="page-header">
+        <template #actions>
+          <p class="subtitle">Управление оценками • Семестр {{ subject.semester }}</p>
+        </template>
+      </Header>
 
       <LoadingState v-if="loading" message="Загрузка данных..." />
 
@@ -81,6 +77,7 @@ import {
   Alert,
   LoadingState,
   EmptyState,
+  Breadcrumbs,
 } from '~/shared/ui'
 
 definePageMeta({ middleware: 'auth' })
@@ -103,6 +100,11 @@ const groups = computed<Group[]>(() => data.value?.groups ?? [])
 const loading = computed(() => status.value === 'pending')
 const error = computed(() => loadError.value?.message ?? '')
 
+const breadcrumbs = computed(() => [
+  { label: 'Мои предметы', to: '/teacher' },
+  { label: subject.value?.name ?? 'Предмет' },
+])
+
 const selectedGroup = ref<Group | null>(null)
 const searchQuery = ref('')
 
@@ -114,10 +116,7 @@ const filteredGroups = computed(() => {
 </script>
 
 <style scoped>
-.header-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
+.page-header {
   margin-bottom: var(--spacing-6);
 }
 

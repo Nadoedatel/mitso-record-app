@@ -1,6 +1,7 @@
 <template>
   <div class="student-detail-page">
     <Container maxWidth="xl">
+      <Breadcrumbs :items="breadcrumbs" />
       <Header title="Карточка студента">
         <template #actions>
           <Button
@@ -11,7 +12,6 @@
           >
             Скачать зачётку (Excel)
           </Button>
-          <Button variant="secondary" @click="$router.push('/students')">К списку</Button>
         </template>
       </Header>
 
@@ -73,6 +73,7 @@ import {
   Table,
   GradeTypeBadge,
   GradeValueBadge,
+  Breadcrumbs,
 } from '~/shared/ui'
 import { formatDate } from '~/shared/lib/formatDate'
 import { formatShortName } from '~/shared/lib/formatName'
@@ -105,6 +106,11 @@ const student = computed<Student | null>(() => data.value?.student ?? null)
 const grades = computed<Grade[]>(() => data.value?.grades ?? [])
 const loading = computed(() => status.value === 'pending')
 const error = computed(() => loadError.value?.message ?? '')
+
+const breadcrumbs = computed(() => [
+  { label: 'Студенты', to: '/students' },
+  { label: student.value ? formatShortName(student.value) : 'Карточка студента' },
+])
 
 const groupedGrades = computed(() => {
   if (!grades.value) return []

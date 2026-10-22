@@ -22,7 +22,9 @@ export async function login(page: Page, role: Role): Promise<void> {
   await expect(page).toHaveURL(new RegExp(`${USERS[role].home}$`))
 }
 
+/** Signs out through the user menu at the bottom of the side panel (desktop width) */
 export async function logout(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Выйти' }).click()
+  await page.getByRole('button', { name: /меню пользователя/ }).click()
+  await page.getByRole('menuitem', { name: 'Выйти' }).click()
   await expect(page).toHaveURL(/\/login$/)
 }

@@ -1,6 +1,5 @@
 export { default as StudentsSection } from './ui/StudentsSection.vue'
 export { default as AuditSection } from './ui/AuditSection.vue'
-export { default as TwoFactorModal } from './ui/TwoFactorModal.vue'
 export { default as StudentsImportModal } from './ui/StudentsImportModal.vue'
 export { default as TeachersSection } from './ui/TeachersSection.vue'
 export { default as SubjectsSection } from './ui/SubjectsSection.vue'

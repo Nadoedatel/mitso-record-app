@@ -16,7 +16,8 @@ import { Icon } from '../Icon'
 import { useTheme } from '~/shared/lib/useTheme'
 
 /**
- * Light/dark switch. Placed in the corner for now; it moves into the user menu with the app shell.
+ * Light/dark switch for pages without the user menu (login, error page, dev showcase).
+ * Signed-in pages pick the theme in the user menu of the app shell.
  */
 const theme = useTheme()
 const isDark = computed(() => theme.resolved.value === 'dark')

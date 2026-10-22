@@ -4,7 +4,8 @@ import { login } from './helpers'
 test('админ создаёт факультет и видит его в списке', async ({ page }) => {
   await login(page, 'admin')
 
-  await page.getByRole('tab', { name: 'Факультеты' }).click()
+  await page.getByRole('navigation', { name: 'Разделы' }).getByRole('link', { name: 'Факультеты' }).click()
+  await expect(page).toHaveURL(/\/admin\?tab=faculties$/)
   await page.getByRole('button', { name: '+ Добавить факультет' }).click()
 
   const dialog = page.getByRole('dialog')

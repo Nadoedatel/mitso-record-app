@@ -47,6 +47,15 @@ function ratio(foreground: string, background: string): number {
 const textOnSurface = ['text-primary', 'text-secondary', 'text-tertiary', 'primary', 'danger', 'success']
 const onSolid = ['primary', 'success', 'danger', 'warning', 'info', 'neutral']
 const statusPairs = ['success', 'danger', 'warning', 'info'].map((s) => [`${s}-dark`, `${s}-light`] as const)
+// Text on tinted fills: active side menu item and avatar, danger menu item on hover, hovered items, menus
+const tintPairs = [
+  ['primary', 'primary-light'],
+  ['danger', 'danger-light'],
+  ['text-primary', 'bg-muted'],
+  ['text-secondary', 'bg-muted'],
+  ['text-primary', 'surface-raised'],
+  ['text-tertiary', 'surface-raised'],
+] as const
 const gradePairs = [
   ...['exam', 'credit', 'coursework', 'lab', 'test'].map((g) => [`grade-${g}-text`, `grade-${g}-bg`] as const),
   ...['excellent', 'good', 'satisfactory', 'poor'].map((g) => [`grade-${g}-text`, `grade-${g}-bg`] as const),
@@ -74,4 +83,5 @@ describe.each([
 
   it.each(statusPairs)('%s on %s', (foreground, background) => check(foreground, background))
   it.each(gradePairs)('%s on %s', (foreground, background) => check(foreground, background))
+  it.each(tintPairs)('%s on %s', (foreground, background) => check(foreground, background))
 })

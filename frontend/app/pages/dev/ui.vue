@@ -1,6 +1,10 @@
 <template>
   <Container max-width="xl">
-    <Header title="Компоненты (только dev)" />
+    <Header title="Компоненты (только dev)">
+      <template #actions>
+        <ThemeToggle />
+      </template>
+    </Header>
     <p class="note">Страница для проверки видов и состояний. В production сборку не попадает.</p>
 
     <Section>
@@ -101,6 +105,25 @@
     </Section>
 
     <Section>
+      <h2>Навигация</h2>
+      <p class="note">Хлебные крошки на вложенных страницах; меню открывается кнопкой, стрелками, Esc закрывает.</p>
+      <Breadcrumbs :items="[{ label: 'Студенты', to: '/students' }, { label: 'Петрова М.' }]" />
+      <div class="row">
+        <Dropdown placement="bottom-start">
+          <template #trigger>Действия <Icon name="chevron-down" :size="16" /></template>
+          <DropdownItem icon="pencil" @select="toast.success('Изменить')">Изменить</DropdownItem>
+          <DropdownSeparator />
+          <DropdownGroup label="Тема">
+            <DropdownItem icon="sun" :checked="true">Светлая</DropdownItem>
+            <DropdownItem icon="moon" :checked="false">Тёмная</DropdownItem>
+          </DropdownGroup>
+          <DropdownSeparator />
+          <DropdownItem icon="trash" variant="danger" @select="toast.error('Удалить')">Удалить</DropdownItem>
+        </Dropdown>
+      </div>
+    </Section>
+
+    <Section>
       <h2>Иконки</h2>
       <div class="row icons">
         <span v-for="name in iconNames" :key="name" class="icon-cell">
@@ -130,9 +153,14 @@ import { ref } from 'vue'
 import {
   Alert,
   Badge,
+  Breadcrumbs,
   Button,
   Card,
   Container,
+  Dropdown,
+  DropdownGroup,
+  DropdownItem,
+  DropdownSeparator,
   EmptyState,
   FormField,
   GradeTypeBadge,
@@ -149,6 +177,7 @@ import {
   Skeleton,
   Table,
   Tabs,
+  ThemeToggle,
 } from '~/shared/ui'
 import { useConfirm } from '~/shared/lib/useConfirm'
 import { useToast } from '~/shared/lib/useToast'

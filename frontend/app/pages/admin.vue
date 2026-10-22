@@ -1,37 +1,23 @@
 <template>
   <div class="admin-page">
     <Container maxWidth="full">
-      <Header title="Панель администратора">
-        <template #actions>
-          <Button variant="secondary" @click="showTwoFactor = true">
-            {{ authStore.user?.twoFactorEnabled ? 'Двухфакторная защита: вкл' : 'Двухфакторная защита' }}
-          </Button>
-          <Button variant="danger" @click="logout">Выйти</Button>
-        </template>
-      </Header>
+      <Header :title="sectionTitle" />
 
-      <TwoFactorModal v-model="showTwoFactor" />
-
-      <Tabs :tabs="tabs" v-model="activeTab" />
-
-      <div class="tab-content">
-        <StudentsSection v-if="activeTab === 'students'" />
-        <TeachersSection v-if="activeTab === 'teachers'" />
-        <SubjectsSection v-if="activeTab === 'subjects'" />
-        <GroupsSection v-if="activeTab === 'groups'" />
-        <FacultiesSection v-if="activeTab === 'faculties'" />
-        <SpecializationsSection v-if="activeTab === 'specializations'" />
-        <AuditSection v-if="activeTab === 'audit'" />
-      </div>
+      <StudentsSection v-if="section === 'students'" />
+      <TeachersSection v-else-if="section === 'teachers'" />
+      <SubjectsSection v-else-if="section === 'subjects'" />
+      <GroupsSection v-else-if="section === 'groups'" />
+      <FacultiesSection v-else-if="section === 'faculties'" />
+      <SpecializationsSection v-else-if="section === 'specializations'" />
+      <AuditSection v-else-if="section === 'audit'" />
     </Container>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '~/features/auth/model/useAuth'
-import { Container, Header, Button, Tabs } from '~/shared/ui'
+import { computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { Container, Header } from '~/shared/ui'
 import {
   StudentsSection,
   TeachersSection,
@@ -40,37 +26,18 @@ import {
   FacultiesSection,
   SpecializationsSection,
   AuditSection,
-  TwoFactorModal,
 } from '~/widgets/admin'
+import { ADMIN_SECTIONS, parseAdminSection } from '~/widgets/app-shell'
 
 definePageMeta({
   middleware: ['auth', 'admin'],
 })
 
-const router = useRouter()
-const authStore = useAuthStore()
+// The section lives in the URL (?tab=), picked from the side panel: it can be linked to and "back" returns to it
+const route = useRoute()
+const section = computed(() => parseAdminSection(route.query.tab))
+const sectionTitle = computed(() => ADMIN_SECTIONS.find((item) => item.key === section.value)?.label ?? '')
 
-const tabs = [
-  { key: 'students', label: 'Студенты' },
-  { key: 'teachers', label: 'Преподаватели' },
-  { key: 'subjects', label: 'Дисциплины' },
-  { key: 'groups', label: 'Группы' },
-  { key: 'faculties', label: 'Факультеты' },
-  { key: 'specializations', label: 'Специализации' },
-  { key: 'audit', label: 'Журнал' },
-]
-
-const activeTab = ref('students')
-const showTwoFactor = ref(false)
-
-async function logout() {
-  await authStore.logout()
-  router.push('/login')
-}
+// Same path, only the query changes: Nuxt keeps the scroll position, so a new section would open mid-table
+watch(section, () => window.scrollTo({ top: 0 }))
 </script>
-
-<style scoped>
-.tab-content {
-  margin-top: var(--spacing-5);
-}
-</style>
