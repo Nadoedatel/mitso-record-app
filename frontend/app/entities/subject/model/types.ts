@@ -6,8 +6,7 @@ export interface Subject {
   code: string
   credits: number
   semester: number
-  description?: string
-  teacherId: number
+  description?: string | null
   createdAt: string
   updatedAt: string
   teacher?: Teacher

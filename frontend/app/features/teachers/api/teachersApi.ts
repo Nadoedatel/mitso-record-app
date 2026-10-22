@@ -1,14 +1,12 @@
 import type { Subject } from '~/entities/subject'
 import type { Teacher } from '~/entities/teacher'
-import { useHttpClient } from '~/shared/api/httpClient'
+import { payload, useApiClient } from '~/shared/api/apiClient'
+import type { ApiSchemas } from '~/shared/api/generated'
+import type { PaginatedResponse } from '~/shared/api/types'
 
-export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
-}
+export type { PaginatedResponse }
+export type CreateTeacherDto = ApiSchemas['CreateTeacherDto']
+export type UpdateTeacherDto = ApiSchemas['UpdateTeacherDto']
 
 export interface TeachersQuery {
   search?: string
@@ -16,92 +14,67 @@ export interface TeachersQuery {
   limit?: number
 }
 
-export interface CreateTeacherDto {
-  firstName: string
-  lastName: string
-  middleName?: string
-  email: string
-  password: string
-  department: string
-  position: string
-  academicDegree?: string
-  phone?: string
-  officeNumber?: string
-}
-
-export interface UpdateTeacherDto {
-  firstName?: string
-  lastName?: string
-  middleName?: string
-  email?: string
-  department?: string
-  position?: string
-  academicDegree?: string
-  phone?: string
-  officeNumber?: string
-}
-
 export const teachersApi = {
   /**
    * Fetch all teachers with optional search and pagination
    */
   async fetchTeachers(query?: TeachersQuery, signal?: AbortSignal): Promise<PaginatedResponse<Teacher>> {
-    const httpClient = useHttpClient()
-    const params = new URLSearchParams()
-
-    if (query?.search) params.append('search', query.search)
-    if (query?.page) params.append('page', query.page.toString())
-    if (query?.limit) params.append('limit', query.limit.toString())
-
-    const queryString = params.toString() ? `?${params.toString()}` : ''
-    return httpClient.get<PaginatedResponse<Teacher>>(`/teachers${queryString}`, { signal })
+    const api = useApiClient()
+    return payload(
+      await api.GET('/api/teachers', {
+        params: {
+          query: { search: query?.search || undefined, page: query?.page || undefined, limit: query?.limit || undefined },
+        },
+        signal,
+      }),
+    )
   },
 
   /**
    * Fetch teacher by ID
    */
   async fetchTeacherById(id: number): Promise<Teacher> {
-    const httpClient = useHttpClient()
-    return httpClient.get<Teacher>(`/teachers/${id}`)
+    const api = useApiClient()
+    return payload(await api.GET('/api/teachers/{id}', { params: { path: { id } } }))
   },
 
   /**
    * Create a new teacher
    */
   async createTeacher(teacherData: CreateTeacherDto): Promise<Teacher> {
-    const httpClient = useHttpClient()
-    return httpClient.post<Teacher>('/teachers', teacherData)
+    const api = useApiClient()
+    return payload(await api.POST('/api/teachers', { body: teacherData }))
   },
 
   /**
    * Update teacher by ID
    */
   async updateTeacher(id: number, teacherData: UpdateTeacherDto): Promise<Teacher> {
-    const httpClient = useHttpClient()
-    return httpClient.patch<Teacher>(`/teachers/${id}`, teacherData)
+    const api = useApiClient()
+    return payload(await api.PATCH('/api/teachers/{id}', { params: { path: { id } }, body: teacherData }))
   },
 
   /**
    * Delete teacher by ID
    */
   async deleteTeacher(id: number): Promise<void> {
-    const httpClient = useHttpClient()
-    await httpClient.delete(`/teachers/${id}`)
+    const api = useApiClient()
+    await api.DELETE('/api/teachers/{id}', { params: { path: { id } } })
   },
 
   /**
    * Get subjects for a teacher
    */
   async getTeacherSubjects(teacherId: number): Promise<Subject[]> {
-    const httpClient = useHttpClient()
-    return httpClient.get<Subject[]>(`/teachers/${teacherId}/subjects`)
+    const api = useApiClient()
+    return payload(await api.GET('/api/teachers/{id}/subjects', { params: { path: { id: teacherId } } }))
   },
 
   /**
    * Assign subjects to teacher (replaces all existing)
    */
   async assignSubjects(teacherId: number, subjectIds: number[]): Promise<void> {
-    const httpClient = useHttpClient()
-    await httpClient.post(`/teachers/${teacherId}/subjects`, { subjectIds })
+    const api = useApiClient()
+    await api.POST('/api/teachers/{id}/subjects', { params: { path: { id: teacherId } }, body: { subjectIds } })
   },
 }

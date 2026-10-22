@@ -1,47 +1,39 @@
-import { useHttpClient } from '~/shared/api/httpClient';
-import type { Group, CreateGroupDto, UpdateGroupDto } from '~/entities/group';
-import type { Subject } from '~/entities/subject';
+import { payload, useApiClient } from '~/shared/api/apiClient'
+import type { Group, CreateGroupDto, UpdateGroupDto } from '~/entities/group'
+import type { Subject } from '~/entities/subject'
 
 export async function fetchGroups(params?: { search?: string }): Promise<Group[]> {
-  const httpClient = useHttpClient();
-
-  // Build query string manually
-  const queryParams = new URLSearchParams();
-  if (params?.search) {
-    queryParams.append('search', params.search);
-  }
-  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-
-  const response = await httpClient.get<{ data: Group[] }>(`/groups${queryString}`);
-  return response.data;
+  const api = useApiClient()
+  const page = payload(await api.GET('/api/groups', { params: { query: { search: params?.search || undefined } } }))
+  return page.data
 }
 
 export async function fetchGroupById(id: number): Promise<Group> {
-  const httpClient = useHttpClient();
-  return httpClient.get<Group>(`/groups/${id}`);
+  const api = useApiClient()
+  return payload(await api.GET('/api/groups/{id}', { params: { path: { id } } }))
 }
 
 export async function createGroup(groupData: CreateGroupDto): Promise<Group> {
-  const httpClient = useHttpClient();
-  return httpClient.post<Group>('/groups', groupData);
+  const api = useApiClient()
+  return payload(await api.POST('/api/groups', { body: groupData }))
 }
 
 export async function updateGroup(id: number, groupData: UpdateGroupDto): Promise<Group> {
-  const httpClient = useHttpClient();
-  return httpClient.patch<Group>(`/groups/${id}`, groupData);
+  const api = useApiClient()
+  return payload(await api.PATCH('/api/groups/{id}', { params: { path: { id } }, body: groupData }))
 }
 
 export async function deleteGroup(id: number): Promise<void> {
-  const httpClient = useHttpClient();
-  await httpClient.delete(`/groups/${id}`);
+  const api = useApiClient()
+  await api.DELETE('/api/groups/{id}', { params: { path: { id } } })
 }
 
 export async function fetchGroupSubjects(groupId: number): Promise<Subject[]> {
-  const httpClient = useHttpClient();
-  return httpClient.get<Subject[]>(`/groups/${groupId}/subjects`);
+  const api = useApiClient()
+  return payload(await api.GET('/api/groups/{id}/subjects', { params: { path: { id: groupId } } }))
 }
 
 export async function setGroupSubjects(groupId: number, subjectIds: number[]): Promise<Subject[]> {
-  const httpClient = useHttpClient();
-  return httpClient.post<Subject[]>(`/groups/${groupId}/subjects`, { subjectIds });
+  const api = useApiClient()
+  return payload(await api.POST('/api/groups/{id}/subjects', { params: { path: { id: groupId } }, body: { subjectIds } }))
 }

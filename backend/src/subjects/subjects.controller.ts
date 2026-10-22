@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { MessageResponseDto, SubjectListResponseDto, SubjectResponseDto, TeacherResponseDto } from '../common/dto';
 import { SubjectsService } from './subjects.service';
 import { CreateSubjectDto, UpdateSubjectDto, QuerySubjectDto, AssignGroupsDto, SetSubjectTeachersDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
@@ -36,7 +37,7 @@ export class SubjectsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Create new subject (ADMIN only)' })
-  @ApiResponse({ status: 201, description: 'Subject created successfully' })
+  @ApiResponse({ status: 201, type: SubjectResponseDto, description: 'Subject created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   create(@Body() dto: CreateSubjectDto) {
     return this.subjectsService.create(dto);
@@ -48,7 +49,7 @@ export class SubjectsController {
    */
   @Get()
   @ApiOperation({ summary: 'Get all subjects with filters and pagination' })
-  @ApiResponse({ status: 200, description: 'Subjects retrieved successfully' })
+  @ApiResponse({ status: 200, type: SubjectListResponseDto, description: 'Subjects retrieved successfully' })
   findAll(@Query() query: QuerySubjectDto) {
     return this.subjectsService.findAll(query);
   }
@@ -59,7 +60,7 @@ export class SubjectsController {
    */
   @Get(':id')
   @ApiOperation({ summary: 'Get subject by ID' })
-  @ApiResponse({ status: 200, description: 'Subject found' })
+  @ApiResponse({ status: 200, type: SubjectResponseDto, description: 'Subject found' })
   @ApiResponse({ status: 404, description: 'Subject not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.subjectsService.findOne(id);
@@ -73,7 +74,7 @@ export class SubjectsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update subject (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Subject updated successfully' })
+  @ApiResponse({ status: 200, type: SubjectResponseDto, description: 'Subject updated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Subject not found' })
   update(
@@ -91,7 +92,7 @@ export class SubjectsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Delete subject (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Subject deleted successfully' })
+  @ApiResponse({ status: 200, type: MessageResponseDto, description: 'Subject deleted successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Subject not found' })
   remove(@Param('id', ParseIntPipe) id: number) {
@@ -106,7 +107,7 @@ export class SubjectsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Assign groups to a subject (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Groups assigned successfully' })
+  @ApiResponse({ status: 200, type: SubjectResponseDto, description: 'Groups assigned successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Subject or group not found' })
   assignGroups(
@@ -124,7 +125,7 @@ export class SubjectsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Get teachers for a subject' })
-  @ApiResponse({ status: 200, description: 'Subject teachers retrieved successfully' })
+  @ApiResponse({ status: 200, type: TeacherResponseDto, isArray: true, description: 'Subject teachers retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Subject not found' })
   getTeachers(@Param('id', ParseIntPipe) id: number) {
     return this.subjectsService.getTeachers(id);
@@ -138,7 +139,7 @@ export class SubjectsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Set teachers for a subject - replaces all existing (ADMIN only)' })
-  @ApiResponse({ status: 200, description: 'Teachers set successfully' })
+  @ApiResponse({ status: 200, type: TeacherResponseDto, isArray: true, description: 'Teachers set successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Subject or teacher not found' })
   setTeachers(

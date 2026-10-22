@@ -1,13 +1,11 @@
 import type { Student } from '~/entities/student'
-import { useHttpClient } from '~/shared/api/httpClient'
+import { payload, useApiClient } from '~/shared/api/apiClient'
+import type { ApiSchemas } from '~/shared/api/generated'
+import type { PaginatedResponse } from '~/shared/api/types'
 
-export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
-}
+export type { PaginatedResponse }
+export type CreateStudentDto = ApiSchemas['CreateStudentDto']
+export type UpdateStudentDto = ApiSchemas['UpdateStudentDto']
 
 export interface StudentsQuery {
   search?: string
@@ -16,82 +14,56 @@ export interface StudentsQuery {
   limit?: number
 }
 
-export interface CreateStudentDto {
-  email: string
-  password: string
-  firstName: string
-  lastName: string
-  middleName?: string
-  studentId: string
-  groupId?: number
-  course: number
-  specializationId?: number
-  enrollmentYear: number
-  phone?: string
-  address?: string
-  birthDate?: string
-}
-
-export interface UpdateStudentDto {
-  firstName?: string
-  lastName?: string
-  middleName?: string
-  groupId?: number
-  course?: number
-  specializationId?: number
-  studentId?: string
-  enrollmentYear?: number
-  phone?: string
-  address?: string
-  birthDate?: string
-}
-
 export const studentsApi = {
   /**
    * Fetch all students with optional search and pagination
    */
   async fetchStudents(query?: StudentsQuery, signal?: AbortSignal): Promise<PaginatedResponse<Student>> {
-    const httpClient = useHttpClient()
-    const params = new URLSearchParams()
-
-    if (query?.search) params.append('search', query.search)
-    if (query?.groupId) params.append('groupId', query.groupId.toString())
-    if (query?.page) params.append('page', query.page.toString())
-    if (query?.limit) params.append('limit', query.limit.toString())
-
-    const queryString = params.toString() ? `?${params.toString()}` : ''
-    return httpClient.get<PaginatedResponse<Student>>(`/students${queryString}`, { signal })
+    const api = useApiClient()
+    return payload(
+      await api.GET('/api/students', {
+        params: {
+          query: {
+            search: query?.search || undefined,
+            groupId: query?.groupId || undefined,
+            page: query?.page || undefined,
+            limit: query?.limit || undefined,
+          },
+        },
+        signal,
+      }),
+    )
   },
 
   /**
    * Fetch student by ID
    */
   async fetchStudentById(id: number): Promise<Student> {
-    const httpClient = useHttpClient()
-    return httpClient.get<Student>(`/students/${id}`)
+    const api = useApiClient()
+    return payload(await api.GET('/api/students/{id}', { params: { path: { id } } }))
   },
 
   /**
    * Create a new student
    */
   async createStudent(studentData: CreateStudentDto): Promise<Student> {
-    const httpClient = useHttpClient()
-    return httpClient.post<Student>('/students', studentData)
+    const api = useApiClient()
+    return payload(await api.POST('/api/students', { body: studentData }))
   },
 
   /**
    * Update student by ID
    */
   async updateStudent(id: number, studentData: UpdateStudentDto): Promise<Student> {
-    const httpClient = useHttpClient()
-    return httpClient.patch<Student>(`/students/${id}`, studentData)
+    const api = useApiClient()
+    return payload(await api.PATCH('/api/students/{id}', { params: { path: { id } }, body: studentData }))
   },
 
   /**
    * Delete student by ID
    */
   async deleteStudent(id: number): Promise<void> {
-    const httpClient = useHttpClient()
-    await httpClient.delete(`/students/${id}`)
+    const api = useApiClient()
+    await api.DELETE('/api/students/{id}', { params: { path: { id } } })
   },
 }
