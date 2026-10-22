@@ -20,7 +20,10 @@
           @update:modelValue="searchItems"
         />
       </div>
-      <Button variant="success" @click="openModal()">+ Добавить студента</Button>
+      <div class="header-actions">
+        <Button variant="secondary" @click="showImport = true">Импорт CSV</Button>
+        <Button variant="success" @click="openModal()">+ Добавить студента</Button>
+      </div>
     </div>
 
     <LoadingState v-if="loading" message="Загрузка студентов..." />
@@ -45,6 +48,8 @@
       @change="changePage"
     />
   </Section>
+
+  <StudentsImportModal v-model="showImport" @imported="searchItems" />
 
   <Modal v-model="showModal" size="lg" :title="editingItem ? 'Редактировать студента' : 'Добавить студента'" @close="closeModal">
     <Form @submit.prevent="save">
@@ -120,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useStudentsAdmin } from '~/features/students/model/useStudentsAdmin'
 import {
   Section,
@@ -139,6 +144,9 @@ import {
   Input,
   NumberInput,
 } from '~/shared/ui'
+import StudentsImportModal from './StudentsImportModal.vue'
+
+const showImport = ref(false)
 
 const {
   students,
@@ -192,7 +200,8 @@ onMounted(async () => {
   max-width: 600px;
 }
 
-.actions {
+.actions,
+.header-actions {
   display: flex;
   gap: var(--spacing-2);
 }
