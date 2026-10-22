@@ -17,9 +17,16 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM students WHERE group_id = 123 ORDER BY 
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM grades
   WHERE student_id IN (SELECT id FROM students WHERE group_id = 123) AND subject_id = 57 ORDER BY exam_date DESC;
 
-\echo '== Q5 students search by name fragment (ILIKE contains, first page)'
+\echo '== Q5 students search, one word (what GET /students?search=иван sends; trigram indexes: see trigram.sql)'
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM students
-  WHERE first_name ILIKE '%van%' OR last_name ILIKE '%van%' OR middle_name ILIKE '%van%' ORDER BY last_name LIMIT 20;
+  WHERE (first_name ILIKE '%иван%' OR last_name ILIKE '%иван%' OR middle_name ILIKE '%иван%' OR student_id ILIKE '%иван%')
+  ORDER BY last_name LIMIT 20;
+
+\echo '== Q5b students search, two words (search=Иванов Иван: every word in any column)'
+EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM students
+  WHERE (first_name ILIKE '%иванов%' OR last_name ILIKE '%иванов%' OR middle_name ILIKE '%иванов%' OR student_id ILIKE '%иванов%')
+    AND (first_name ILIKE '%иван%' OR last_name ILIKE '%иван%' OR middle_name ILIKE '%иван%' OR student_id ILIKE '%иван%')
+  ORDER BY last_name LIMIT 20;
 
 \echo '== Q6 subjects of one group'
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM subject_groups WHERE group_id = 123;
