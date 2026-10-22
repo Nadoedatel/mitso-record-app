@@ -4,6 +4,7 @@ import * as request from 'supertest';
 import { configureApp } from '../app.setup';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { TwoFactorService } from './two-factor/two-factor.service';
 
 /** Request validation of POST /auth/login (Zod) through the real pipeline, no database. */
 describe('Auth login validation (Zod)', () => {
@@ -15,7 +16,10 @@ describe('Auth login validation (Zod)', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthService, useValue: service }],
+      providers: [
+        { provide: AuthService, useValue: service },
+        { provide: TwoFactorService, useValue: {} },
+      ],
     }).compile();
 
     app = moduleRef.createNestApplication();

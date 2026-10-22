@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { LoginAttemptsService } from './login-attempts.service';
 import { SessionRevocationService } from './session-revocation.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { TwoFactorService } from './two-factor/two-factor.service';
 
 /**
  * AuthModule - authentication module
@@ -21,7 +22,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, LoginAttemptsService, SessionRevocationService],
+  providers: [AuthService, JwtStrategy, LoginAttemptsService, SessionRevocationService, TwoFactorService],
   exports: [AuthService],
 })
 export class AuthModule {}

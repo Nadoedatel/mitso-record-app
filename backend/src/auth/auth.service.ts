@@ -1,13 +1,17 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InvalidInputError, UnauthenticatedError } from '../common/errors';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { createHash, randomUUID } from 'crypto';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChangePasswordDto, LoginDto } from './dto';
 import { SessionRevocationService } from './session-revocation.service';
 import { LoginAttemptsService } from './login-attempts.service';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { JWT_ALGORITHM } from './jwt-secrets';
+import { TwoFactorService } from './two-factor/two-factor.service';
+import { VerifyTwoFactorDto } from './two-factor/dto';
 
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 /** A just-rotated token presented again within this window is a lost race of two tabs, not theft */
@@ -27,6 +31,7 @@ export class AuthService {
     private jwtService: JwtService,
     private loginAttempts: LoginAttemptsService,
     private revocation: SessionRevocationService,
+    private twoFactor: TwoFactorService,
   ) {}
 
   /**
@@ -45,11 +50,36 @@ export class AuthService {
 
     if (!user || !isPasswordValid) {
       await this.loginAttempts.recordFailure(dto.email);
-      throw new UnauthorizedException('Неверный email или пароль');
+      throw new UnauthenticatedError('Неверный email или пароль');
     }
 
     await this.loginAttempts.recordSuccess(dto.email);
 
+    // Second factor on: no session yet, the client trades the challenge and a code for tokens (loginWithSecondFactor)
+    if (user.totpEnabledAt) {
+      return { twoFactorRequired: true as const, challengeToken: await this.twoFactor.createChallenge(user.id) };
+    }
+
+    return this.startSession(user, userAgent);
+  }
+
+  /**
+   * Second login step: a valid challenge token (from the password step) plus a code from the app or a recovery code.
+   * @throws UnauthenticatedError for an expired challenge or a wrong code
+   */
+  async loginWithSecondFactor(dto: VerifyTwoFactorDto, userAgent?: string) {
+    const userId = this.twoFactor.verifyChallenge(dto.challengeToken);
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user?.totpEnabledAt) {
+      throw new UnauthenticatedError('Время подтверждения истекло. Войдите заново.');
+    }
+
+    await this.twoFactor.verifySecondFactor(user.id, dto.code);
+    return this.startSession(user, userAgent);
+  }
+
+  /** New session of a user who passed every login step: tokens, a refresh session row, the public user fields */
+  private async startSession(user: { id: number; email: string; role: Role }, userAgent?: string) {
     // New login = new family (one family per device)
     const familyId = randomUUID();
     const tokens = await this.generateTokens({ sub: user.id, email: user.email, role: user.role, sid: familyId });
@@ -72,7 +102,7 @@ export class AuthService {
    */
   async refresh(refreshToken: string, userAgent?: string) {
     if (!refreshToken) {
-      throw new UnauthorizedException('Токен обновления не передан');
+      throw new UnauthenticatedError('Токен обновления не передан');
     }
 
     let payload: JwtPayload;
@@ -82,7 +112,7 @@ export class AuthService {
         algorithms: [JWT_ALGORITHM],
       });
     } catch {
-      throw new UnauthorizedException('Недействительный токен обновления');
+      throw new UnauthenticatedError('Недействительный токен обновления');
     }
 
     const session = await this.prisma.refreshSession.findUnique({
@@ -91,14 +121,14 @@ export class AuthService {
     });
 
     if (!session || session.userId !== payload.sub || session.expiresAt.getTime() <= Date.now()) {
-      throw new UnauthorizedException('Недействительный токен обновления');
+      throw new UnauthenticatedError('Недействительный токен обновления');
     }
 
     if (session.usedAt) {
       if (Date.now() - session.usedAt.getTime() > REUSE_GRACE_MS) {
         await this.revokeFamilies([session.familyId]);
       }
-      throw new UnauthorizedException('Недействительный токен обновления');
+      throw new UnauthenticatedError('Недействительный токен обновления');
     }
 
     // Atomic claim: of two parallel requests with the same token only one flips usedAt
@@ -107,7 +137,7 @@ export class AuthService {
       data: { usedAt: new Date() },
     });
     if (claimed.count === 0) {
-      throw new UnauthorizedException('Недействительный токен обновления');
+      throw new UnauthenticatedError('Недействительный токен обновления');
     }
 
     const tokens = await this.generateTokens({
@@ -167,7 +197,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Пользователь не найден');
+      throw new UnauthenticatedError('Пользователь не найден');
     }
 
     return {
@@ -176,6 +206,7 @@ export class AuthService {
       role: user.role,
       student: user.student || null,
       teacher: user.teacher || null,
+      twoFactorEnabled: user.totpEnabledAt !== null,
     };
   }
 
@@ -204,14 +235,14 @@ export class AuthService {
   async changePassword(userId: number, dto: ChangePasswordDto) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw new UnauthorizedException('Пользователь не найден');
+      throw new UnauthenticatedError('Пользователь не найден');
     }
 
     await this.loginAttempts.assertNotLocked(user.email);
 
     if (!(await bcrypt.compare(dto.currentPassword, user.password))) {
       await this.loginAttempts.recordFailure(user.email);
-      throw new BadRequestException('Текущий пароль указан неверно');
+      throw new InvalidInputError('Текущий пароль указан неверно');
     }
 
     await this.prisma.user.update({

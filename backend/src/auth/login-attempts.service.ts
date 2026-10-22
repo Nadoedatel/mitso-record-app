@@ -1,4 +1,5 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { TooManyAttemptsError } from '../common/errors';
 import { CacheService } from '../cache';
 
 const MAX_FAILURES = 5;
@@ -21,12 +22,12 @@ const MAX_LOCK_SECONDS = 15 * 60;
 export class LoginAttemptsService {
   constructor(private readonly cache: CacheService) {}
 
-  /** Throws 429 while the email is locked */
+  /** @throws TooManyAttemptsError (429) while the email is locked */
   async assertNotLocked(email: string): Promise<void> {
     const until = Number(await this.cache.peek(this.lockKey(email)));
     const remaining = Math.ceil((until - Date.now()) / 1000);
     if (until && remaining > 0) {
-      throw new HttpException(`Слишком много неудачных попыток входа. Повторите через ${remaining} с.`, HttpStatus.TOO_MANY_REQUESTS);
+      throw new TooManyAttemptsError(`Слишком много неудачных попыток входа. Повторите через ${remaining} с.`, remaining);
     }
   }
 

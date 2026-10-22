@@ -1,4 +1,4 @@
-import { HttpException } from '@nestjs/common';
+import { TooManyAttemptsError } from '../common/errors';
 import { CacheService } from '../cache';
 import { MemoryCacheStore } from '../cache/memory-cache.store';
 import { LoginAttemptsService } from './login-attempts.service';
@@ -10,7 +10,7 @@ describe('LoginAttemptsService', () => {
   const fail = async (times: number, who = email) => {
     for (let i = 0; i < times; i++) await attempts.recordFailure(who);
   };
-  const isLocked = () => attempts.assertNotLocked(email).then(() => false, (e: HttpException) => e.getStatus() === 429);
+  const isLocked = () => attempts.assertNotLocked(email).then(() => false, (e: unknown) => e instanceof TooManyAttemptsError);
 
   beforeEach(() => {
     attempts = new LoginAttemptsService(new CacheService(new MemoryCacheStore()));
@@ -53,8 +53,8 @@ describe('LoginAttemptsService', () => {
     expect(await isLocked()).toBe(false);
 
     await fail(20);
-    const error = await attempts.assertNotLocked(email).catch((e: HttpException) => e);
-    expect((error as HttpException).message).toMatch(/Повторите через (9\d\d|900) с/);
+    const error = await attempts.assertNotLocked(email).catch((e: unknown) => e);
+    expect((error as TooManyAttemptsError).message).toMatch(/Повторите через (9\d\d|900) с/);
   });
 
   it('a successful login clears failures and lock', async () => {

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '~/entities/user'
-import { authApi, type LoginDto } from '../api/authApi'
+import { authApi, type AuthResponse, type LoginDto, type LoginResult } from '../api/authApi'
 import { useHttpClient } from '~/shared/api/httpClient'
 
 const SESSION_HINT_KEY = 'mitso:session'
@@ -35,13 +35,26 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Login user with credentials
    */
-  async function login(credentials: LoginDto) {
+  async function login(credentials: LoginDto): Promise<LoginResult> {
     const response = await authApi.login(credentials)
+    // Second factor on: nothing to store yet, the caller shows the code step and calls `completeTwoFactor`
+    if ('twoFactorRequired' in response) return response
+    await startSession(response)
+    return response
+  }
+
+  /** Second login step: a code from the authenticator app (or a recovery code) for the challenge from `login` */
+  async function completeTwoFactor(challengeToken: string, code: string): Promise<AuthResponse> {
+    const response = await authApi.verifyTwoFactor(challengeToken, code)
+    await startSession(response)
+    return response
+  }
+
+  async function startSession(response: AuthResponse) {
     useHttpClient().setAccessToken(response.accessToken)
     // The login response only has id, email and role; pages need the student/teacher profile too
     user.value = await authApi.getMe()
     setSessionHint(true)
-    return response
   }
 
   /**
@@ -104,6 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     isAuthenticated,
     login,
+    completeTwoFactor,
     restoreSession,
     hasSessionHint,
     logout,

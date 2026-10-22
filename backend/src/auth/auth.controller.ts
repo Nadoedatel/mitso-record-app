@@ -18,10 +18,21 @@ import {
   ApiBearerAuth,
   ApiCookieAuth,
 } from '@nestjs/swagger';
+import {
+  LoginResponseDto,
+  MeResponseDto,
+  MessageResponseDto,
+  RecoveryCodesResponseDto,
+  RefreshResponseDto,
+  TwoFactorSetupResponseDto,
+} from '../common/dto';
 import { AuthService } from './auth.service';
 import { ChangePasswordDto, LoginDto } from './dto';
-import { JwtAuthGuard, OriginGuard } from '../common/guards';
-import { CurrentUser } from '../common/decorators';
+import { DisableTwoFactorDto, EnableTwoFactorDto, VerifyTwoFactorDto } from './two-factor/dto';
+import { TwoFactorService } from './two-factor/two-factor.service';
+import { JwtAuthGuard, OriginGuard, RolesGuard } from '../common/guards';
+import { CurrentUser, Roles } from '../common/decorators';
+import { Role } from '@prisma/client';
 import { AuthUser } from './interfaces/auth-user.interface';
 
 /** The refresh cookie is only ever needed by /api/auth/*, so the browser must not attach it to other API calls */
@@ -48,7 +59,10 @@ function refreshCookieOptions() {
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private twoFactorService: TwoFactorService,
+  ) {}
 
   /**
    * Login user
@@ -60,7 +74,7 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({
-    status: 200,
+    status: 200, type: LoginResponseDto,
     description: 'User successfully logged in. Refresh token set in httpOnly cookie.',
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
@@ -72,6 +86,92 @@ export class AuthController {
   ) {
     const result = await this.authService.login(dto, req.headers['user-agent']);
 
+    // Second factor on: no session yet, so no cookie either
+    if ('twoFactorRequired' in result) return result;
+
+    return this.sendSession(result, res);
+  }
+
+  /**
+   * Second login step: the challenge token from the password step and a code from the authenticator app
+   * (or a recovery code). Answers like a normal login.
+   * POST /api/auth/2fa/verify
+   */
+  @Post('2fa/verify')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: 'Finish a login that needs the second factor' })
+  @ApiResponse({ status: 200, type: LoginResponseDto, description: 'Logged in. Refresh token set in httpOnly cookie.' })
+  @ApiResponse({ status: 401, description: 'Wrong or reused code, or the challenge expired' })
+  @ApiResponse({ status: 429, description: 'Too many wrong codes' })
+  async verifyTwoFactor(
+    @Body() dto: VerifyTwoFactorDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.loginWithSecondFactor(dto, req.headers['user-agent']);
+    return this.sendSession(result, res);
+  }
+
+  /**
+   * Start enabling the second factor: returns the secret and a QR code (ADMIN only)
+   * POST /api/auth/2fa/setup
+   */
+  @Post('2fa/setup')
+  @UseGuards(OriginGuard, JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Start enabling two-factor login (ADMIN only)' })
+  @ApiResponse({ status: 200, type: TwoFactorSetupResponseDto, description: 'Secret and QR code; the factor is not on yet' })
+  @ApiResponse({ status: 409, description: 'Already enabled' })
+  @ApiResponse({ status: 503, description: 'The server has no TOTP_ENCRYPTION_KEY' })
+  setupTwoFactor(@CurrentUser() user: AuthUser) {
+    return this.twoFactorService.setup(user.id, user.email);
+  }
+
+  /**
+   * Finish enabling with the first code; returns the one-time recovery codes (ADMIN only)
+   * POST /api/auth/2fa/enable
+   */
+  @Post('2fa/enable')
+  @UseGuards(OriginGuard, JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Confirm the setup with a code and get recovery codes (ADMIN only)' })
+  @ApiResponse({ status: 200, type: RecoveryCodesResponseDto, description: 'Enabled. The recovery codes are shown only now.' })
+  @ApiResponse({ status: 400, description: 'No setup started, or a wrong code' })
+  async enableTwoFactor(@CurrentUser() user: AuthUser, @Body() dto: EnableTwoFactorDto) {
+    return { recoveryCodes: await this.twoFactorService.enable(user.id, dto.code) };
+  }
+
+  /**
+   * Turn the second factor off; needs the password and a code (ADMIN only)
+   * POST /api/auth/2fa/disable
+   */
+  @Post('2fa/disable')
+  @UseGuards(OriginGuard, JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Turn two-factor login off (ADMIN only)' })
+  @ApiResponse({ status: 200, type: MessageResponseDto, description: 'Disabled' })
+  @ApiResponse({ status: 400, description: 'Wrong password, or the factor is not on' })
+  @ApiResponse({ status: 401, description: 'Wrong code' })
+  async disableTwoFactor(@CurrentUser() user: AuthUser, @Body() dto: DisableTwoFactorDto) {
+    await this.twoFactorService.disable(user.id, dto.password, dto.code);
+    return { message: 'Двухфакторная защита отключена' };
+  }
+
+  /** Cookie of a new session and the public part of the login result (never the refresh token itself) */
+  private sendSession(
+    result: { user: { id: number; email: string; role: Role }; accessToken: string; refreshToken: string },
+    res: Response,
+  ) {
     // Set refresh token in httpOnly cookie
     res.cookie('refreshToken', result.refreshToken, refreshCookieOptions());
     res.clearCookie('refreshToken', LEGACY_REFRESH_COOKIE);
@@ -97,7 +197,7 @@ export class AuthController {
   @ApiCookieAuth('refreshToken')
   @ApiOperation({ summary: 'Refresh access token using httpOnly cookie' })
   @ApiResponse({
-    status: 200,
+    status: 200, type: RefreshResponseDto,
     description: 'Access token refreshed successfully. New refresh token set in cookie.',
   })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
@@ -126,7 +226,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
-  @ApiResponse({ status: 200, description: 'User profile retrieved successfully' })
+  @ApiResponse({ status: 200, type: MeResponseDto, description: 'User profile retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getMe(@CurrentUser() user: AuthUser) {
     return this.authService.getMe(user.id);
@@ -142,7 +242,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({
-    status: 200,
+    status: 200, type: MessageResponseDto,
     description: 'User logged out successfully. Refresh token cookie cleared.',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -169,7 +269,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Change own password and sign out everywhere' })
-  @ApiResponse({ status: 200, description: 'Password changed, all sessions revoked' })
+  @ApiResponse({ status: 200, type: MessageResponseDto, description: 'Password changed, all sessions revoked' })
   @ApiResponse({ status: 400, description: 'Wrong current password or invalid new password' })
   @ApiResponse({ status: 429, description: 'Too many attempts' })
   async changePassword(
