@@ -8,7 +8,9 @@ services:
     region: frankfurt
     plan: free
     healthCheckPath: /api/health
-    buildCommand: npm install && npm run build && npx prisma generate && npx prisma migrate deploy
+    # NODE_ENV=production makes npm skip devDependencies, and nest CLI, typescript and prisma live there: include them.
+    # Client is generated before the build because the TypeScript code imports its types
+    buildCommand: npm ci --include=dev && npx prisma generate && npm run build && npx prisma migrate deploy
     startCommand: node dist/main.js
     envVars:
       # Neon connection string, direct (not pooled): migrate deploy needs a session. Typed in the Render dashboard
@@ -16,6 +18,9 @@ services:
         sync: false
       - key: NODE_ENV
         value: production
+      # Render defaults to the newest Node; the project is built and tested on 22 (see frontend/.nvmrc)
+      - key: NODE_VERSION
+        value: 22.19.0
       - key: LOG_LEVEL
         value: info
       # Кэш справочников и счётчики лимитов. Внутренний адрес Key Value сервиса ниже;
