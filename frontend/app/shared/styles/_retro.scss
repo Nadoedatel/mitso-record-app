@@ -165,7 +165,7 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Phone: thinner frame, header stacked with a full-width action, quiet decor */
+/* Phone: thinner frame and smaller shadows (Header itself stacks on phones for every design) */
 @media (max-width: 767px) {
   :root[data-design='retro'] body::before {
     box-shadow:
@@ -177,21 +177,6 @@
     box-shadow:
       inset 0 0 0 5px var(--retro-page),
       inset 0 0 0 7px var(--retro-violet);
-  }
-
-  :root[data-design='retro'] .header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  :root[data-design='retro'] .header-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  :root[data-design='retro'] .header-title {
-    font-size: var(--font-size-xl);
-    overflow-wrap: anywhere;
   }
 
   :root[data-design='retro'] .section,

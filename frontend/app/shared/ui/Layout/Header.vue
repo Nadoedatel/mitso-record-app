@@ -32,9 +32,33 @@ const props = defineProps<HeaderProps>()
   margin: 0;
 }
 
+.header-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .header-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--spacing-3);
+  min-width: 0;
+}
+
+/* Phone: title above, actions below at full width. In one row the actions (nowrap buttons) pushed the page wider than the screen */
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 </style>
