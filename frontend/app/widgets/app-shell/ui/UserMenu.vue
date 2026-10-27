@@ -29,6 +29,18 @@
         </DropdownItem>
       </DropdownGroup>
 
+      <DropdownGroup label="Дизайн">
+        <DropdownItem
+          v-for="option in DESIGN_OPTIONS"
+          :key="option.design"
+          icon="palette"
+          :checked="theme.design.value === option.design"
+          @select="theme.setDesign(option.design)"
+        >
+          {{ option.label }}
+        </DropdownItem>
+      </DropdownGroup>
+
       <DropdownSeparator />
 
       <DropdownItem icon="log-out" variant="danger" @select="logout">Выйти</DropdownItem>
@@ -45,18 +57,23 @@ import { useRouter } from 'vue-router'
 import { Role, getRoleLabel, type User } from '~/entities/user'
 import { useAuthStore } from '~/features/auth/model/useAuth'
 import { formatFullName } from '~/shared/lib/formatName'
-import { useTheme, type ThemeMode } from '~/shared/lib/useTheme'
+import { useTheme, type DesignName, type ThemeMode } from '~/shared/lib/useTheme'
 import { Dropdown, DropdownGroup, DropdownItem, DropdownSeparator, Icon, type IconName } from '~/shared/ui'
 import ChangePasswordModal from './ChangePasswordModal.vue'
 import TwoFactorModal from './TwoFactorModal.vue'
 
-/** Who is signed in, plus account actions: password, second factor (admin), theme, sign out */
+/** Who is signed in, plus account actions: password, second factor (admin), theme, design, sign out */
 const props = defineProps<{ user: User }>()
 
 const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: IconName }[] = [
   { mode: 'system', label: 'Как в системе', icon: 'monitor' },
   { mode: 'light', label: 'Светлая', icon: 'sun' },
   { mode: 'dark', label: 'Тёмная', icon: 'moon' },
+]
+
+const DESIGN_OPTIONS: { design: DesignName; label: string }[] = [
+  { design: 'default', label: 'Классика' },
+  { design: 'retro', label: '日本レトロ' },
 ]
 
 const authStore = useAuthStore()

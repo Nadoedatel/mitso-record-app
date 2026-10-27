@@ -7,7 +7,8 @@ export default defineNuxtConfig({
   // and would share module-level state between requests, so render on the client only
   ssr: false,
 
-  // Headers for every page served by the Nitro server (Render runs `node .output/server/index.mjs`).
+  // Headers for every page served by a Nitro server (`npm run build` + `node .output/server/index.mjs`).
+  // On Cloudflare Pages (`npm run generate`, static) the same headers come from public/_headers: keep both in sync.
   // No script CSP on purpose: the Nuxt bootstrap is an inline script, so a useful CSP needs nonces or
   // hashes and tuning for Sentry. frame-ancestors alone is safe and stops clickjacking.
   routeRules: {
@@ -60,18 +61,22 @@ export default defineNuxtConfig({
     '@fontsource/roboto/400.css',
     '@fontsource/roboto/500.css',
     '@fontsource/roboto/700.css',
+    // Retro design: display serif (Cyrillic) and Japanese serif for the decor; unicode-range subsets, loaded on demand
+    '@fontsource/playfair-display/700.css',
+    '@fontsource/playfair-display/700-italic.css',
+    '@fontsource/noto-serif-jp/700.css',
     '~/assets/styles/main.scss',
   ],
 
   // The saved theme is applied before the first paint: otherwise a dark-theme user sees a white flash on every load.
-  // Keep in sync with shared/lib/useTheme.ts (same storage key and rule)
+  // Keep in sync with shared/lib/useTheme.ts (same storage keys and rule)
   app: {
     head: {
       meta: [{ name: 'color-scheme', content: 'light dark' }],
       script: [
         {
           innerHTML:
-            "(function(){try{var m=localStorage.getItem('mitso:theme');var d=m==='dark'||(m!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light')}catch(e){}})()",
+            "(function(){try{var m=localStorage.getItem('mitso:theme');var d=m==='dark'||(m!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.setAttribute('data-design',localStorage.getItem('mitso:design')==='retro'?'retro':'default')}catch(e){}})()",
           tagPosition: 'head',
         },
       ],

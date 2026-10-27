@@ -1,0 +1,201 @@
+/* ========== Retro design (Japanese record-sleeve poster) ==========
+ * <html data-design="retro">, combined with data-theme light/dark. Loud on purpose: blue poster page, cream paper cards,
+ * thick ink outlines, hard offset shadows, red accent. Dark: Tokyo night street, neon pink and yellow.
+ * The page background is transparent so RetroDecor can sit behind the content (see the stacking note on #__nuxt). */
+:root[data-design='retro'] {
+  --font-display: 'Playfair Display', 'Noto Serif JP', Georgia, serif;
+  --font-jp: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+
+  --retro-ink: #1d1b1a;
+  --retro-paper: #f1e8d0;
+  --retro-page: #6f9bb8;
+  --retro-decor: #f1e8d0;
+  --retro-glow: #c8372d;
+  --retro-blue: #2b3fd6;
+  --retro-frame: #a3b86a;
+
+  --color-bg-page: transparent;
+  --color-surface: var(--retro-paper);
+  --color-surface-raised: #f7f0dc;
+  --color-bg-subtle: #ebe1c6;
+  --color-bg-muted: #ddd1b0;
+  --color-bg-strong: #cdbf99;
+  --color-bg-hover: #ebe1c6;
+  --color-input-bg: #faf5e6;
+
+  --color-text-primary: var(--retro-ink);
+  --color-text-secondary: #3d3934;
+  --color-text-tertiary: #5a544b;
+  --color-on-solid: #faf5e6;
+
+  --color-border: var(--retro-ink);
+  --color-border-light: color-mix(in srgb, var(--retro-ink) 28%, transparent);
+  --color-border-dark: var(--retro-ink);
+
+  --color-primary: #c0302a;
+  --color-primary-hover: #9c2420;
+  --color-primary-light: #f0cfc3;
+  --color-focus-ring: color-mix(in srgb, #2d6490 55%, transparent);
+
+  --color-danger: #8f1d18;
+  --color-danger-hover: #6f1511;
+  --color-danger-dark: #6f1511;
+
+  /* Print look: hand-cut corners (uneven radii, no ruler-straight boxes), hard ink shadows instead of soft blur */
+  --radius-sm: 2px 6px 3px 7px / 6px 3px 7px 2px;
+  --radius-md: 3px 9px 4px 10px / 10px 4px 9px 3px;
+  --radius-lg: 4px 14px 5px 16px / 16px 5px 14px 4px;
+  --radius-xl: 5px 16px 6px 18px / 18px 6px 16px 5px;
+  --shadow-xs: 2px 2px 0 var(--retro-ink);
+  --shadow-sm: 3px 3px 0 var(--retro-ink);
+  --shadow-md: 4px 4px 0 var(--retro-ink);
+  --shadow-lg: 6px 6px 0 var(--retro-ink);
+  --shadow-xl: 8px 8px 0 var(--retro-ink);
+  --shadow-primary-hover: 4px 4px 0 var(--retro-ink);
+
+  background-color: var(--retro-page);
+}
+
+:root[data-design='retro'][data-theme='dark'] {
+  /* Tokyo night from reference 1, three roles instead of pink everywhere:
+   * violet of the car for structure (borders, shadows), yellow of the kanji for actions, dusty pink only on the sign */
+  --retro-ink: #05030a;
+  --retro-paper: #171221;
+  --retro-page: #0e0b16;
+  --retro-violet: #6a58a6;
+  --retro-violet-deep: #3b2f63;
+  --retro-yellow: #e8c15a;
+  --retro-decor: var(--retro-yellow);
+  --retro-glow: #d98aa6;
+  --retro-blue: #9a8fe0;
+  --retro-frame: #0e0b16;
+
+  --color-surface: var(--retro-paper);
+  --color-surface-raised: #211a30;
+  --color-bg-subtle: #1b1527;
+  --color-bg-muted: #261e38;
+  --color-bg-strong: #342a4b;
+  --color-bg-hover: #1b1527;
+  --color-input-bg: #120e1c;
+
+  --color-text-primary: #f3eef8;
+  --color-text-secondary: #cfc6de;
+  --color-text-tertiary: #a69cbb;
+  --color-on-solid: #14101c;
+
+  --color-border: var(--retro-violet);
+  --color-border-light: #2e2546;
+  --color-border-dark: var(--retro-violet);
+
+  --color-primary: var(--retro-yellow);
+  --color-primary-hover: #f2d27a;
+  --color-primary-light: color-mix(in srgb, var(--retro-yellow) 14%, transparent);
+  --color-focus-ring: color-mix(in srgb, var(--retro-blue) 60%, transparent);
+
+  --shadow-xs: 2px 2px 0 var(--retro-violet-deep);
+  --shadow-sm: 3px 3px 0 var(--retro-violet-deep);
+  --shadow-md: 4px 4px 0 var(--retro-violet-deep);
+  --shadow-lg: 6px 6px 0 var(--retro-violet-deep);
+  --shadow-xl: 8px 8px 0 var(--retro-violet-deep);
+  --shadow-primary-hover: 4px 4px 0 var(--retro-violet);
+}
+
+/* Everything of the app above the decor layer (RetroDecor uses z-index: -1 inside this context) */
+:root[data-design='retro'] #__nuxt {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+
+/* Headings: loud display serif, caps, italic for the page title */
+:root[data-design='retro'] :is(h1, h2, h3) {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+:root[data-design='retro'] h1 {
+  font-style: italic;
+}
+
+/* Poster frame: cream border with an ink line, like the edge of a record sleeve */
+:root[data-design='retro'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 10px var(--retro-frame),
+    inset 0 0 0 13px var(--retro-ink);
+}
+
+:root[data-design='retro'][data-theme='dark'] body::before {
+  box-shadow:
+    inset 0 0 0 10px var(--retro-page),
+    inset 0 0 0 12px var(--retro-violet);
+}
+
+/* Film grain over the whole site: faint, constant, invisible to the pointer. Light: dark specks on paper. Dark: light specks */
+:root[data-design='retro'] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2001;
+  pointer-events: none;
+  opacity: 0.17;
+  mix-blend-mode: multiply;
+  background-image:
+    url('/theme-retro/paper-texture.svg'),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.6 -0.35'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+:root[data-design='retro'][data-theme='dark'] body::after {
+  mix-blend-mode: screen;
+  opacity: 0.1;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.6 -0.35'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Page headers sit straight on the poster background, so they get their own paper plate: the title must never fight the decor */
+:root[data-design='retro'] .header {
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+/* Phone: thinner frame, header stacked with a full-width action, quiet decor */
+@media (max-width: 767px) {
+  :root[data-design='retro'] body::before {
+    box-shadow:
+      inset 0 0 0 5px var(--retro-frame),
+      inset 0 0 0 7px var(--retro-ink);
+  }
+
+  :root[data-design='retro'][data-theme='dark'] body::before {
+    box-shadow:
+      inset 0 0 0 5px var(--retro-page),
+      inset 0 0 0 7px var(--retro-violet);
+  }
+
+  :root[data-design='retro'] .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  :root[data-design='retro'] .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  :root[data-design='retro'] .header-title {
+    font-size: var(--font-size-xl);
+    overflow-wrap: anywhere;
+  }
+
+  :root[data-design='retro'] .section,
+  :root[data-design='retro'] .header {
+    box-shadow: var(--shadow-sm);
+  }
+}

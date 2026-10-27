@@ -5,9 +5,10 @@ name: Deploy
 # репозитория (Settings -> Environments) можно включить обязательное подтверждение.
 #
 # Нужно задать в Environments (production, staging):
-#   secret DATABASE_URL            - строка подключения к БД этого окружения (Render: External Database URL)
-#   secret RENDER_DEPLOY_HOOK_BACKEND / RENDER_DEPLOY_HOOK_FRONTEND - Deploy Hook сервисов Render (необязательно:
-#                                    без них job deploy пропускается, а Render выкладывает сам по autoDeploy)
+#   secret DATABASE_URL            - строка подключения к БД этого окружения (Neon, прямая, без pooler)
+#   secret RENDER_DEPLOY_HOOK_BACKEND - Deploy Hook бэка на Render (необязательно: без него job deploy пропускается,
+#                                    а Render выкладывает сам по autoDeploy)
+# Фронт сюда не входит: Cloudflare Pages собирает его сам после пуша в main.
 on:
   push:
     branches: [main]
@@ -55,11 +56,9 @@ jobs:
       - name: Запустить выкладку на Render
         env:
           HOOK_BACKEND: ${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}
-          HOOK_FRONTEND: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}
         run: |
-          if [ -z "$HOOK_BACKEND$HOOK_FRONTEND" ]; then
-            echo "Deploy Hook не заданы: выкладку делает Render по autoDeploy"
+          if [ -z "$HOOK_BACKEND" ]; then
+            echo "Deploy Hook не задан: выкладку делает Render по autoDeploy"
             exit 0
           fi
-          [ -z "$HOOK_BACKEND" ] || curl -fsS -X POST "$HOOK_BACKEND"
-          [ -z "$HOOK_FRONTEND" ] || curl -fsS -X POST "$HOOK_FRONTEND"
+          curl -fsS -X POST "$HOOK_BACKEND"

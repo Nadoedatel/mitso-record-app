@@ -1,15 +1,19 @@
+# Demo deploy: backend and Redis on Render free, PostgreSQL on Neon, frontend on Cloudflare Pages
+# (frontend/functions/api proxies /api/* here). Plan and steps: Obsidian note mitso-deploy-plan.
 services:
   - type: web
     name: mitso-backend
     env: node
     rootDir: backend
+    region: frankfurt
+    plan: free
+    healthCheckPath: /api/health
     buildCommand: npm install && npm run build && npx prisma generate && npx prisma migrate deploy
     startCommand: node dist/main.js
     envVars:
+      # Neon connection string, direct (not pooled): migrate deploy needs a session. Typed in the Render dashboard
       - key: DATABASE_URL
-        fromDatabase:
-          name: mitso-db
-          property: connectionString
+        sync: false
       - key: NODE_ENV
         value: production
       - key: LOG_LEVEL
@@ -32,36 +36,24 @@ services:
         value: 15m
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
-      # Render стоит перед сервисом одним прокси: верим одному X-Forwarded-For, иначе лимит запросов считает всех как одного
+      # Два прокси перед сервисом: Pages Function (ставит X-Forwarded-For из CF-Connecting-IP) и балансировщик Render.
+      # Верим двум хопам, иначе лимит входа считает всех как один IP Cloudflare
       - key: TRUST_PROXY
-        value: "1"
+        value: "2"
+      # Адрес проекта Cloudflare Pages (https://<проект>.pages.dev), вписывается в панели после создания Pages
       - key: FRONTEND_URL
-        value: https://mitso-record-frontend-app.onrender.com
+        sync: false
+      # Включает /api/metrics для Grafana Cloud. Без значения эндпоинт отвечает 404
+      - key: METRICS_TOKEN
+        sync: false
       - key: PORT
         value: 8080
 
   # Key Value (Redis-совместимое хранилище Render). Только для кэша: можно терять без последствий
   - type: keyvalue
     name: mitso-redis
+    region: frankfurt
     plan: free
     maxmemoryPolicy: allkeys-lru
     # Пустой список: доступ только из сервисов Render внутри сети, снаружи закрыто
     ipAllowList: []
-
-  - type: web
-    name: mitso-frontend
-    env: node
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    startCommand: node .output/server/index.mjs
-    envVars:
-      - key: NUXT_PUBLIC_API_URL
-        value: https://mitso-record-app.onrender.com/api
-      # Sentry фронта выключен, пока не задан DSN (отдельный проект Sentry, значение в панели Render)
-      - key: NUXT_PUBLIC_SENTRY_DSN
-        sync: false
-
-databases:
-  - name: mitso-db
-    databaseName: mitso_db
-    user: postgres

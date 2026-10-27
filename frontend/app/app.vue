@@ -2,10 +2,11 @@
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
+  <RetroDecor />
   <ToastContainer />
   <ConfirmDialog />
 </template>
 
 <script setup lang="ts">
-import { ToastContainer, ConfirmDialog } from '~/shared/ui'
+import { RetroDecor, ToastContainer, ConfirmDialog } from '~/shared/ui'
 </script>
