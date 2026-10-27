@@ -60,18 +60,22 @@ export default defineNuxtConfig({
     '@fontsource/roboto/400.css',
     '@fontsource/roboto/500.css',
     '@fontsource/roboto/700.css',
+    // Retro design: display serif (Cyrillic) and Japanese serif for the decor; unicode-range subsets, loaded on demand
+    '@fontsource/playfair-display/700.css',
+    '@fontsource/playfair-display/700-italic.css',
+    '@fontsource/noto-serif-jp/700.css',
     '~/assets/styles/main.scss',
   ],
 
   // The saved theme is applied before the first paint: otherwise a dark-theme user sees a white flash on every load.
-  // Keep in sync with shared/lib/useTheme.ts (same storage key and rule)
+  // Keep in sync with shared/lib/useTheme.ts (same storage keys and rule)
   app: {
     head: {
       meta: [{ name: 'color-scheme', content: 'light dark' }],
       script: [
         {
           innerHTML:
-            "(function(){try{var m=localStorage.getItem('mitso:theme');var d=m==='dark'||(m!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light')}catch(e){}})()",
+            "(function(){try{var m=localStorage.getItem('mitso:theme');var d=m==='dark'||(m!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.setAttribute('data-design',localStorage.getItem('mitso:design')==='retro'?'retro':'default')}catch(e){}})()",
           tagPosition: 'head',
         },
       ],

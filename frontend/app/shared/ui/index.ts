@@ -65,3 +65,6 @@ export * from './Breadcrumbs'
 
 // Dropdown
 export * from './Dropdown'
+
+// RetroDecor
+export * from './RetroDecor'

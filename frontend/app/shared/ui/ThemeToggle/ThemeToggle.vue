@@ -1,4 +1,5 @@
 <template>
+  <div class="theme-toggle-group">
   <button
     type="button"
     class="theme-toggle"
@@ -8,6 +9,17 @@
   >
     <Icon :name="isDark ? 'sun' : 'moon'" :size="20" />
   </button>
+  <button
+    type="button"
+    class="theme-toggle"
+    :aria-label="isRetro ? 'Включить дизайн Классика' : 'Включить дизайн 日本レトロ'"
+    :title="isRetro ? 'Классика' : '日本レトロ'"
+    :aria-pressed="isRetro"
+    @click="theme.setDesign(isRetro ? 'default' : 'retro')"
+  >
+    <Icon name="palette" :size="20" />
+  </button>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -16,15 +28,21 @@ import { Icon } from '../Icon'
 import { useTheme } from '~/shared/lib/useTheme'
 
 /**
- * Light/dark switch for pages without the user menu (login, error page, dev showcase).
- * Signed-in pages pick the theme in the user menu of the app shell.
+ * Light/dark and design switches for pages without the user menu (login, error page, dev showcase).
+ * Signed-in pages pick theme and design in the user menu of the app shell.
  */
 const theme = useTheme()
 const isDark = computed(() => theme.resolved.value === 'dark')
+const isRetro = computed(() => theme.design.value === 'retro')
 const toggle = () => theme.toggle()
 </script>
 
 <style scoped>
+.theme-toggle-group {
+  display: inline-flex;
+  gap: var(--spacing-2);
+}
+
 .theme-toggle {
   display: inline-flex;
   align-items: center;
