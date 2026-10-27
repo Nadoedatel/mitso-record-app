@@ -3,13 +3,12 @@
     <Container maxWidth="xl">
       <Header
         v-if="authStore.user?.teacher"
-        :title="`${authStore.user.teacher.lastName} ${authStore.user.teacher.firstName}`"
+        :title="formatFullName(authStore.user.teacher)"
       >
         <template #actions>
           <p v-if="authStore.user?.teacher" class="subtitle">
             {{ authStore.user.teacher.position }} • {{ authStore.user.teacher.department }}
           </p>
-          <Button variant="danger" @click="logout">Выйти</Button>
         </template>
       </Header>
 
@@ -84,7 +83,6 @@ import { GradeEntryPanel } from '~/widgets/grades'
 import {
   Container,
   Header,
-  Button,
   LoadingState,
   Alert,
   InfoCard,
@@ -92,6 +90,7 @@ import {
   FormField,
   Select,
 } from '~/shared/ui'
+import { formatFullName } from '~/shared/lib/formatName'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -170,11 +169,6 @@ const teacherInfoItems = computed(() => {
 
 function viewSubjectDetails(subject: Subject) {
   router.push(`/subjects/${subject.id}/grades`)
-}
-
-async function logout() {
-  await authStore.logout()
-  router.push('/login')
 }
 </script>
 

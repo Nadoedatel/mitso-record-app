@@ -7,7 +7,13 @@ const httpClient = vi.hoisted(() => ({
   clearAuth: vi.fn(),
   refresh: vi.fn<() => Promise<boolean>>(),
 }))
-const authApi = vi.hoisted(() => ({ login: vi.fn(), verifyTwoFactor: vi.fn(), getMe: vi.fn(), logout: vi.fn() }))
+const authApi = vi.hoisted(() => ({
+  login: vi.fn(),
+  verifyTwoFactor: vi.fn(),
+  getMe: vi.fn(),
+  logout: vi.fn(),
+  changePassword: vi.fn(),
+}))
 
 vi.mock('~/shared/api/httpClient', () => ({ useHttpClient: () => httpClient }))
 vi.mock('~/features/auth/api/authApi', () => ({ authApi }))
@@ -78,6 +84,32 @@ describe('auth store', () => {
 
     expect(store.user).toBeNull()
     expect(httpClient.clearAuth).toHaveBeenCalled()
+  })
+
+  describe('password change', () => {
+    it('drops the local session once the backend has revoked every session', async () => {
+      authApi.changePassword.mockResolvedValue(undefined)
+      const store = useAuthStore()
+      store.user = admin as never
+
+      await store.changePassword('old-password', 'new-password')
+
+      expect(authApi.changePassword).toHaveBeenCalledWith('old-password', 'new-password')
+      expect(store.user).toBeNull()
+      expect(httpClient.clearAuth).toHaveBeenCalled()
+      expect(storage.has('mitso:session')).toBe(false)
+    })
+
+    it('keeps the session when the backend refuses (wrong current password)', async () => {
+      authApi.changePassword.mockRejectedValue(new Error('Неверный текущий пароль'))
+      const store = useAuthStore()
+      store.user = admin as never
+
+      await expect(store.changePassword('wrong', 'new-password')).rejects.toThrow('Неверный текущий пароль')
+
+      expect(store.user).toEqual(admin)
+      expect(httpClient.clearAuth).not.toHaveBeenCalled()
+    })
   })
 
   describe('two-factor login', () => {

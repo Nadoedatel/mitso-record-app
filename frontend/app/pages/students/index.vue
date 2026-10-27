@@ -1,11 +1,7 @@
 <template>
   <div class="students-page">
     <Container maxWidth="xl">
-      <Header title="Поиск студентов">
-        <template #actions>
-          <Button variant="secondary" @click="$router.push(homeRoute)">На главную</Button>
-        </template>
-      </Header>
+      <Header title="Поиск студентов" />
 
       <div class="search-section">
         <SearchInput
@@ -50,16 +46,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { studentsApi } from '~/features/students/api/studentsApi'
-import { useAuthStore } from '~/features/auth/model/useAuth'
 import type { Student } from '~/entities/student'
-import { getHomeRoute } from '~/entities/user'
 import { usePagedList } from '~/shared/lib/usePagedList'
 import {
   Container,
   Header,
-  Button,
   SearchInput,
   Card,
   Pagination,
@@ -69,9 +62,6 @@ import {
 } from '~/shared/ui'
 
 definePageMeta({ middleware: 'auth' })
-
-const authStore = useAuthStore()
-const homeRoute = computed(() => getHomeRoute(authStore.user?.role))
 
 const {
   items: students,

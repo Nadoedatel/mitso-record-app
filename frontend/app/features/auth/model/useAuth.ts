@@ -99,6 +99,15 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
+   * Change own password. The backend revokes every session (this one too), so the local session is dropped
+   * and the caller sends the user to the login page
+   */
+  async function changePassword(currentPassword: string, newPassword: string) {
+    await authApi.changePassword(currentPassword, newPassword)
+    clearLocalSession()
+  }
+
+  /**
    * Fetch current user profile with related data
    */
   async function fetchProfile() {
@@ -121,6 +130,7 @@ export const useAuthStore = defineStore('auth', () => {
     restoreSession,
     hasSessionHint,
     logout,
+    changePassword,
     fetchProfile,
   }
 })

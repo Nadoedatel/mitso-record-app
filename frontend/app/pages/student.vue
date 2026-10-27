@@ -3,7 +3,7 @@
     <Container maxWidth="xl">
       <Header
         v-if="authStore.user?.student"
-        :title="`${authStore.user.student.lastName} ${authStore.user.student.firstName}`"
+        :title="formatFullName(authStore.user.student)"
       >
         <template #actions>
           <p v-if="authStore.user?.student" class="subtitle">
@@ -18,7 +18,6 @@
           >
             Скачать зачётку (Excel)
           </Button>
-          <Button variant="danger" @click="logout">Выйти</Button>
         </template>
       </Header>
 
@@ -63,8 +62,6 @@ import { computed } from 'vue'
 import { useAuthStore } from '~/features/auth/model/useAuth'
 import { gradesApi } from '~/features/grades/api/gradesApi'
 import { useRecordBookExport } from '~/features/jobs/model/useRecordBookExport'
-
-definePageMeta({ middleware: 'auth' })
 import type { Grade } from '~/entities/grade'
 import {
   Container,
@@ -80,10 +77,11 @@ import {
   GradeValueBadge,
 } from '~/shared/ui'
 import { formatDate } from '~/shared/lib/formatDate'
-import { formatShortName } from '~/shared/lib/formatName'
+import { formatFullName, formatShortName } from '~/shared/lib/formatName'
+
+definePageMeta({ middleware: 'auth' })
 
 const authStore = useAuthStore()
-const router = useRouter()
 const { exportRecordBook, exporting, downloading } = useRecordBookExport()
 
 const gradeColumns = [
@@ -136,11 +134,6 @@ const studentInfoItems = computed(() => {
 
   return items
 })
-
-async function logout() {
-  await authStore.logout()
-  router.push('/login')
-}
 
 </script>
 

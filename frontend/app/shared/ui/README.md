@@ -346,6 +346,38 @@ import { Button, Input, Modal, Table } from '@/shared/ui'
 - `perPage`: number
 - `total`: number
 
+### Navigation Components
+
+#### Breadcrumbs
+
+```vue
+<Breadcrumbs :items="[{ label: 'Студенты', to: '/students' }, { label: 'Петрова М.' }]" />
+```
+
+**Props:**
+- `items`: Array<{ label, to? }> — от раздела к текущей странице; последний пункт без ссылки (`aria-current="page"`)
+
+#### Dropdown, DropdownItem, DropdownGroup, DropdownSeparator
+
+```vue
+<Dropdown placement="bottom-end" label="Действия">
+  <template #trigger><Icon name="menu" /></template>
+  <DropdownItem icon="pencil" @select="edit">Изменить</DropdownItem>
+  <DropdownSeparator />
+  <DropdownGroup label="Тема">
+    <DropdownItem icon="sun" :checked="mode === 'light'" @select="setMode('light')">Светлая</DropdownItem>
+  </DropdownGroup>
+  <DropdownItem icon="trash" variant="danger" @select="remove">Удалить</DropdownItem>
+</Dropdown>
+```
+
+**Props Dropdown:**
+- `placement`: 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end' (по умолчанию `bottom-end`)
+- `label`: доступное имя кнопки, если в ней только иконка
+- `block`: кнопка и меню на всю ширину родителя
+
+**Props DropdownItem:** `icon`, `variant` ('default' | 'danger'), `checked` (задан → пункт-переключатель `menuitemradio` с галочкой). Событие `select`: меню уже закрыто, фокус вернулся на кнопку.
+
 ---
 
 ## Типизация
@@ -442,4 +474,6 @@ const componentClasses = computed(() => {
 - **Таблица.** Сортировка (`sortable`) состояния: нет → по возрастанию → по убыванию; пустые значения всегда в конце. Логика в `Table/sortRows.ts` (тесты: `tests/sortRows.spec.ts`). Для серверной сортировки `manual-sort` + событие `sort`. Строка кликабельна только с `clickable`.
 - **Иконки.** Только через `<Icon name="..." />`; без `label` иконка декоративная (скрыта от скринридеров), для иконки-кнопки подпись даёт `aria-label` на самой кнопке.
 - **Миксины** (`shared/styles/_mixins.scss`): `respond-up`, `respond-down`, `focus-ring`, `truncate`, `visually-hidden`, `scroll-x`, `reduced-motion`. Подключать в `<style scoped lang="scss">` через `@use 'shared/styles/mixins' as *;`.
+- **Меню (Dropdown).** Кнопка с `aria-haspopup="menu"` и `aria-expanded`, пункты `role="menuitem"`. Enter, пробел или стрелки открывают меню и ставят фокус на пункт; стрелки, Home и End двигают фокус; Esc закрывает и возвращает фокус на кнопку; Tab закрывает и идёт дальше; клик снаружи закрывает.
+- **Крошки.** `<nav aria-label="Путь к странице">` со списком `ol`; текущая страница не ссылка.
 - **Витрина** `/dev/ui` (только `nuxt dev`): все компоненты и состояния на одной странице; в production-сборку не попадает.

@@ -53,6 +53,12 @@ export const authApi = {
     await api.POST('/api/auth/logout')
   },
 
+  /** Change own password; the backend ends every session of the user, this one too */
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    const api = useApiClient()
+    await api.POST('/api/auth/change-password', { body: { currentPassword, newPassword } })
+  },
+
   /** Start enabling the second factor: secret and QR code (ADMIN) */
   async setupTwoFactor(): Promise<TwoFactorSetup> {
     const api = useApiClient()
