@@ -33,7 +33,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Prisma** (ORM)
 - **PostgreSQL** (база данных)
 - **Passport.js** + **JWT** (аутентификация, access + refresh токены)
-- **class-validator** + **class-transformer** (валидация DTO)
+- **Zod** через `nestjs-zod` (валидация DTO)
+- **Redis** (необязателен: кэш, лимиты запросов, очередь BullMQ)
 - Порт: `8080`
 
 ### DevOps
@@ -110,30 +111,34 @@ docker-compose logs -f       # логи
 
 ### Backend (NestJS)
 
-Бекенд следует **модульной архитектуре NestJS**:
+Бекенд следует **модульной архитектуре NestJS**, подробности в `backend/CLAUDE.md`:
 
 ```
 backend/src/
-├── app.module.ts
-├── main.ts
-├── common/           # общие декораторы, guard-ы, interceptor-ы, pipes
-│   ├── guards/       # JwtAuthGuard, RolesGuard
-│   ├── decorators/   # @CurrentUser(), @Roles()
-│   └── filters/      # глобальный exception filter
-├── auth/             # аутентификация (JWT, Passport, refresh токены)
-├── students/         # модуль студентов (CRUD, поиск)
-├── teachers/         # модуль преподавателей
-├── grades/           # модуль оценок и зачётов
-├── subjects/         # модуль предметов
-└── prisma/           # PrismaService (singleton)
+├── main.ts           # точка входа
+├── app.module.ts     # корневой модуль
+├── app.setup.ts      # префикс, cookie, ZodValidationPipe, фильтр (общий с e2e)
+├── common/           # guard-ы, декораторы, фильтр, доменные ошибки, Zod-поля, курсор, поиск
+├── prisma/           # PrismaService (singleton)
+├── auth/             # JWT, refresh с ротацией, 2FA (two-factor/)
+├── students/         # студенты (CRUD, поиск), students.repository.ts
+├── teachers/         # преподаватели
+├── grades/           # оценки и зачёты, grades.repository.ts
+├── subjects/, groups/, faculties/, specializations/   # справочники
+├── audit/            # журнал изменений оценок
+├── cache/            # кэш (Redis или память)
+├── throttling/       # хранилище лимитов запросов
+├── jobs/             # фоновые задачи BullMQ: экспорт, импорт
+├── metrics/          # метрики Prometheus
+└── health/           # проверка живости
 ```
 
 **Каждый модуль содержит:**
 - `*.module.ts` — регистрация зависимостей
-- `*.controller.ts` — HTTP эндпоинты, валидация входящих данных
+- `*.controller.ts` — HTTP эндпоинты
 - `*.service.ts` — бизнес-логика
-- `dto/` — DTO классы с декораторами `class-validator`
-- `entities/` — Prisma-типы или доп. типы сущности
+- `dto/` — Zod-схемы и DTO-классы `createZodDto`
+- `index.ts` — публичный API, если модуль импортируют другие
 
 ---
 
@@ -143,9 +148,9 @@ backend/src/
 - Аутентификация: `Bearer <access_token>` в заголовке `Authorization`
 - Обёртки `{ data, message }` нет: ответ это сам объект/массив, списки приходят как `{ data, total, page, limit, totalPages }`, удаление возвращает `{ message }`
 - Контракт описан в `backend/openapi.json` (запросы и ответы, схемы в `backend/src/common/dto/responses.ts`); после правки DTO или контроллера: `npm run openapi:generate` в backend и `npm run api:types` во frontend
-- Ошибки возвращаются через глобальный exception filter в формате:
+- Ошибки возвращаются через глобальный exception filter в формате (`message` строка или массив строк при ошибке валидации):
   ```json
-  { "statusCode": 400, "message": "...", "error": "Bad Request" }
+  { "statusCode": 400, "timestamp": "...", "message": "..." }
   ```
 
 ### Ключевые эндпоинты
@@ -211,7 +216,7 @@ backend/src/
 
 ### Backend
 - Каждый контроллер, сервис, модуль — в отдельном файле
-- DTO для всех входящих данных с валидацией через `class-validator`
+- DTO для всех входящих данных: Zod-схема + `createZodDto` (`nestjs-zod`), общие поля в `src/common/dto/zod-fields.ts`
 - Сервисы не зависят от HTTP-слоя (не используют `Request`/`Response`)
 - Все публичные методы сервисов покрыты JSDoc
 - Никаких `any` — строгая типизация
@@ -236,7 +241,8 @@ backend/src/
 - `frontend/app/middleware/admin.ts` — защита /admin
 
 ### Backend
-- `backend/src/main.ts` — точка входа, настройка CORS, Swagger, global pipes
+- `backend/src/main.ts` — точка входа, проверка JWT-секретов, CORS, helmet, Swagger
+- `backend/src/app.setup.ts` — префикс `/api`, cookie, `ZodValidationPipe`, глобальный фильтр
 - `backend/src/app.module.ts` — корневой модуль
 - `backend/prisma/schema.prisma` — схема БД
 - `backend/.env` — переменные окружения (не коммитить!)
@@ -248,6 +254,8 @@ JWT_ACCESS_SECRET="your-access-secret"
 JWT_REFRESH_SECRET="your-refresh-secret"
 PORT=8080
 ```
+
+Это минимум для запуска. JWT-секреты должны быть от 32 символов, разными и не из шаблона, иначе бэк не стартует. Полный список (`REDIS_URL`, `FRONTEND_URL`, `TOTP_ENCRYPTION_KEY` и др.) в `backend/.env.example` и `backend/CLAUDE.md`.
 
 ## Git
 
