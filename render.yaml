@@ -1,5 +1,7 @@
-# Demo deploy: backend and Redis on Render free, PostgreSQL on Neon, frontend on Cloudflare Pages
-# (frontend/functions/api proxies /api/* here). Plan and steps: Obsidian note mitso-deploy-plan.
+# Demo deploy: frontend (static site), backend and Redis on Render free, PostgreSQL on Neon.
+# The static site rewrites /api/* to the backend, so the browser sees one origin and the SameSite=Strict refresh cookie works.
+# Cloudflare Pages (frontend/functions/api) stays as a second address: *.pages.dev is throttled by some providers in Belarus/Russia.
+# Plan and steps: Obsidian note mitso-deploy-plan.
 services:
   - type: web
     name: mitso-backend
@@ -41,11 +43,12 @@ services:
         value: 15m
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
-      # Два прокси перед сервисом: Pages Function (ставит X-Forwarded-For из CF-Connecting-IP) и балансировщик Render.
-      # Верим двум хопам, иначе лимит входа считает всех как один IP Cloudflare
+      # Два прокси перед сервисом: rewrite статического сайта mitso-frontend (или Pages Function) и балансировщик Render.
+      # Верим двум хопам, иначе лимит входа считает всех как один IP прокси. Не проверено на живом трафике Render
       - key: TRUST_PROXY
         value: "2"
-      # Адрес проекта Cloudflare Pages (https://<проект>.pages.dev), вписывается в панели после создания Pages
+      # Адреса фронта через запятую: статический сайт Render и, если оставлен, Cloudflare Pages.
+      # Вписывается в панели: https://mitso-frontend.onrender.com,https://<проект>.pages.dev
       - key: FRONTEND_URL
         sync: false
       # Включает /api/metrics для Grafana Cloud. Без значения эндпоинт отвечает 404
@@ -62,3 +65,42 @@ services:
     maxmemoryPolicy: allkeys-lru
     # Пустой список: доступ только из сервисов Render внутри сети, снаружи закрыто
     ipAllowList: []
+
+  # Frontend: client-only Nuxt (ssr: false) built with `nuxt generate`, served from Render's CDN, never sleeps
+  - type: web
+    name: mitso-frontend
+    runtime: static
+    # No rootDir: staticPublishPath is relative to the repo root, so both paths are spelled out
+    buildCommand: cd frontend && npm ci && npm run generate
+    # NITRO_PRESET=static pins the output to .output/public (on Render Nitro would otherwise pick its own preset)
+    staticPublishPath: frontend/.output/public
+    envVars:
+      - key: NODE_VERSION
+        value: 22.19.0
+      - key: NITRO_PRESET
+        value: static
+      - key: NUXT_PUBLIC_API_URL
+        value: /api
+    routes:
+      # First match wins: the API proxy before the SPA fallback. Backend address is the mitso-backend service URL
+      - type: rewrite
+        source: /api/*
+        destination: https://mitso-backend.onrender.com/api/*
+      # Deep links (/student, /students/12) get the SPA shell; rewrites skip paths where a file exists (/_nuxt/*)
+      - type: rewrite
+        source: /*
+        destination: /200.html
+    # Same security headers as routeRules in nuxt.config.ts and public/_headers (Cloudflare)
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
+      - path: /*
+        name: Content-Security-Policy
+        value: frame-ancestors 'none'

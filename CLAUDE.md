@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 └── docker-compose.yml
 ```
 
-`mobile/` (Flutter) заморожен с 2026-10-14: не поддерживать и не менять. Демо-выкладка бесплатная: фронт на Cloudflare Pages (`nuxt generate`, прокси `/api/*` в `frontend/functions/api`), бэк и Redis на Render free (`render.yaml`), PostgreSQL на Neon. Это не прод: без SLA, демо-данные. Seed на нелокальной базе требует `SEED_PASSWORD` и `SEED_ADMIN_PASSWORD`.
+`mobile/` (Flutter) заморожен с 2026-10-14: не поддерживать и не менять. Демо-выкладка бесплатная, всё в `render.yaml`: фронт статическим сайтом Render (`nuxt generate`, rewrite `/api/*` на бэк), бэк и Redis на Render free, PostgreSQL на Neon. Cloudflare Pages (прокси в `frontend/functions/api`) остаётся вторым адресом: `*.pages.dev` у части провайдеров в РБ и РФ тормозит без VPN. Это не прод: без SLA, демо-данные. Seed на нелокальной базе требует `SEED_PASSWORD` и `SEED_ADMIN_PASSWORD`.
 
 ---
 
