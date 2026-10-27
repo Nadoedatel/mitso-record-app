@@ -1,0 +1,10 @@
+# Cloudflare Pages. The app is a client-only SPA (ssr: false): `nuxt generate` writes one shell, 200.html.
+# Deep links must get that shell, not 404.html. Routes are listed explicitly: a catch-all /* would also rewrite /_nuxt/* assets.
+# /api/* never reaches this file: the Pages Function in functions/api handles it first.
+/login         /200.html  200
+/student       /200.html  200
+/teacher       /200.html  200
+/admin         /200.html  200
+/students      /200.html  200
+/students/*    /200.html  200
+/subjects/*    /200.html  200

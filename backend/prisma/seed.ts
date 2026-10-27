@@ -3,7 +3,39 @@ import * as bcrypt from 'bcrypt'
 
 const prisma = new PrismaClient()
 
+const LOCAL_PASSWORD = 'password123'
+// Hosts of the local and docker-compose databases: only there the well-known demo password is allowed
+const LOCAL_DB_HOSTS = new Set(['localhost', '127.0.0.1', '::1', 'postgres', 'postgres-test', 'db'])
+
+/**
+ * Passwords for the seeded accounts. On a local database everyone gets `password123`.
+ * On any other host (Neon, Render) the seed refuses to run without SEED_PASSWORD (students, teachers)
+ * and a separate SEED_ADMIN_PASSWORD: a public demo must not have a known admin password.
+ */
+function resolvePasswords(): { user: string; admin: string; isLocal: boolean } {
+  const url = process.env.DATABASE_URL ?? ''
+  let host = ''
+  try {
+    host = new URL(url).hostname.replace(/^\[|\]$/g, '')
+  } catch {
+    throw new Error('DATABASE_URL is missing or not a URL')
+  }
+  if (LOCAL_DB_HOSTS.has(host)) return { user: LOCAL_PASSWORD, admin: LOCAL_PASSWORD, isLocal: true }
+
+  const user = process.env.SEED_PASSWORD ?? ''
+  const admin = process.env.SEED_ADMIN_PASSWORD ?? ''
+  if (user.length < 10 || admin.length < 16 || user === admin) {
+    throw new Error(
+      `Database host ${host} is not local: set SEED_PASSWORD (10+ chars) and a different SEED_ADMIN_PASSWORD (16+ chars)`,
+    )
+  }
+  return { user, admin, isLocal: false }
+}
+
 async function main() {
+  // Before anything is deleted: a remote database without passwords must stay untouched
+  const passwords = resolvePasswords()
+
   console.log('🌱 Starting database seeding...')
 
   // Clean existing data (in proper order due to foreign keys)
@@ -19,8 +51,8 @@ async function main() {
   await prisma.user.deleteMany()
   console.log('✅ Cleaned existing data')
 
-  // Hash password for all users
-  const passwordHash = await bcrypt.hash('password123', 10)
+  const passwordHash = await bcrypt.hash(passwords.user, 10)
+  const adminPasswordHash = await bcrypt.hash(passwords.admin, 10)
 
   // Create Faculties
   const faculty1 = await prisma.faculty.create({
@@ -188,7 +220,7 @@ async function main() {
   await prisma.user.create({
     data: {
       email: 'admin@mitso.by',
-      password: passwordHash,
+      password: adminPasswordHash,
       role: 'ADMIN',
     },
   })
@@ -345,7 +377,11 @@ async function main() {
   console.log('\nTeachers:')
   console.log('  Email: kozlov@mitso.by')
   console.log('  Email: novikova@mitso.by')
-  console.log('\nPassword for all: password123')
+  console.log(
+    passwords.isLocal
+      ? `\nPassword for all: ${LOCAL_PASSWORD}`
+      : '\nPasswords: SEED_PASSWORD for students and teachers, SEED_ADMIN_PASSWORD for the admin',
+  )
   console.log('-----------------------------------\n')
 }
 

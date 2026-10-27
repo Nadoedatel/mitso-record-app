@@ -7,7 +7,8 @@ export default defineNuxtConfig({
   // and would share module-level state between requests, so render on the client only
   ssr: false,
 
-  // Headers for every page served by the Nitro server (Render runs `node .output/server/index.mjs`).
+  // Headers for every page served by a Nitro server (`npm run build` + `node .output/server/index.mjs`).
+  // On Cloudflare Pages (`npm run generate`, static) the same headers come from public/_headers: keep both in sync.
   // No script CSP on purpose: the Nuxt bootstrap is an inline script, so a useful CSP needs nonces or
   // hashes and tuning for Sentry. frame-ancestors alone is safe and stops clickjacking.
   routeRules: {

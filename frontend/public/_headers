@@ -1,0 +1,7 @@
+# Cloudflare Pages: the same security headers that routeRules in nuxt.config.ts set on a Nitro server.
+# Static hosting does not run Nitro, so they are declared here. Responses of the /api proxy keep the backend's own headers.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: frame-ancestors 'none'
