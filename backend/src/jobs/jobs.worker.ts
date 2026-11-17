@@ -18,8 +18,7 @@ import { buildRecordBook, studentFullName } from './record-book.xlsx';
 import { describeIssues, readStudentCsv, toStudentInput } from './student-import';
 
 /**
- * JobsWorker - takes jobs from the queue and runs them inside the API process.
- * One process is enough for this app; a separate worker process would only need to create the same Worker.
+ * JobsWorker - takes jobs from the queue in the dedicated worker process.
  *
  * Failure rules: a problem of one CSV row is data (it goes into the result and the job still completes);
  * a problem of the system (database or Redis hiccup) is thrown, and BullMQ retries the job with backoff;

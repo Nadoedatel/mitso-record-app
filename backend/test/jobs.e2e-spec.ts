@@ -1,5 +1,8 @@
 import * as request from 'supertest';
 import { Role } from '@prisma/client';
+import { INestApplicationContext } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { WorkerModule } from '../src/worker.module';
 import { createTestApp, resetDb, TestApp } from './helpers/app';
 import { bearerFor } from './helpers/auth';
 import { createStudent, createUser } from './helpers/factories';
@@ -15,10 +18,12 @@ interface JobBody {
 
 describeWithRedis('Background jobs (e2e)', () => {
   let ctx: TestApp;
+  let worker: INestApplicationContext;
   const http = () => request(ctx.app.getHttpServer());
 
   beforeAll(async () => {
     ctx = await createTestApp();
+    worker = await NestFactory.createApplicationContext(WorkerModule, { logger: false });
   });
 
   beforeEach(async () => {
@@ -27,9 +32,10 @@ describeWithRedis('Background jobs (e2e)', () => {
 
   afterAll(async () => {
     await ctx.app.close();
+    await worker?.close();
   });
 
-  /** Polls the job until it leaves waiting/active (the worker runs in the same process) */
+  /** Polls the job until the separate worker context completes it. */
   async function untilDone(jobId: string, auth: string): Promise<JobBody> {
     for (let attempt = 0; attempt < 100; attempt++) {
       const res = await http().get(`/api/jobs/${jobId}`).set('Authorization', auth).expect(200);

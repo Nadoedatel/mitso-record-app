@@ -473,6 +473,8 @@ CI падает, если `openapi.json` или сгенерированные �
 
 ## Production Deployment
 
+Фоновые задания BullMQ обрабатывает отдельный процесс `backend/src/worker.ts`. В обоих Docker Compose файлах он запускается как сервис `worker` после готовности API и Redis. При ручном запуске бэкенда нужен также `cd backend && npm run worker:dev` с теми же `DATABASE_URL` и `REDIS_URL`. Без worker задания останутся в очереди. В `render.yaml` отдельный worker пока не настроен: для работы импорта и экспорта на Render его нужно развернуть отдельно с доступом к той же БД и Redis.
+
 Для деплоя на production:
 
 1. **Переменные окружения:** Обновить секреты JWT и DATABASE_URL
